@@ -1,0 +1,30 @@
+# Credentials & Secrets (SEC-CRED)
+.netark/auth.json
+.env
+.env.*
+!.env.example
+
+# Ephemeral Runtime & Binary Cache inside .netark Brain
+# NOTE: .netark/role-models.json and .netark/auth.example.json are intentionally tracked in Git!
+.netark/sessions/
+.netark/bin/
+.netark/audit/
+.netark/models-store.json
+.netark/.*vault*.json
+.*vault*.json
+
+# Dual-Track Private Memory & Scratch Staging
+memory/private/
+memory/index/PRIVATE_INDEX.json
+scratch/
+.staging/
+
+# Python & Node Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+node_modules/
+dist/
+venv/
+.venv/

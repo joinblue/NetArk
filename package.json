@@ -1,0 +1,41 @@
+{
+  "name": "netark",
+  "version": "1.0.0",
+  "private": false,
+  "description": "NetArk (N.E.T.A.R.K.) — Network-shielded, Enforced-Template Archival & Rule-indexed Kernel for Agentic Coding",
+  "license": "LicenseRef-Prosperity-3.0.0 OR LicenseRef-Commercial",
+  "author": "joinblue <joinblue42@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joinblue/NetArk.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22.15.0"
+  },
+  "scripts": {
+    "test": "python3 scripts/test_netark_harness.py",
+    "test:guard": "python3 scripts/test_netark_enterprise_guard.py",
+    "test:dashboard": "python3 dashboard/tests/test_dashboard_shards.py",
+    "init": "python3 scripts/netark_init.py",
+    "validate": "python3 schemas/schema_validator.py --run-oracle",
+    "map": "python3 scripts/auto_update_map.py",
+    "dashboard": "python3 dashboard/backend/server.py 8765"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": ">=1.5.0",
+    "@earendil-works/pi-coding-agent": ">=1.5.0",
+    "@earendil-works/pi-tui": ">=1.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-ai": {
+      "optional": true
+    },
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    },
+    "@earendil-works/pi-tui": {
+      "optional": true
+    }
+  }
+}

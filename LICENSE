@@ -1,0 +1,53 @@
+# The Prosperity Public License 3.0.0
+
+Copyright (c) 2026 joinblue <joinblue42@gmail.com>
+
+## Purpose
+
+This license allows you to use and share this software for noncommercial purposes for free, and to try it for commercial purposes for thirty days.
+
+## Agreement
+
+In order to receive this license, you have to agree to its rules. Those rules are both obligations under that agreement and conditions to your license. Don't do anything with this software that triggers a rule you can't or won't follow.
+
+## Notices
+
+Make sure everyone who gets a copy of any part of this software from you, with or without changes, also gets the text of this license and the copyright notice above.
+
+## Commercial Trial
+
+Limit your use of this software for commercial purposes to a thirty-day trial period. If you use this software for work, your company gets one trial period for all personnel, not one trial per person.
+
+## Noncommercial Uses
+
+You may use this software for any noncommercial purpose. You may also use this software to:
+
+1.Contribute changes or additions back to the licensor.
+
+2.Develop and test other software that links to or depends on this software, provided that the other software is distributed under an Open Source license approved by the Open Source Initiative or a Free Software license approved by the Free Software Foundation.
+
+## Excuse
+
+If anyone notifies you in writing that you have not complied with [Notices](#notices) or [Commercial Trial](#commercial-trial), you can keep your license by taking all practical steps to comply within thirty days after the notice. If you do not do so, your license ends immediately.
+
+## Patent
+
+Each contributor licenses you to do everything with this software that would otherwise infringe any patent claims they can license or become able to license.
+
+## Reliability
+
+No contributor can revoke this license.
+
+## No Liability
+
+***As far as the law allows, this software comes as is, without any warranty or condition, and no contributor will be liable to anyone for any damages related to this software or this license, under any kind of legal claim.***
+
+---
+
+## Commercial Licensing Notice
+
+For commercial or enterprise internal use beyond the thirty-day trial period, a separate Commercial License is required. Please see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) or contact `joinblue42@gmail.com`.
+
+## Upstream Attribution Notice
+
+`NetArk` interfaces with and builds upon the open-source ecosystem of `@earendil-works/pi-coding-agent`, `@earendil-works/pi-ai`, and `@earendil-works/pi-tui`, which are independently licensed under the MIT License by their respective copyright holders.

@@ -1,0 +1,2622 @@
+{
+  "schema_version": "2.3.0",
+  "project": "NetArk",
+  "harness": "NetArk",
+  "generated_at": "2026-11-08T15:12:03Z",
+  "total_nodes": 5,
+  "healed_links": [],
+  "pending_topology_alignments": [],
+  "domain_stats": {
+    "000": 1,
+    "100": 1,
+    "200": 1,
+    "300": 1,
+    "310": 0,
+    "320": 0,
+    "330": 0,
+    "400": 0,
+    "500": 0,
+    "510": 0,
+    "600": 0,
+    "700": 0,
+    "800": 0,
+    "900": 1,
+    "910": 0
+  },
+  "facet_registry": {
+    "NetArk:Core:Ledger:WorkOrders": 1,
+    "NetArk:Core:Constitution:Governance": 1,
+    "Epistemic:AntiSycophancy:DualTrack:Oracle": 1,
+    "NetArk:Security:Boundary:Rule": 1,
+    "Guard:Tier0AST:DLP:PreWriteLint": 1,
+    "NetArk:Architecture:ADR:Codebook": 1,
+    "Context:KV-Cache:Compression:MultiHost": 1,
+    "NetArk:Episodic:Handover:SessionState": 1
+  },
+  "domain_registry": {
+    "000": {
+      "title": "000 Core Constitution & Soul (核心憲法與靈魂)",
+      "count": 1,
+      "items": [
+        {
+          "node_id": "MEM-2026-0001",
+          "artifact_type": "constitution",
+          "status": "verified",
+          "access_tier": "immutable",
+          "priority": "critical",
+          "domain_code": "000",
+          "subdomain": null,
+          "artifact_track": "official",
+          "outbound_links": [],
+          "backlinks": [
+            "100.ARCH-RULES.v1",
+            "200.ADR-001.v1",
+            "300.LEDGER.v1",
+            "900.HANDOVER.v1"
+          ],
+          "node_key": "000.SOUL.v1",
+          "facet_tags": [
+            "NetArk:Core:Constitution:Governance",
+            "Epistemic:AntiSycophancy:DualTrack:Oracle"
+          ],
+          "keywords": [
+            "NetArk",
+            "Constitution",
+            "Epistemic Honesty",
+            "Dual-Track Library",
+            "Anti-Sycophancy"
+          ],
+          "summary_1line": "NetArk核心憲法：四級認知標籤、Official/Wiki雙軌制與反盲從Oracle鐵律",
+          "path": "memory/codex/000_SOUL.md",
+          "sha256_16": "e8d43afc31169734",
+          "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
+          "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
+          "depends_on": [],
+          "affected_paths": [
+            "schemas/schema_validator.py"
+          ],
+          "parent_blueprint": null,
+          "shard_modules": [],
+          "stub_paths": []
+        }
+      ]
+    },
+    "100": {
+      "title": "100 System Architecture & Security Guardrails (系統架構與安全護欄)",
+      "count": 1,
+      "items": [
+        {
+          "node_id": "MEM-2026-0002",
+          "artifact_type": "rule",
+          "status": "verified",
+          "access_tier": "restricted",
+          "priority": "critical",
+          "domain_code": "100",
+          "subdomain": null,
+          "artifact_track": "official",
+          "outbound_links": [
+            "000.SOUL.v1"
+          ],
+          "backlinks": [
+            "200.ADR-001.v1"
+          ],
+          "node_key": "100.ARCH-RULES.v1",
+          "facet_tags": [
+            "NetArk:Security:Boundary:Rule",
+            "Guard:Tier0AST:DLP:PreWriteLint"
+          ],
+          "keywords": [
+            "Workspace Boundary",
+            "SEC-CRED",
+            "SEC-PREWRITE-SECRET",
+            "SEC-CONTROL-PLANE",
+            "Zero Exfiltration"
+          ],
+          "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+          "path": "memory/codex/100_ARCH_RULES.md",
+          "sha256_16": "8ba60df34dd03539",
+          "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
+          "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
+          "depends_on": [
+            "000.SOUL.v1"
+          ],
+          "affected_paths": [
+            "schemas/netark_guard_core.py",
+            ".netark/extensions/workspace-guard.ts"
+          ],
+          "parent_blueprint": null,
+          "shard_modules": [],
+          "stub_paths": []
+        }
+      ]
+    },
+    "200": {
+      "title": "200 Architecture Decisions & Epistemic Governance (架構決策與認識論治理)",
+      "count": 1,
+      "items": [
+        {
+          "node_id": "MEM-2026-0003",
+          "artifact_type": "adr",
+          "status": "verified",
+          "access_tier": "restricted",
+          "priority": "high",
+          "domain_code": "200",
+          "subdomain": null,
+          "artifact_track": "official",
+          "outbound_links": [
+            "000.SOUL.v1",
+            "100.ARCH-RULES.v1"
+          ],
+          "backlinks": [],
+          "node_key": "200.ADR-001.v1",
+          "facet_tags": [
+            "NetArk:Architecture:ADR:Codebook",
+            "Context:KV-Cache:Compression:MultiHost"
+          ],
+          "keywords": [
+            "ADR-001",
+            "Codebook Compression",
+            "Turn-1 Frozen Map",
+            "Prefix KV Cache",
+            "Portable Brain"
+          ],
+          "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+          "path": "memory/codex/200_DECISIONS.md",
+          "sha256_16": "01cd48a21ebdad27",
+          "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
+          "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
+          "depends_on": [
+            "000.SOUL.v1",
+            "100.ARCH-RULES.v1"
+          ],
+          "affected_paths": [
+            "scripts/auto_update_map.py",
+            ".netark/extensions/epistemic-gate.ts"
+          ],
+          "parent_blueprint": null,
+          "shard_modules": [],
+          "stub_paths": []
+        }
+      ]
+    },
+    "300": {
+      "title": "300 Core Domain Logic & Active Ledger (核心領域邏輯與活躍台帳)",
+      "count": 1,
+      "items": [
+        {
+          "node_id": "MEM-2026-0004",
+          "artifact_type": "spec",
+          "status": "verified",
+          "access_tier": "standard",
+          "priority": "high",
+          "domain_code": "300",
+          "subdomain": null,
+          "artifact_track": "official",
+          "outbound_links": [
+            "000.SOUL.v1"
+          ],
+          "backlinks": [],
+          "node_key": "300.LEDGER.v1",
+          "facet_tags": [
+            "NetArk:Core:Ledger:WorkOrders"
+          ],
+          "keywords": [
+            "LEDGER",
+            "Work Orders",
+            "Active Tasks"
+          ],
+          "summary_1line": "專案唯一活躍工單台帳 (<=80行)",
+          "path": "memory/LEDGER.md",
+          "sha256_16": "9fdf4089b034d340",
+          "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
+          "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
+          "depends_on": [
+            "000.SOUL.v1"
+          ],
+          "affected_paths": [],
+          "parent_blueprint": null,
+          "shard_modules": [],
+          "stub_paths": []
+        }
+      ]
+    },
+    "310": {
+      "title": "310 Library Wiki & Knowledge Graph Notes (知識庫 Wiki 與圖譜筆記)",
+      "count": 0,
+      "items": []
+    },
+    "320": {
+      "title": "320 Domain Workflows & SOPs (領域工作流程與標準作業程序)",
+      "count": 0,
+      "items": []
+    },
+    "330": {
+      "title": "330 Domain Glossaries & Ontologies (領域詞彙表與本體庫)",
+      "count": 0,
+      "items": []
+    },
+    "400": {
+      "title": "400 Data Schemas & Storage Protocols (資料綱要與儲存協定)",
+      "count": 0,
+      "items": []
+    },
+    "500": {
+      "title": "500 Agentic Harness & Prompt Contracts (代理控制軛與提示詞契約)",
+      "count": 0,
+      "items": []
+    },
+    "510": {
+      "title": "510 Model Pool & Routing Strategy (模型池與路由策略)",
+      "count": 0,
+      "items": []
+    },
+    "600": {
+      "title": "600 Verification Oracles & Testing (驗證神諭與測試基準)",
+      "count": 0,
+      "items": []
+    },
+    "700": {
+      "title": "700 Operations, Telemetry & Runtime (維運、遙測與執行期治理)",
+      "count": 0,
+      "items": []
+    },
+    "800": {
+      "title": "800 External Integrations & Tooling (外部整合與工具鏈)",
+      "count": 0,
+      "items": []
+    },
+    "900": {
+      "title": "900 Episodic Handover & Historical Archives (情節交接與歷史封存)",
+      "count": 1,
+      "items": [
+        {
+          "node_id": "MEM-2026-0005",
+          "artifact_type": "digest",
+          "status": "verified",
+          "access_tier": "standard",
+          "priority": "high",
+          "domain_code": "900",
+          "subdomain": "910",
+          "artifact_track": "wiki",
+          "outbound_links": [
+            "000.SOUL.v1"
+          ],
+          "backlinks": [],
+          "node_key": "900.HANDOVER.v1",
+          "facet_tags": [
+            "NetArk:Episodic:Handover:SessionState"
+          ],
+          "keywords": [
+            "HANDOVER",
+            "Session Continuity",
+            "Turn-1 Frozen Snapshot"
+          ],
+          "summary_1line": "微對話無縫交接快照 (<=65行)",
+          "path": "memory/episodic/HANDOVER.md",
+          "sha256_16": "39264213fd08debf",
+          "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
+          "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
+          "depends_on": [
+            "000.SOUL.v1"
+          ],
+          "affected_paths": [
+            ".netark/extensions/epistemic-gate.ts"
+          ],
+          "parent_blueprint": null,
+          "shard_modules": [],
+          "stub_paths": []
+        }
+      ]
+    },
+    "910": {
+      "title": "910 Episodic Handover & Session State (情節交接與會話狀態)",
+      "count": 0,
+      "items": []
+    }
+  },
+  "causal_topology_edges": [
+    {
+      "from": "MEM-2026-0004",
+      "to": "MEM-2026-0001",
+      "relation": "depends_on"
+    },
+    {
+      "from": "MEM-2026-0002",
+      "to": "MEM-2026-0001",
+      "relation": "depends_on"
+    },
+    {
+      "from": "MEM-2026-0003",
+      "to": "MEM-2026-0001",
+      "relation": "depends_on"
+    },
+    {
+      "from": "MEM-2026-0003",
+      "to": "MEM-2026-0002",
+      "relation": "depends_on"
+    },
+    {
+      "from": "MEM-2026-0005",
+      "to": "MEM-2026-0001",
+      "relation": "depends_on"
+    }
+  ],
+  "code_dependency_edges": [
+    {
+      "from": "scripts/auto_update_map.py",
+      "to": "schemas/netark_guard_core.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/auto_update_map.py",
+      "to": "schemas/schema_validator.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/sync_doc_metadata.py",
+      "to": "schemas/schema_validator.py",
+      "type": "py_import"
+    },
+    {
+      "from": ".netark/extensions/epistemic-gate.ts",
+      "to": "@earendil-works/pi-coding-agent",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/model-router.ts",
+      "to": "@earendil-works/pi-ai",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/model-router.ts",
+      "to": "@earendil-works/pi-coding-agent",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/workspace-guard.ts",
+      "to": "@earendil-works/pi-coding-agent",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/subagent/agents.ts",
+      "to": "@earendil-works/pi-coding-agent",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/subagent/index.ts",
+      "to": "@earendil-works/pi-agent-core",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/subagent/index.ts",
+      "to": "@earendil-works/pi-ai",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/subagent/index.ts",
+      "to": "@earendil-works/pi-coding-agent",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/subagent/index.ts",
+      "to": "@earendil-works/pi-tui",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/subagent/index.ts",
+      "to": ".netark/extensions/subagent/agents.ts",
+      "type": "ts_local_import"
+    }
+  ],
+  "code_intelligence_map": {
+    "schemas/netark_guard_core.py": {
+      "file_path": "schemas/netark_guard_core.py",
+      "language": "python",
+      "total_lines": 399,
+      "symbols": [
+        {
+          "name": "_is_printable_text",
+          "kind": "function",
+          "line_start": 47,
+          "line_end": 52
+        },
+        {
+          "name": "normalize_and_deobfuscate",
+          "kind": "function",
+          "line_start": 55,
+          "line_end": 97
+        },
+        {
+          "name": "calculate_shannon_entropy",
+          "kind": "function",
+          "line_start": 100,
+          "line_end": 107
+        },
+        {
+          "name": "load_enterprise_policy",
+          "kind": "function",
+          "line_start": 110,
+          "line_end": 120
+        },
+        {
+          "name": "scan_plaintext_secrets",
+          "kind": "function",
+          "line_start": 123,
+          "line_end": 150
+        },
+        {
+          "name": "redact_sensitive_payload",
+          "kind": "function",
+          "line_start": 156,
+          "line_end": 174
+        },
+        {
+          "name": "check_prewrite_secret_lint",
+          "kind": "function",
+          "line_start": 177,
+          "line_end": 191
+        },
+        {
+          "name": "_is_secret_path",
+          "kind": "function",
+          "line_start": 194,
+          "line_end": 199
+        },
+        {
+          "name": "_extract_subshells_and_segments",
+          "kind": "function",
+          "line_start": 202,
+          "line_end": 267
+        },
+        {
+          "name": "_inspect_inline_python_ast",
+          "kind": "function",
+          "line_start": 270,
+          "line_end": 291
+        },
+        {
+          "name": "_analyze_shell_ast",
+          "kind": "function",
+          "line_start": 294,
+          "line_end": 354
+        },
+        {
+          "name": "evaluate_command_and_path",
+          "kind": "function",
+          "line_start": 357,
+          "line_end": 380
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [],
+      "imported_by": [
+        "scripts/auto_update_map.py"
+      ],
+      "governing_specs": [
+        {
+          "node_id": "MEM-2026-0002",
+          "node_key": "100.ARCH-RULES.v1",
+          "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+          "path": "memory/codex/100_ARCH_RULES.md"
+        }
+      ]
+    },
+    "schemas/schema_validator.py": {
+      "file_path": "schemas/schema_validator.py",
+      "language": "python",
+      "total_lines": 758,
+      "symbols": [
+        {
+          "name": "load_valid_taxonomy_codes",
+          "kind": "function",
+          "line_start": 66,
+          "line_end": 86
+        },
+        {
+          "name": "parse_markdown_frontmatter",
+          "kind": "function",
+          "line_start": 96,
+          "line_end": 111
+        },
+        {
+          "name": "count_prose_lines",
+          "kind": "function",
+          "line_start": 114,
+          "line_end": 140
+        },
+        {
+          "name": "check_as05_portability",
+          "kind": "function",
+          "line_start": 143,
+          "line_end": 152
+        },
+        {
+          "name": "load_all_memory_nodes",
+          "kind": "function",
+          "line_start": 155,
+          "line_end": 169
+        },
+        {
+          "name": "check_as06_node_exclusivity",
+          "kind": "function",
+          "line_start": 172,
+          "line_end": 211
+        },
+        {
+          "name": "detect_unlinked_topology_references",
+          "kind": "function",
+          "line_start": 214,
+          "line_end": 262
+        },
+        {
+          "name": "generate_prescription_skeleton",
+          "kind": "function",
+          "line_start": 265,
+          "line_end": 350
+        },
+        {
+          "name": "validate_against_schema",
+          "kind": "function",
+          "line_start": 353,
+          "line_end": 364
+        },
+        {
+          "name": "validate_document",
+          "kind": "function",
+          "line_start": 367,
+          "line_end": 562
+        },
+        {
+          "name": "check_topology_graph",
+          "kind": "function",
+          "line_start": 565,
+          "line_end": 624
+        },
+        {
+          "name": "is_gitignored_path",
+          "kind": "function",
+          "line_start": 627,
+          "line_end": 666
+        },
+        {
+          "name": "main",
+          "kind": "function",
+          "line_start": 669,
+          "line_end": 754
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [],
+      "imported_by": [
+        "scripts/auto_update_map.py",
+        "scripts/sync_doc_metadata.py"
+      ],
+      "governing_specs": [
+        {
+          "node_id": "MEM-2026-0001",
+          "node_key": "000.SOUL.v1",
+          "summary_1line": "NetArk核心憲法：四級認知標籤、Official/Wiki雙軌制與反盲從Oracle鐵律",
+          "path": "memory/codex/000_SOUL.md"
+        }
+      ]
+    },
+    "scripts/auto_update_map.py": {
+      "file_path": "scripts/auto_update_map.py",
+      "language": "python",
+      "total_lines": 1192,
+      "symbols": [
+        {
+          "name": "get_brain_rel_dir",
+          "kind": "function",
+          "line_start": 84,
+          "line_end": 92
+        },
+        {
+          "name": "load_domain_layers",
+          "kind": "function",
+          "line_start": 95,
+          "line_end": 117
+        },
+        {
+          "name": "extract_wikilinks_outside_fenced_blocks",
+          "kind": "function",
+          "line_start": 120,
+          "line_end": 132
+        },
+        {
+          "name": "sha256_file",
+          "kind": "function",
+          "line_start": 135,
+          "line_end": 136
+        },
+        {
+          "name": "discover_workspace_code_files",
+          "kind": "function",
+          "line_start": 139,
+          "line_end": 175
+        },
+        {
+          "name": "heal_dead_links",
+          "kind": "function",
+          "line_start": 178,
+          "line_end": 243
+        },
+        {
+          "name": "scan_code_dependencies",
+          "kind": "function",
+          "line_start": 246,
+          "line_end": 306
+        },
+        {
+          "name": "build_code_intelligence_map",
+          "kind": "function",
+          "line_start": 309,
+          "line_end": 451
+        },
+        {
+          "name": "build_codebook_map",
+          "kind": "function",
+          "line_start": 454,
+          "line_end": 746
+        },
+        {
+          "name": "is_private_memory_path",
+          "kind": "function",
+          "line_start": 749,
+          "line_end": 751
+        },
+        {
+          "name": "_compile_index_subset",
+          "kind": "function",
+          "line_start": 754,
+          "line_end": 963
+        },
+        {
+          "name": "build_context_index",
+          "kind": "function",
+          "line_start": 966,
+          "line_end": 968
+        },
+        {
+          "name": "build_public_and_private_indices",
+          "kind": "function",
+          "line_start": 971,
+          "line_end": 1018
+        },
+        {
+          "name": "render_context_map_md",
+          "kind": "function",
+          "line_start": 1021,
+          "line_end": 1111
+        },
+        {
+          "name": "verify_no_plaintext_secrets_before_index_write",
+          "kind": "function",
+          "line_start": 1114,
+          "line_end": 1130
+        },
+        {
+          "name": "main",
+          "kind": "function",
+          "line_start": 1133,
+          "line_end": 1188
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/netark_guard_core.py",
+        "schemas/schema_validator.py"
+      ],
+      "imported_by": [],
+      "governing_specs": [
+        {
+          "node_id": "MEM-2026-0003",
+          "node_key": "200.ADR-001.v1",
+          "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+          "path": "memory/codex/200_DECISIONS.md"
+        }
+      ]
+    },
+    "scripts/sync_doc_metadata.py": {
+      "file_path": "scripts/sync_doc_metadata.py",
+      "language": "python",
+      "total_lines": 582,
+      "symbols": [
+        {
+          "name": "split_frontmatter_raw",
+          "kind": "function",
+          "line_start": 52,
+          "line_end": 59
+        },
+        {
+          "name": "surgical_set_scalar",
+          "kind": "function",
+          "line_start": 62,
+          "line_end": 88
+        },
+        {
+          "name": "surgical_remove_from_yaml_list",
+          "kind": "function",
+          "line_start": 91,
+          "line_end": 151
+        },
+        {
+          "name": "render_role_models_ssot_block",
+          "kind": "function",
+          "line_start": 154,
+          "line_end": 182
+        },
+        {
+          "name": "compute_actual_epistemic_counts",
+          "kind": "function",
+          "line_start": 185,
+          "line_end": 190
+        },
+        {
+          "name": "load_all_node_paths",
+          "kind": "function",
+          "line_start": 193,
+          "line_end": 216
+        },
+        {
+          "name": "sync_governed_markdown",
+          "kind": "function",
+          "line_start": 219,
+          "line_end": 371
+        },
+        {
+          "name": "allocate_next_node_id",
+          "kind": "function",
+          "line_start": 378,
+          "line_end": 401
+        },
+        {
+          "name": "init_governed_markdown",
+          "kind": "function",
+          "line_start": 404,
+          "line_end": 521
+        },
+        {
+          "name": "main",
+          "kind": "function",
+          "line_start": 524,
+          "line_end": 578
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/schema_validator.py"
+      ],
+      "imported_by": [],
+      "governing_specs": []
+    },
+    ".netark/extensions/epistemic-gate.ts": {
+      "file_path": ".netark/extensions/epistemic-gate.ts",
+      "language": "typescript",
+      "total_lines": 678,
+      "symbols": [
+        {
+          "name": "CATALOG_STAGE2_THRESHOLD",
+          "kind": "const",
+          "line_start": 19,
+          "line_end": 19
+        },
+        {
+          "name": "CODE_SOFT_LINE_LIMIT",
+          "kind": "const",
+          "line_start": 20,
+          "line_end": 20
+        },
+        {
+          "name": "CODE_HARD_LINE_LIMIT",
+          "kind": "const",
+          "line_start": 21,
+          "line_end": 21
+        },
+        {
+          "name": "readHandoverBodySnapshot",
+          "kind": "function",
+          "line_start": 23,
+          "line_end": 23
+        },
+        {
+          "name": "buildProgressiveContextSummary",
+          "kind": "function",
+          "line_start": 41,
+          "line_end": 41
+        },
+        {
+          "name": "findAffectedMemoryNodes",
+          "kind": "function",
+          "line_start": 150,
+          "line_end": 150
+        },
+        {
+          "name": "getSessionPinnedContextSummary",
+          "kind": "function",
+          "line_start": 195,
+          "line_end": 195
+        },
+        {
+          "name": "clearSessionPinnedContextSummaries",
+          "kind": "function",
+          "line_start": 206,
+          "line_end": 206
+        },
+        {
+          "name": "NetArkEpistemicBridge",
+          "kind": "interface",
+          "line_start": 210,
+          "line_end": 210
+        },
+        {
+          "name": "queryLibraryNodes",
+          "kind": "function",
+          "line_start": 227,
+          "line_end": 227
+        },
+        {
+          "name": "netarkEpistemicBridge",
+          "kind": "const",
+          "line_start": 365,
+          "line_end": 365
+        },
+        {
+          "name": "fridayEpistemicBridge",
+          "kind": "const",
+          "line_start": 375,
+          "line_end": 375
+        }
+      ],
+      "pi_registrations": [
+        {
+          "kind": "tool",
+          "name": "query_library",
+          "line": 384
+        },
+        {
+          "kind": "hook",
+          "name": "session_shutdown",
+          "line": 406
+        },
+        {
+          "kind": "hook",
+          "name": "session_start",
+          "line": 490
+        },
+        {
+          "kind": "hook",
+          "name": "before_agent_start",
+          "line": 495
+        },
+        {
+          "kind": "hook",
+          "name": "tool_call",
+          "line": 509
+        },
+        {
+          "kind": "hook",
+          "name": "tool_result",
+          "line": 551
+        }
+      ],
+      "command_conflicts": [],
+      "imports": [
+        "@earendil-works/pi-coding-agent"
+      ],
+      "imported_by": [],
+      "governing_specs": [
+        {
+          "node_id": "MEM-2026-0003",
+          "node_key": "200.ADR-001.v1",
+          "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+          "path": "memory/codex/200_DECISIONS.md"
+        },
+        {
+          "node_id": "MEM-2026-0005",
+          "node_key": "900.HANDOVER.v1",
+          "summary_1line": "微對話無縫交接快照 (<=65行)",
+          "path": "memory/episodic/HANDOVER.md"
+        }
+      ]
+    },
+    ".netark/extensions/model-router.ts": {
+      "file_path": ".netark/extensions/model-router.ts",
+      "language": "typescript",
+      "total_lines": 3283,
+      "symbols": [
+        {
+          "name": "NetArkEpistemicBridge",
+          "kind": "interface",
+          "line_start": 32,
+          "line_end": 32
+        },
+        {
+          "name": "DEFAULT_ROLE_MODELS",
+          "kind": "const",
+          "line_start": 79,
+          "line_end": 79
+        },
+        {
+          "name": "RoleName",
+          "kind": "type",
+          "line_start": 89,
+          "line_end": 89
+        },
+        {
+          "name": "SpecialistRole",
+          "kind": "type",
+          "line_start": 90,
+          "line_end": 90
+        },
+        {
+          "name": "StrategyMode",
+          "kind": "type",
+          "line_start": 91,
+          "line_end": 91
+        },
+        {
+          "name": "ROLE_FALLBACK_CHAINS",
+          "kind": "const",
+          "line_start": 94,
+          "line_end": 94
+        },
+        {
+          "name": "ROLE_MODELS",
+          "kind": "const",
+          "line_start": 140,
+          "line_end": 140
+        },
+        {
+          "name": "syncNvidiaModelsFromStore",
+          "kind": "function",
+          "line_start": 220,
+          "line_end": 220
+        },
+        {
+          "name": "pruneDeprecatedModelFromModelsJson",
+          "kind": "function",
+          "line_start": 335,
+          "line_end": 335
+        },
+        {
+          "name": "getProviderKeyPool",
+          "kind": "function",
+          "line_start": 466,
+          "line_end": 466
+        },
+        {
+          "name": "saveProviderKeyPool",
+          "kind": "function",
+          "line_start": 493,
+          "line_end": 493
+        },
+        {
+          "name": "acquireStickyProviderKey",
+          "kind": "function",
+          "line_start": 520,
+          "line_end": 520
+        },
+        {
+          "name": "buildSpecialistTools",
+          "kind": "function",
+          "line_start": 685,
+          "line_end": 685
+        },
+        {
+          "name": "executeSpecialistToolCall",
+          "kind": "function",
+          "line_start": 712,
+          "line_end": 712
+        },
+        {
+          "name": "hasImageAttachment",
+          "kind": "function",
+          "line_start": 904,
+          "line_end": 904
+        }
+      ],
+      "pi_registrations": [
+        {
+          "kind": "hook",
+          "name": "session_start",
+          "line": 1104
+        },
+        {
+          "kind": "hook",
+          "name": "session_shutdown",
+          "line": 1109
+        },
+        {
+          "kind": "hook",
+          "name": "turn_start",
+          "line": 1181
+        },
+        {
+          "kind": "hook",
+          "name": "before_agent_start",
+          "line": 1185
+        },
+        {
+          "kind": "hook",
+          "name": "tool_call",
+          "line": 1305
+        },
+        {
+          "kind": "tool",
+          "name": "dispatch_specialist",
+          "line": 1429
+        },
+        {
+          "kind": "command",
+          "name": "/mode",
+          "line": 2653
+        },
+        {
+          "kind": "command",
+          "name": "/context",
+          "line": 3262
+        }
+      ],
+      "command_conflicts": [],
+      "imports": [
+        "@earendil-works/pi-ai",
+        "@earendil-works/pi-coding-agent"
+      ],
+      "imported_by": [],
+      "governing_specs": []
+    },
+    ".netark/extensions/session-handover.ts": {
+      "file_path": ".netark/extensions/session-handover.ts",
+      "language": "typescript",
+      "total_lines": 112,
+      "symbols": [
+        {
+          "name": "HANDOVER_SOFT_THRESHOLD",
+          "kind": "const",
+          "line_start": 15,
+          "line_end": 15
+        },
+        {
+          "name": "HANDOVER_HARD_THRESHOLD",
+          "kind": "const",
+          "line_start": 16,
+          "line_end": 16
+        },
+        {
+          "name": "HANDOVER_REMIND_STEP_TOKENS",
+          "kind": "const",
+          "line_start": 17,
+          "line_end": 17
+        },
+        {
+          "name": "buildHandoverMandateMessage",
+          "kind": "function",
+          "line_start": 19,
+          "line_end": 19
+        },
+        {
+          "name": "sessionHandoverExtension",
+          "kind": "function",
+          "line_start": 46,
+          "line_end": 46
+        }
+      ],
+      "pi_registrations": [
+        {
+          "kind": "hook",
+          "name": "session_start",
+          "line": 50
+        },
+        {
+          "kind": "command",
+          "name": "/handover",
+          "line": 55
+        },
+        {
+          "kind": "hook",
+          "name": "before_agent_start",
+          "line": 73
+        }
+      ],
+      "command_conflicts": [
+        "/handover shadows .netark/prompts/handover.md (L55)"
+      ],
+      "imports": [],
+      "imported_by": [],
+      "governing_specs": []
+    },
+    ".netark/extensions/web-research.ts": {
+      "file_path": ".netark/extensions/web-research.ts",
+      "language": "typescript",
+      "total_lines": 591,
+      "symbols": [
+        {
+          "name": "OutboundCheckResult",
+          "kind": "interface",
+          "line_start": 5,
+          "line_end": 5
+        },
+        {
+          "name": "WebPageSnippet",
+          "kind": "interface",
+          "line_start": 10,
+          "line_end": 10
+        },
+        {
+          "name": "NemotronGuardVerdict",
+          "kind": "interface",
+          "line_start": 17,
+          "line_end": 17
+        },
+        {
+          "name": "IPI_DETERMINISTIC_RE",
+          "kind": "const",
+          "line_start": 32,
+          "line_end": 32
+        },
+        {
+          "name": "validateOutboundSafety",
+          "kind": "function",
+          "line_start": 35,
+          "line_end": 35
+        },
+        {
+          "name": "loadNvidiaApiKeys",
+          "kind": "function",
+          "line_start": 74,
+          "line_end": 74
+        },
+        {
+          "name": "htmlToCleanMarkdown",
+          "kind": "function",
+          "line_start": 110,
+          "line_end": 110
+        },
+        {
+          "name": "hybridSearchAndFetch",
+          "kind": "function",
+          "line_start": 140,
+          "line_end": 140
+        },
+        {
+          "name": "evaluateWebContentWithNemotronGuard",
+          "kind": "function",
+          "line_start": 317,
+          "line_end": 317
+        },
+        {
+          "name": "synthesizeWithScout",
+          "kind": "function",
+          "line_start": 419,
+          "line_end": 419
+        },
+        {
+          "name": "registerWebResearchExtension",
+          "kind": "function",
+          "line_start": 510,
+          "line_end": 510
+        }
+      ],
+      "pi_registrations": [
+        {
+          "kind": "tool",
+          "name": "web_research",
+          "line": 513
+        }
+      ],
+      "command_conflicts": [],
+      "imports": [],
+      "imported_by": [],
+      "governing_specs": []
+    },
+    ".netark/extensions/workspace-guard.ts": {
+      "file_path": ".netark/extensions/workspace-guard.ts",
+      "language": "typescript",
+      "total_lines": 863,
+      "symbols": [
+        {
+          "name": "formatRemediation",
+          "kind": "function",
+          "line_start": 128,
+          "line_end": 128
+        },
+        {
+          "name": "parseShellCommandQuoteAware",
+          "kind": "function",
+          "line_start": 140,
+          "line_end": 140
+        },
+        {
+          "name": "isReadOnlyBashCommand",
+          "kind": "function",
+          "line_start": 266,
+          "line_end": 266
+        },
+        {
+          "name": "checkPortabilityViolation",
+          "kind": "function",
+          "line_start": 354,
+          "line_end": 354
+        },
+        {
+          "name": "extractPathsFromBash",
+          "kind": "function",
+          "line_start": 404,
+          "line_end": 404
+        }
+      ],
+      "pi_registrations": [
+        {
+          "kind": "hook",
+          "name": "session_start",
+          "line": 597
+        },
+        {
+          "kind": "hook",
+          "name": "user_bash",
+          "line": 603
+        },
+        {
+          "kind": "hook",
+          "name": "tool_call",
+          "line": 627
+        },
+        {
+          "kind": "command",
+          "name": "/guard",
+          "line": 802
+        }
+      ],
+      "command_conflicts": [],
+      "imports": [
+        "@earendil-works/pi-coding-agent"
+      ],
+      "imported_by": [],
+      "governing_specs": [
+        {
+          "node_id": "MEM-2026-0002",
+          "node_key": "100.ARCH-RULES.v1",
+          "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+          "path": "memory/codex/100_ARCH_RULES.md"
+        }
+      ]
+    },
+    ".netark/extensions/subagent/agents.ts": {
+      "file_path": ".netark/extensions/subagent/agents.ts",
+      "language": "typescript",
+      "total_lines": 157,
+      "symbols": [
+        {
+          "name": "AgentScope",
+          "kind": "type",
+          "line_start": 9,
+          "line_end": 9
+        },
+        {
+          "name": "AgentConfig",
+          "kind": "interface",
+          "line_start": 11,
+          "line_end": 11
+        },
+        {
+          "name": "AgentDiscoveryResult",
+          "kind": "interface",
+          "line_start": 21,
+          "line_end": 21
+        },
+        {
+          "name": "discoverAgents",
+          "kind": "function",
+          "line_start": 128,
+          "line_end": 128
+        },
+        {
+          "name": "formatAgentList",
+          "kind": "function",
+          "line_start": 149,
+          "line_end": 149
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "@earendil-works/pi-coding-agent"
+      ],
+      "imported_by": [
+        ".netark/extensions/subagent/index.ts"
+      ],
+      "governing_specs": []
+    },
+    ".netark/extensions/subagent/index.ts": {
+      "file_path": ".netark/extensions/subagent/index.ts",
+      "language": "typescript",
+      "total_lines": 1185,
+      "symbols": [],
+      "pi_registrations": [
+        {
+          "kind": "tool",
+          "name": "subagent",
+          "line": 578
+        }
+      ],
+      "command_conflicts": [],
+      "imports": [
+        "@earendil-works/pi-agent-core",
+        "@earendil-works/pi-ai",
+        "@earendil-works/pi-coding-agent",
+        "@earendil-works/pi-tui",
+        ".netark/extensions/subagent/agents.ts"
+      ],
+      "imported_by": [],
+      "governing_specs": []
+    }
+  },
+  "codebook_map": {
+    "tier": "L1-Full",
+    "total_nodes": 5,
+    "total_scripts": 11,
+    "raw_char_estimate": 20837,
+    "compact_char_count": 1205,
+    "compression_ratio_pct": 94.2,
+    "dirs": {
+      "M": "memory/",
+      "C": "memory/codex/",
+      "E": "memory/episodic/",
+      "H": "schemas/",
+      "S": "scripts/",
+      "X": ".netark/extensions/",
+      "XS": ".netark/extensions/subagent/"
+    },
+    "scripts": {
+      "C0": "schemas/schema_validator.py",
+      "C1": "schemas/netark_guard_core.py",
+      "C2": "scripts/auto_update_map.py",
+      "C3": "scripts/sync_doc_metadata.py",
+      "C4": ".netark/extensions/epistemic-gate.ts",
+      "C5": ".netark/extensions/workspace-guard.ts",
+      "C6": ".netark/extensions/model-router.ts",
+      "C7": ".netark/extensions/session-handover.ts",
+      "C8": ".netark/extensions/web-research.ts",
+      "C9": ".netark/extensions/subagent/agents.ts",
+      "C10": ".netark/extensions/subagent/index.ts"
+    },
+    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 11 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-758) | C1=H:netark_guard_core.py(L1-399) | C2=S:auto_update_map.py(L1-1192)\n  C3=S:sync_doc_metadata.py(L1-582) | C4=X:epistemic-gate.ts(L1-678) | C5=X:workspace-guard.ts(L1-863)\n  C6=X:model-router.ts(L1-3283) | C7=X:session-handover.ts(L1-112) | C8=X:web-research.ts(L1-591)\n  C9=XS:agents.ts(L1-157) | C10=XS:index.ts(L1-1185)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C5 | 200 => C2,C4 | 900 => C4\n  [AST] C2 -> C1,C0 | C3 -> C0 | C10 -> C9\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
+    "reverse_lookup": {
+      "C0": {
+        "kind": "script",
+        "code": "C0",
+        "path": "schemas/schema_validator.py",
+        "dir_code": "H",
+        "line_range": "L1-758",
+        "total_lines": 758,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "load_valid_taxonomy_codes",
+            "kind": "function",
+            "line_start": 66,
+            "line_end": 86
+          },
+          {
+            "name": "parse_markdown_frontmatter",
+            "kind": "function",
+            "line_start": 96,
+            "line_end": 111
+          },
+          {
+            "name": "count_prose_lines",
+            "kind": "function",
+            "line_start": 114,
+            "line_end": 140
+          },
+          {
+            "name": "check_as05_portability",
+            "kind": "function",
+            "line_start": 143,
+            "line_end": 152
+          },
+          {
+            "name": "load_all_memory_nodes",
+            "kind": "function",
+            "line_start": 155,
+            "line_end": 169
+          },
+          {
+            "name": "check_as06_node_exclusivity",
+            "kind": "function",
+            "line_start": 172,
+            "line_end": 211
+          },
+          {
+            "name": "detect_unlinked_topology_references",
+            "kind": "function",
+            "line_start": 214,
+            "line_end": 262
+          },
+          {
+            "name": "generate_prescription_skeleton",
+            "kind": "function",
+            "line_start": 265,
+            "line_end": 350
+          },
+          {
+            "name": "validate_against_schema",
+            "kind": "function",
+            "line_start": 353,
+            "line_end": 364
+          },
+          {
+            "name": "validate_document",
+            "kind": "function",
+            "line_start": 367,
+            "line_end": 562
+          },
+          {
+            "name": "check_topology_graph",
+            "kind": "function",
+            "line_start": 565,
+            "line_end": 624
+          },
+          {
+            "name": "is_gitignored_path",
+            "kind": "function",
+            "line_start": 627,
+            "line_end": 666
+          },
+          {
+            "name": "main",
+            "kind": "function",
+            "line_start": 669,
+            "line_end": 754
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": [
+          {
+            "node_id": "MEM-2026-0001",
+            "node_key": "000.SOUL.v1",
+            "summary_1line": "NetArk核心憲法：四級認知標籤、Official/Wiki雙軌制與反盲從Oracle鐵律",
+            "path": "memory/codex/000_SOUL.md"
+          }
+        ]
+      },
+      "C1": {
+        "kind": "script",
+        "code": "C1",
+        "path": "schemas/netark_guard_core.py",
+        "dir_code": "H",
+        "line_range": "L1-399",
+        "total_lines": 399,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "_is_printable_text",
+            "kind": "function",
+            "line_start": 47,
+            "line_end": 52
+          },
+          {
+            "name": "normalize_and_deobfuscate",
+            "kind": "function",
+            "line_start": 55,
+            "line_end": 97
+          },
+          {
+            "name": "calculate_shannon_entropy",
+            "kind": "function",
+            "line_start": 100,
+            "line_end": 107
+          },
+          {
+            "name": "load_enterprise_policy",
+            "kind": "function",
+            "line_start": 110,
+            "line_end": 120
+          },
+          {
+            "name": "scan_plaintext_secrets",
+            "kind": "function",
+            "line_start": 123,
+            "line_end": 150
+          },
+          {
+            "name": "redact_sensitive_payload",
+            "kind": "function",
+            "line_start": 156,
+            "line_end": 174
+          },
+          {
+            "name": "check_prewrite_secret_lint",
+            "kind": "function",
+            "line_start": 177,
+            "line_end": 191
+          },
+          {
+            "name": "_is_secret_path",
+            "kind": "function",
+            "line_start": 194,
+            "line_end": 199
+          },
+          {
+            "name": "_extract_subshells_and_segments",
+            "kind": "function",
+            "line_start": 202,
+            "line_end": 267
+          },
+          {
+            "name": "_inspect_inline_python_ast",
+            "kind": "function",
+            "line_start": 270,
+            "line_end": 291
+          },
+          {
+            "name": "_analyze_shell_ast",
+            "kind": "function",
+            "line_start": 294,
+            "line_end": 354
+          },
+          {
+            "name": "evaluate_command_and_path",
+            "kind": "function",
+            "line_start": 357,
+            "line_end": 380
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": [
+          {
+            "node_id": "MEM-2026-0002",
+            "node_key": "100.ARCH-RULES.v1",
+            "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+            "path": "memory/codex/100_ARCH_RULES.md"
+          }
+        ]
+      },
+      "C2": {
+        "kind": "script",
+        "code": "C2",
+        "path": "scripts/auto_update_map.py",
+        "dir_code": "S",
+        "line_range": "L1-1192",
+        "total_lines": 1192,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "get_brain_rel_dir",
+            "kind": "function",
+            "line_start": 84,
+            "line_end": 92
+          },
+          {
+            "name": "load_domain_layers",
+            "kind": "function",
+            "line_start": 95,
+            "line_end": 117
+          },
+          {
+            "name": "extract_wikilinks_outside_fenced_blocks",
+            "kind": "function",
+            "line_start": 120,
+            "line_end": 132
+          },
+          {
+            "name": "sha256_file",
+            "kind": "function",
+            "line_start": 135,
+            "line_end": 136
+          },
+          {
+            "name": "discover_workspace_code_files",
+            "kind": "function",
+            "line_start": 139,
+            "line_end": 175
+          },
+          {
+            "name": "heal_dead_links",
+            "kind": "function",
+            "line_start": 178,
+            "line_end": 243
+          },
+          {
+            "name": "scan_code_dependencies",
+            "kind": "function",
+            "line_start": 246,
+            "line_end": 306
+          },
+          {
+            "name": "build_code_intelligence_map",
+            "kind": "function",
+            "line_start": 309,
+            "line_end": 451
+          },
+          {
+            "name": "build_codebook_map",
+            "kind": "function",
+            "line_start": 454,
+            "line_end": 746
+          },
+          {
+            "name": "is_private_memory_path",
+            "kind": "function",
+            "line_start": 749,
+            "line_end": 751
+          },
+          {
+            "name": "_compile_index_subset",
+            "kind": "function",
+            "line_start": 754,
+            "line_end": 963
+          },
+          {
+            "name": "build_context_index",
+            "kind": "function",
+            "line_start": 966,
+            "line_end": 968
+          },
+          {
+            "name": "build_public_and_private_indices",
+            "kind": "function",
+            "line_start": 971,
+            "line_end": 1018
+          },
+          {
+            "name": "render_context_map_md",
+            "kind": "function",
+            "line_start": 1021,
+            "line_end": 1111
+          },
+          {
+            "name": "verify_no_plaintext_secrets_before_index_write",
+            "kind": "function",
+            "line_start": 1114,
+            "line_end": 1130
+          },
+          {
+            "name": "main",
+            "kind": "function",
+            "line_start": 1133,
+            "line_end": 1188
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": [
+          {
+            "node_id": "MEM-2026-0003",
+            "node_key": "200.ADR-001.v1",
+            "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+            "path": "memory/codex/200_DECISIONS.md"
+          }
+        ]
+      },
+      "C3": {
+        "kind": "script",
+        "code": "C3",
+        "path": "scripts/sync_doc_metadata.py",
+        "dir_code": "S",
+        "line_range": "L1-582",
+        "total_lines": 582,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "split_frontmatter_raw",
+            "kind": "function",
+            "line_start": 52,
+            "line_end": 59
+          },
+          {
+            "name": "surgical_set_scalar",
+            "kind": "function",
+            "line_start": 62,
+            "line_end": 88
+          },
+          {
+            "name": "surgical_remove_from_yaml_list",
+            "kind": "function",
+            "line_start": 91,
+            "line_end": 151
+          },
+          {
+            "name": "render_role_models_ssot_block",
+            "kind": "function",
+            "line_start": 154,
+            "line_end": 182
+          },
+          {
+            "name": "compute_actual_epistemic_counts",
+            "kind": "function",
+            "line_start": 185,
+            "line_end": 190
+          },
+          {
+            "name": "load_all_node_paths",
+            "kind": "function",
+            "line_start": 193,
+            "line_end": 216
+          },
+          {
+            "name": "sync_governed_markdown",
+            "kind": "function",
+            "line_start": 219,
+            "line_end": 371
+          },
+          {
+            "name": "allocate_next_node_id",
+            "kind": "function",
+            "line_start": 378,
+            "line_end": 401
+          },
+          {
+            "name": "init_governed_markdown",
+            "kind": "function",
+            "line_start": 404,
+            "line_end": 521
+          },
+          {
+            "name": "main",
+            "kind": "function",
+            "line_start": 524,
+            "line_end": 578
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C4": {
+        "kind": "script",
+        "code": "C4",
+        "path": ".netark/extensions/epistemic-gate.ts",
+        "dir_code": "X",
+        "line_range": "L1-678",
+        "total_lines": 678,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "CATALOG_STAGE2_THRESHOLD",
+            "kind": "const",
+            "line_start": 19,
+            "line_end": 19
+          },
+          {
+            "name": "CODE_SOFT_LINE_LIMIT",
+            "kind": "const",
+            "line_start": 20,
+            "line_end": 20
+          },
+          {
+            "name": "CODE_HARD_LINE_LIMIT",
+            "kind": "const",
+            "line_start": 21,
+            "line_end": 21
+          },
+          {
+            "name": "readHandoverBodySnapshot",
+            "kind": "function",
+            "line_start": 23,
+            "line_end": 23
+          },
+          {
+            "name": "buildProgressiveContextSummary",
+            "kind": "function",
+            "line_start": 41,
+            "line_end": 41
+          },
+          {
+            "name": "findAffectedMemoryNodes",
+            "kind": "function",
+            "line_start": 150,
+            "line_end": 150
+          },
+          {
+            "name": "getSessionPinnedContextSummary",
+            "kind": "function",
+            "line_start": 195,
+            "line_end": 195
+          },
+          {
+            "name": "clearSessionPinnedContextSummaries",
+            "kind": "function",
+            "line_start": 206,
+            "line_end": 206
+          },
+          {
+            "name": "NetArkEpistemicBridge",
+            "kind": "interface",
+            "line_start": 210,
+            "line_end": 210
+          },
+          {
+            "name": "queryLibraryNodes",
+            "kind": "function",
+            "line_start": 227,
+            "line_end": 227
+          },
+          {
+            "name": "netarkEpistemicBridge",
+            "kind": "const",
+            "line_start": 365,
+            "line_end": 365
+          },
+          {
+            "name": "fridayEpistemicBridge",
+            "kind": "const",
+            "line_start": 375,
+            "line_end": 375
+          }
+        ],
+        "pi_registrations": [
+          {
+            "kind": "tool",
+            "name": "query_library",
+            "line": 384
+          },
+          {
+            "kind": "hook",
+            "name": "session_shutdown",
+            "line": 406
+          },
+          {
+            "kind": "hook",
+            "name": "session_start",
+            "line": 490
+          },
+          {
+            "kind": "hook",
+            "name": "before_agent_start",
+            "line": 495
+          },
+          {
+            "kind": "hook",
+            "name": "tool_call",
+            "line": 509
+          },
+          {
+            "kind": "hook",
+            "name": "tool_result",
+            "line": 551
+          }
+        ],
+        "governing_specs": [
+          {
+            "node_id": "MEM-2026-0003",
+            "node_key": "200.ADR-001.v1",
+            "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+            "path": "memory/codex/200_DECISIONS.md"
+          },
+          {
+            "node_id": "MEM-2026-0005",
+            "node_key": "900.HANDOVER.v1",
+            "summary_1line": "微對話無縫交接快照 (<=65行)",
+            "path": "memory/episodic/HANDOVER.md"
+          }
+        ]
+      },
+      "C5": {
+        "kind": "script",
+        "code": "C5",
+        "path": ".netark/extensions/workspace-guard.ts",
+        "dir_code": "X",
+        "line_range": "L1-863",
+        "total_lines": 863,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "formatRemediation",
+            "kind": "function",
+            "line_start": 128,
+            "line_end": 128
+          },
+          {
+            "name": "parseShellCommandQuoteAware",
+            "kind": "function",
+            "line_start": 140,
+            "line_end": 140
+          },
+          {
+            "name": "isReadOnlyBashCommand",
+            "kind": "function",
+            "line_start": 266,
+            "line_end": 266
+          },
+          {
+            "name": "checkPortabilityViolation",
+            "kind": "function",
+            "line_start": 354,
+            "line_end": 354
+          },
+          {
+            "name": "extractPathsFromBash",
+            "kind": "function",
+            "line_start": 404,
+            "line_end": 404
+          }
+        ],
+        "pi_registrations": [
+          {
+            "kind": "hook",
+            "name": "session_start",
+            "line": 597
+          },
+          {
+            "kind": "hook",
+            "name": "user_bash",
+            "line": 603
+          },
+          {
+            "kind": "hook",
+            "name": "tool_call",
+            "line": 627
+          },
+          {
+            "kind": "command",
+            "name": "/guard",
+            "line": 802
+          }
+        ],
+        "governing_specs": [
+          {
+            "node_id": "MEM-2026-0002",
+            "node_key": "100.ARCH-RULES.v1",
+            "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+            "path": "memory/codex/100_ARCH_RULES.md"
+          }
+        ]
+      },
+      "C6": {
+        "kind": "script",
+        "code": "C6",
+        "path": ".netark/extensions/model-router.ts",
+        "dir_code": "X",
+        "line_range": "L1-3283",
+        "total_lines": 3283,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "NetArkEpistemicBridge",
+            "kind": "interface",
+            "line_start": 32,
+            "line_end": 32
+          },
+          {
+            "name": "DEFAULT_ROLE_MODELS",
+            "kind": "const",
+            "line_start": 79,
+            "line_end": 79
+          },
+          {
+            "name": "RoleName",
+            "kind": "type",
+            "line_start": 89,
+            "line_end": 89
+          },
+          {
+            "name": "SpecialistRole",
+            "kind": "type",
+            "line_start": 90,
+            "line_end": 90
+          },
+          {
+            "name": "StrategyMode",
+            "kind": "type",
+            "line_start": 91,
+            "line_end": 91
+          },
+          {
+            "name": "ROLE_FALLBACK_CHAINS",
+            "kind": "const",
+            "line_start": 94,
+            "line_end": 94
+          },
+          {
+            "name": "ROLE_MODELS",
+            "kind": "const",
+            "line_start": 140,
+            "line_end": 140
+          },
+          {
+            "name": "syncNvidiaModelsFromStore",
+            "kind": "function",
+            "line_start": 220,
+            "line_end": 220
+          },
+          {
+            "name": "pruneDeprecatedModelFromModelsJson",
+            "kind": "function",
+            "line_start": 335,
+            "line_end": 335
+          },
+          {
+            "name": "getProviderKeyPool",
+            "kind": "function",
+            "line_start": 466,
+            "line_end": 466
+          },
+          {
+            "name": "saveProviderKeyPool",
+            "kind": "function",
+            "line_start": 493,
+            "line_end": 493
+          },
+          {
+            "name": "acquireStickyProviderKey",
+            "kind": "function",
+            "line_start": 520,
+            "line_end": 520
+          },
+          {
+            "name": "buildSpecialistTools",
+            "kind": "function",
+            "line_start": 685,
+            "line_end": 685
+          },
+          {
+            "name": "executeSpecialistToolCall",
+            "kind": "function",
+            "line_start": 712,
+            "line_end": 712
+          },
+          {
+            "name": "hasImageAttachment",
+            "kind": "function",
+            "line_start": 904,
+            "line_end": 904
+          }
+        ],
+        "pi_registrations": [
+          {
+            "kind": "hook",
+            "name": "session_start",
+            "line": 1104
+          },
+          {
+            "kind": "hook",
+            "name": "session_shutdown",
+            "line": 1109
+          },
+          {
+            "kind": "hook",
+            "name": "turn_start",
+            "line": 1181
+          },
+          {
+            "kind": "hook",
+            "name": "before_agent_start",
+            "line": 1185
+          },
+          {
+            "kind": "hook",
+            "name": "tool_call",
+            "line": 1305
+          },
+          {
+            "kind": "tool",
+            "name": "dispatch_specialist",
+            "line": 1429
+          },
+          {
+            "kind": "command",
+            "name": "/mode",
+            "line": 2653
+          },
+          {
+            "kind": "command",
+            "name": "/context",
+            "line": 3262
+          }
+        ],
+        "governing_specs": []
+      },
+      "C7": {
+        "kind": "script",
+        "code": "C7",
+        "path": ".netark/extensions/session-handover.ts",
+        "dir_code": "X",
+        "line_range": "L1-112",
+        "total_lines": 112,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "HANDOVER_SOFT_THRESHOLD",
+            "kind": "const",
+            "line_start": 15,
+            "line_end": 15
+          },
+          {
+            "name": "HANDOVER_HARD_THRESHOLD",
+            "kind": "const",
+            "line_start": 16,
+            "line_end": 16
+          },
+          {
+            "name": "HANDOVER_REMIND_STEP_TOKENS",
+            "kind": "const",
+            "line_start": 17,
+            "line_end": 17
+          },
+          {
+            "name": "buildHandoverMandateMessage",
+            "kind": "function",
+            "line_start": 19,
+            "line_end": 19
+          },
+          {
+            "name": "sessionHandoverExtension",
+            "kind": "function",
+            "line_start": 46,
+            "line_end": 46
+          }
+        ],
+        "pi_registrations": [
+          {
+            "kind": "hook",
+            "name": "session_start",
+            "line": 50
+          },
+          {
+            "kind": "command",
+            "name": "/handover",
+            "line": 55
+          },
+          {
+            "kind": "hook",
+            "name": "before_agent_start",
+            "line": 73
+          }
+        ],
+        "governing_specs": []
+      },
+      "C8": {
+        "kind": "script",
+        "code": "C8",
+        "path": ".netark/extensions/web-research.ts",
+        "dir_code": "X",
+        "line_range": "L1-591",
+        "total_lines": 591,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "OutboundCheckResult",
+            "kind": "interface",
+            "line_start": 5,
+            "line_end": 5
+          },
+          {
+            "name": "WebPageSnippet",
+            "kind": "interface",
+            "line_start": 10,
+            "line_end": 10
+          },
+          {
+            "name": "NemotronGuardVerdict",
+            "kind": "interface",
+            "line_start": 17,
+            "line_end": 17
+          },
+          {
+            "name": "IPI_DETERMINISTIC_RE",
+            "kind": "const",
+            "line_start": 32,
+            "line_end": 32
+          },
+          {
+            "name": "validateOutboundSafety",
+            "kind": "function",
+            "line_start": 35,
+            "line_end": 35
+          },
+          {
+            "name": "loadNvidiaApiKeys",
+            "kind": "function",
+            "line_start": 74,
+            "line_end": 74
+          },
+          {
+            "name": "htmlToCleanMarkdown",
+            "kind": "function",
+            "line_start": 110,
+            "line_end": 110
+          },
+          {
+            "name": "hybridSearchAndFetch",
+            "kind": "function",
+            "line_start": 140,
+            "line_end": 140
+          },
+          {
+            "name": "evaluateWebContentWithNemotronGuard",
+            "kind": "function",
+            "line_start": 317,
+            "line_end": 317
+          },
+          {
+            "name": "synthesizeWithScout",
+            "kind": "function",
+            "line_start": 419,
+            "line_end": 419
+          },
+          {
+            "name": "registerWebResearchExtension",
+            "kind": "function",
+            "line_start": 510,
+            "line_end": 510
+          }
+        ],
+        "pi_registrations": [
+          {
+            "kind": "tool",
+            "name": "web_research",
+            "line": 513
+          }
+        ],
+        "governing_specs": []
+      },
+      "C9": {
+        "kind": "script",
+        "code": "C9",
+        "path": ".netark/extensions/subagent/agents.ts",
+        "dir_code": "XS",
+        "line_range": "L1-157",
+        "total_lines": 157,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "AgentScope",
+            "kind": "type",
+            "line_start": 9,
+            "line_end": 9
+          },
+          {
+            "name": "AgentConfig",
+            "kind": "interface",
+            "line_start": 11,
+            "line_end": 11
+          },
+          {
+            "name": "AgentDiscoveryResult",
+            "kind": "interface",
+            "line_start": 21,
+            "line_end": 21
+          },
+          {
+            "name": "discoverAgents",
+            "kind": "function",
+            "line_start": 128,
+            "line_end": 128
+          },
+          {
+            "name": "formatAgentList",
+            "kind": "function",
+            "line_start": 149,
+            "line_end": 149
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C10": {
+        "kind": "script",
+        "code": "C10",
+        "path": ".netark/extensions/subagent/index.ts",
+        "dir_code": "XS",
+        "line_range": "L1-1185",
+        "total_lines": 1185,
+        "language": "typescript",
+        "symbols": [],
+        "pi_registrations": [
+          {
+            "kind": "tool",
+            "name": "subagent",
+            "line": 578
+          }
+        ],
+        "governing_specs": []
+      },
+      "M": {
+        "kind": "dir",
+        "code": "M",
+        "path": "memory/"
+      },
+      "C": {
+        "kind": "dir",
+        "code": "C",
+        "path": "memory/codex/"
+      },
+      "E": {
+        "kind": "dir",
+        "code": "E",
+        "path": "memory/episodic/"
+      },
+      "H": {
+        "kind": "dir",
+        "code": "H",
+        "path": "schemas/"
+      },
+      "S": {
+        "kind": "dir",
+        "code": "S",
+        "path": "scripts/"
+      },
+      "X": {
+        "kind": "dir",
+        "code": "X",
+        "path": ".netark/extensions/"
+      },
+      "XS": {
+        "kind": "dir",
+        "code": "XS",
+        "path": ".netark/extensions/subagent/"
+      },
+      "000": {
+        "kind": "node",
+        "code": "000",
+        "node_id": "MEM-2026-0001",
+        "node_key": "000.SOUL.v1",
+        "status": "verified",
+        "path": "memory/codex/000_SOUL.md",
+        "summary_1line": "NetArk核心憲法：四級認知標籤、Official/Wiki雙軌制與反盲從Oracle鐵律",
+        "depends_on": [],
+        "governed_scripts": [
+          "C0"
+        ],
+        "affected_paths": [
+          "schemas/schema_validator.py"
+        ]
+      },
+      "000.SOUL.v1": {
+        "kind": "node",
+        "code": "000",
+        "node_id": "MEM-2026-0001",
+        "node_key": "000.SOUL.v1",
+        "status": "verified",
+        "path": "memory/codex/000_SOUL.md",
+        "summary_1line": "NetArk核心憲法：四級認知標籤、Official/Wiki雙軌制與反盲從Oracle鐵律",
+        "depends_on": [],
+        "governed_scripts": [
+          "C0"
+        ],
+        "affected_paths": [
+          "schemas/schema_validator.py"
+        ]
+      },
+      "MEM-2026-0001": {
+        "kind": "node",
+        "code": "000",
+        "node_id": "MEM-2026-0001",
+        "node_key": "000.SOUL.v1",
+        "status": "verified",
+        "path": "memory/codex/000_SOUL.md",
+        "summary_1line": "NetArk核心憲法：四級認知標籤、Official/Wiki雙軌制與反盲從Oracle鐵律",
+        "depends_on": [],
+        "governed_scripts": [
+          "C0"
+        ],
+        "affected_paths": [
+          "schemas/schema_validator.py"
+        ]
+      },
+      "100": {
+        "kind": "node",
+        "code": "100",
+        "node_id": "MEM-2026-0002",
+        "node_key": "100.ARCH-RULES.v1",
+        "status": "verified",
+        "path": "memory/codex/100_ARCH_RULES.md",
+        "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [
+          "C1",
+          "C5"
+        ],
+        "affected_paths": [
+          "schemas/netark_guard_core.py",
+          ".netark/extensions/workspace-guard.ts"
+        ]
+      },
+      "100.ARCH-RULES.v1": {
+        "kind": "node",
+        "code": "100",
+        "node_id": "MEM-2026-0002",
+        "node_key": "100.ARCH-RULES.v1",
+        "status": "verified",
+        "path": "memory/codex/100_ARCH_RULES.md",
+        "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [
+          "C1",
+          "C5"
+        ],
+        "affected_paths": [
+          "schemas/netark_guard_core.py",
+          ".netark/extensions/workspace-guard.ts"
+        ]
+      },
+      "MEM-2026-0002": {
+        "kind": "node",
+        "code": "100",
+        "node_id": "MEM-2026-0002",
+        "node_key": "100.ARCH-RULES.v1",
+        "status": "verified",
+        "path": "memory/codex/100_ARCH_RULES.md",
+        "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [
+          "C1",
+          "C5"
+        ],
+        "affected_paths": [
+          "schemas/netark_guard_core.py",
+          ".netark/extensions/workspace-guard.ts"
+        ]
+      },
+      "200": {
+        "kind": "node",
+        "code": "200",
+        "node_id": "MEM-2026-0003",
+        "node_key": "200.ADR-001.v1",
+        "status": "verified",
+        "path": "memory/codex/200_DECISIONS.md",
+        "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+        "depends_on": [
+          "000.SOUL.v1",
+          "100.ARCH-RULES.v1"
+        ],
+        "governed_scripts": [
+          "C2",
+          "C4"
+        ],
+        "affected_paths": [
+          "scripts/auto_update_map.py",
+          ".netark/extensions/epistemic-gate.ts"
+        ]
+      },
+      "200.ADR-001.v1": {
+        "kind": "node",
+        "code": "200",
+        "node_id": "MEM-2026-0003",
+        "node_key": "200.ADR-001.v1",
+        "status": "verified",
+        "path": "memory/codex/200_DECISIONS.md",
+        "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+        "depends_on": [
+          "000.SOUL.v1",
+          "100.ARCH-RULES.v1"
+        ],
+        "governed_scripts": [
+          "C2",
+          "C4"
+        ],
+        "affected_paths": [
+          "scripts/auto_update_map.py",
+          ".netark/extensions/epistemic-gate.ts"
+        ]
+      },
+      "MEM-2026-0003": {
+        "kind": "node",
+        "code": "200",
+        "node_id": "MEM-2026-0003",
+        "node_key": "200.ADR-001.v1",
+        "status": "verified",
+        "path": "memory/codex/200_DECISIONS.md",
+        "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+        "depends_on": [
+          "000.SOUL.v1",
+          "100.ARCH-RULES.v1"
+        ],
+        "governed_scripts": [
+          "C2",
+          "C4"
+        ],
+        "affected_paths": [
+          "scripts/auto_update_map.py",
+          ".netark/extensions/epistemic-gate.ts"
+        ]
+      },
+      "300": {
+        "kind": "node",
+        "code": "300",
+        "node_id": "MEM-2026-0004",
+        "node_key": "300.LEDGER.v1",
+        "status": "verified",
+        "path": "memory/LEDGER.md",
+        "summary_1line": "專案唯一活躍工單台帳 (<=80行)",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [],
+        "affected_paths": []
+      },
+      "300.LEDGER.v1": {
+        "kind": "node",
+        "code": "300",
+        "node_id": "MEM-2026-0004",
+        "node_key": "300.LEDGER.v1",
+        "status": "verified",
+        "path": "memory/LEDGER.md",
+        "summary_1line": "專案唯一活躍工單台帳 (<=80行)",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [],
+        "affected_paths": []
+      },
+      "MEM-2026-0004": {
+        "kind": "node",
+        "code": "300",
+        "node_id": "MEM-2026-0004",
+        "node_key": "300.LEDGER.v1",
+        "status": "verified",
+        "path": "memory/LEDGER.md",
+        "summary_1line": "專案唯一活躍工單台帳 (<=80行)",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [],
+        "affected_paths": []
+      },
+      "900": {
+        "kind": "node",
+        "code": "900",
+        "node_id": "MEM-2026-0005",
+        "node_key": "900.HANDOVER.v1",
+        "status": "verified",
+        "path": "memory/episodic/HANDOVER.md",
+        "summary_1line": "微對話無縫交接快照 (<=65行)",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [
+          "C4"
+        ],
+        "affected_paths": [
+          ".netark/extensions/epistemic-gate.ts"
+        ]
+      },
+      "900.HANDOVER.v1": {
+        "kind": "node",
+        "code": "900",
+        "node_id": "MEM-2026-0005",
+        "node_key": "900.HANDOVER.v1",
+        "status": "verified",
+        "path": "memory/episodic/HANDOVER.md",
+        "summary_1line": "微對話無縫交接快照 (<=65行)",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [
+          "C4"
+        ],
+        "affected_paths": [
+          ".netark/extensions/epistemic-gate.ts"
+        ]
+      },
+      "MEM-2026-0005": {
+        "kind": "node",
+        "code": "900",
+        "node_id": "MEM-2026-0005",
+        "node_key": "900.HANDOVER.v1",
+        "status": "verified",
+        "path": "memory/episodic/HANDOVER.md",
+        "summary_1line": "微對話無縫交接快照 (<=65行)",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [
+          "C4"
+        ],
+        "affected_paths": [
+          ".netark/extensions/epistemic-gate.ts"
+        ]
+      }
+    }
+  }
+}

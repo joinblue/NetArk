@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netark"
+version = "1.0.0"
+description = "NetArk (N.E.T.A.R.K.) — Network-shielded, Enforced-Template Archival & Rule-indexed Kernel Validator Suite"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "joinblue", email = "joinblue42@gmail.com" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "pyyaml>=6.0",
+  "jsonschema>=4.20.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "scripts", "dashboard/tests"]
+python_files = ["test_*.py"]
+addopts = "-v"
