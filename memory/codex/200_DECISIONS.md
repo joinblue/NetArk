@@ -47,6 +47,7 @@ topology:
     - "schemas/schema_validator.py"
   affected_paths:
     - "scripts/auto_update_map.py"
+    - "scripts/netark_init.py"
     - ".netark/extensions/epistemic-gate.ts"
 ---
 

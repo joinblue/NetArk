@@ -46,6 +46,7 @@ topology:
     - "schemas/netark_guard_core.py"
   affected_paths:
     - "schemas/netark_guard_core.py"
+    - "scripts/netark_guard_daemon.py"
     - ".netark/extensions/workspace-guard.ts"
 ---
 

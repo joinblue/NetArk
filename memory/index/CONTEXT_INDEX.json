@@ -2,7 +2,7 @@
   "schema_version": "2.3.0",
   "project": "NetArk",
   "harness": "NetArk",
-  "generated_at": "2026-11-08T15:12:03Z",
+  "generated_at": "2026-11-08T16:21:25Z",
   "total_nodes": 5,
   "healed_links": [],
   "pending_topology_alignments": [],
@@ -114,7 +114,7 @@
           ],
           "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
           "path": "memory/codex/100_ARCH_RULES.md",
-          "sha256_16": "8ba60df34dd03539",
+          "sha256_16": "24b24629260e94e4",
           "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
           "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
           "depends_on": [
@@ -122,6 +122,7 @@
           ],
           "affected_paths": [
             "schemas/netark_guard_core.py",
+            "scripts/netark_guard_daemon.py",
             ".netark/extensions/workspace-guard.ts"
           ],
           "parent_blueprint": null,
@@ -162,7 +163,7 @@
           ],
           "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
           "path": "memory/codex/200_DECISIONS.md",
-          "sha256_16": "01cd48a21ebdad27",
+          "sha256_16": "d8fa9ce160e9950a",
           "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
           "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
           "depends_on": [
@@ -171,6 +172,7 @@
           ],
           "affected_paths": [
             "scripts/auto_update_map.py",
+            "scripts/netark_init.py",
             ".netark/extensions/epistemic-gate.ts"
           ],
           "parent_blueprint": null,
@@ -353,9 +355,34 @@
       "type": "py_from_import"
     },
     {
+      "from": "scripts/netark_guard_daemon.py",
+      "to": "schemas/netark_guard_core.py",
+      "type": "py_from_import"
+    },
+    {
       "from": "scripts/sync_doc_metadata.py",
       "to": "schemas/schema_validator.py",
       "type": "py_import"
+    },
+    {
+      "from": "scripts/test_netark_enterprise_guard.py",
+      "to": "schemas/netark_guard_core.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/test_netark_enterprise_guard.py",
+      "to": "scripts/netark_guard_daemon.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/test_netark_enterprise_guard.py",
+      "to": "scripts/netark_init.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/test_netark_harness.py",
+      "to": "schemas/schema_validator.py",
+      "type": "py_from_import"
     },
     {
       "from": ".netark/extensions/epistemic-gate.ts",
@@ -491,7 +518,9 @@
       "command_conflicts": [],
       "imports": [],
       "imported_by": [
-        "scripts/auto_update_map.py"
+        "scripts/auto_update_map.py",
+        "scripts/netark_guard_daemon.py",
+        "scripts/test_netark_enterprise_guard.py"
       ],
       "governing_specs": [
         {
@@ -591,7 +620,8 @@
       "imports": [],
       "imported_by": [
         "scripts/auto_update_map.py",
-        "scripts/sync_doc_metadata.py"
+        "scripts/sync_doc_metadata.py",
+        "scripts/test_netark_harness.py"
       ],
       "governing_specs": [
         {
@@ -720,6 +750,188 @@
         }
       ]
     },
+    "scripts/netark_guard_daemon.py": {
+      "file_path": "scripts/netark_guard_daemon.py",
+      "language": "python",
+      "total_lines": 392,
+      "symbols": [
+        {
+          "name": "GuardModelSlot",
+          "kind": "class",
+          "line_start": 33,
+          "line_end": 38
+        },
+        {
+          "name": "Tier1ClassifierSlot",
+          "kind": "class",
+          "line_start": 41,
+          "line_end": 102
+        },
+        {
+          "name": "Tier2SemanticSlot",
+          "kind": "class",
+          "line_start": 105,
+          "line_end": 129
+        },
+        {
+          "name": "generate_offline_license_token",
+          "kind": "function",
+          "line_start": 132,
+          "line_end": 137
+        },
+        {
+          "name": "verify_enterprise_license",
+          "kind": "function",
+          "line_start": 140,
+          "line_end": 154
+        },
+        {
+          "name": "append_signed_audit_log",
+          "kind": "function",
+          "line_start": 157,
+          "line_end": 175
+        },
+        {
+          "name": "NetArkGuardEngine",
+          "kind": "class",
+          "line_start": 178,
+          "line_end": 212
+        },
+        {
+          "name": "_check_governance_pre_write",
+          "kind": "function",
+          "line_start": 218,
+          "line_end": 247
+        },
+        {
+          "name": "_parse_stdin_json",
+          "kind": "function",
+          "line_start": 250,
+          "line_end": 255
+        },
+        {
+          "name": "_resolve_cwd_and_tool",
+          "kind": "function",
+          "line_start": 258,
+          "line_end": 270
+        },
+        {
+          "name": "_run_hook_mode",
+          "kind": "function",
+          "line_start": 273,
+          "line_end": 295
+        },
+        {
+          "name": "_run_post_hook_mode",
+          "kind": "function",
+          "line_start": 298,
+          "line_end": 315
+        },
+        {
+          "name": "_run_session_start_mode",
+          "kind": "function",
+          "line_start": 318,
+          "line_end": 344
+        },
+        {
+          "name": "_run_stop_mode",
+          "kind": "function",
+          "line_start": 347,
+          "line_end": 355
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/netark_guard_core.py"
+      ],
+      "imported_by": [
+        "scripts/test_netark_enterprise_guard.py"
+      ],
+      "governing_specs": [
+        {
+          "node_id": "MEM-2026-0002",
+          "node_key": "100.ARCH-RULES.v1",
+          "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+          "path": "memory/codex/100_ARCH_RULES.md"
+        }
+      ]
+    },
+    "scripts/netark_init.py": {
+      "file_path": "scripts/netark_init.py",
+      "language": "python",
+      "total_lines": 317,
+      "symbols": [
+        {
+          "name": "ensure_enterprise_policy",
+          "kind": "function",
+          "line_start": 50,
+          "line_end": 61
+        },
+        {
+          "name": "_sync_workflow_commands",
+          "kind": "function",
+          "line_start": 64,
+          "line_end": 73
+        },
+        {
+          "name": "_sync_skills",
+          "kind": "function",
+          "line_start": 76,
+          "line_end": 87
+        },
+        {
+          "name": "install_agy_adapter",
+          "kind": "function",
+          "line_start": 90,
+          "line_end": 133
+        },
+        {
+          "name": "install_claude_adapter",
+          "kind": "function",
+          "line_start": 136,
+          "line_end": 176
+        },
+        {
+          "name": "install_pi_adapter",
+          "kind": "function",
+          "line_start": 179,
+          "line_end": 208
+        },
+        {
+          "name": "_sync_python_core_if_external",
+          "kind": "function",
+          "line_start": 211,
+          "line_end": 237
+        },
+        {
+          "name": "bootstrap_bilingual_memory",
+          "kind": "function",
+          "line_start": 240,
+          "line_end": 255
+        },
+        {
+          "name": "initialize_workspace",
+          "kind": "function",
+          "line_start": 258,
+          "line_end": 286
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [],
+      "imported_by": [
+        "scripts/test_netark_enterprise_guard.py"
+      ],
+      "governing_specs": [
+        {
+          "node_id": "MEM-2026-0003",
+          "node_key": "200.ADR-001.v1",
+          "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+          "path": "memory/codex/200_DECISIONS.md"
+        }
+      ]
+    },
     "scripts/sync_doc_metadata.py": {
       "file_path": "scripts/sync_doc_metadata.py",
       "language": "python",
@@ -784,6 +996,90 @@
           "kind": "function",
           "line_start": 524,
           "line_end": 578
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/schema_validator.py"
+      ],
+      "imported_by": [],
+      "governing_specs": []
+    },
+    "scripts/test_netark_enterprise_guard.py": {
+      "file_path": "scripts/test_netark_enterprise_guard.py",
+      "language": "python",
+      "total_lines": 314,
+      "symbols": [
+        {
+          "name": "test_01_tier0_ast_73_vectors_and_g01_to_g05",
+          "kind": "function",
+          "line_start": 46,
+          "line_end": 172
+        },
+        {
+          "name": "test_02_daemon_slots_vaultless_dlp_and_soc2",
+          "kind": "function",
+          "line_start": 175,
+          "line_end": 216
+        },
+        {
+          "name": "test_03_multi_host_init_and_agy_nested_hooks",
+          "kind": "function",
+          "line_start": 219,
+          "line_end": 284
+        },
+        {
+          "name": "test_04_bilingual_docs_and_line_budgets",
+          "kind": "function",
+          "line_start": 287,
+          "line_end": 306
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/netark_guard_core.py",
+        "scripts/netark_guard_daemon.py",
+        "scripts/netark_init.py"
+      ],
+      "imported_by": [],
+      "governing_specs": []
+    },
+    "scripts/test_netark_harness.py": {
+      "file_path": "scripts/test_netark_harness.py",
+      "language": "python",
+      "total_lines": 169,
+      "symbols": [
+        {
+          "name": "test_01_clean_5_core_nodes_and_oracle",
+          "kind": "function",
+          "line_start": 34,
+          "line_end": 58
+        },
+        {
+          "name": "test_02_block_gitignored_affected_paths",
+          "kind": "function",
+          "line_start": 61,
+          "line_end": 94
+        },
+        {
+          "name": "test_03_codebook_topology_map_and_reverse_lookup",
+          "kind": "function",
+          "line_start": 97,
+          "line_end": 127
+        },
+        {
+          "name": "test_04_role_models_and_subagent_alignment",
+          "kind": "function",
+          "line_start": 130,
+          "line_end": 149
+        },
+        {
+          "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
+          "kind": "function",
+          "line_start": 152,
+          "line_end": 160
         }
       ],
       "pi_registrations": [],
@@ -1359,10 +1655,10 @@
   "codebook_map": {
     "tier": "L1-Full",
     "total_nodes": 5,
-    "total_scripts": 11,
-    "raw_char_estimate": 20837,
-    "compact_char_count": 1205,
-    "compression_ratio_pct": 94.2,
+    "total_scripts": 15,
+    "raw_char_estimate": 25950,
+    "compact_char_count": 1410,
+    "compression_ratio_pct": 94.6,
     "dirs": {
       "M": "memory/",
       "C": "memory/codex/",
@@ -1376,16 +1672,20 @@
       "C0": "schemas/schema_validator.py",
       "C1": "schemas/netark_guard_core.py",
       "C2": "scripts/auto_update_map.py",
-      "C3": "scripts/sync_doc_metadata.py",
-      "C4": ".netark/extensions/epistemic-gate.ts",
-      "C5": ".netark/extensions/workspace-guard.ts",
-      "C6": ".netark/extensions/model-router.ts",
-      "C7": ".netark/extensions/session-handover.ts",
-      "C8": ".netark/extensions/web-research.ts",
-      "C9": ".netark/extensions/subagent/agents.ts",
-      "C10": ".netark/extensions/subagent/index.ts"
+      "C3": "scripts/netark_guard_daemon.py",
+      "C4": "scripts/netark_init.py",
+      "C5": "scripts/sync_doc_metadata.py",
+      "C6": ".netark/extensions/epistemic-gate.ts",
+      "C7": ".netark/extensions/workspace-guard.ts",
+      "C8": ".netark/extensions/model-router.ts",
+      "C9": ".netark/extensions/session-handover.ts",
+      "C10": ".netark/extensions/web-research.ts",
+      "C11": ".netark/extensions/subagent/agents.ts",
+      "C12": ".netark/extensions/subagent/index.ts",
+      "C13": "scripts/test_netark_enterprise_guard.py",
+      "C14": "scripts/test_netark_harness.py"
     },
-    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 11 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-758) | C1=H:netark_guard_core.py(L1-399) | C2=S:auto_update_map.py(L1-1192)\n  C3=S:sync_doc_metadata.py(L1-582) | C4=X:epistemic-gate.ts(L1-678) | C5=X:workspace-guard.ts(L1-863)\n  C6=X:model-router.ts(L1-3283) | C7=X:session-handover.ts(L1-112) | C8=X:web-research.ts(L1-591)\n  C9=XS:agents.ts(L1-157) | C10=XS:index.ts(L1-1185)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C5 | 200 => C2,C4 | 900 => C4\n  [AST] C2 -> C1,C0 | C3 -> C0 | C10 -> C9\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
+    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 15 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-758) | C1=H:netark_guard_core.py(L1-399) | C2=S:auto_update_map.py(L1-1192)\n  C3=S:netark_guard_daemon.py(L1-392) | C4=S:netark_init.py(L1-317) | C5=S:sync_doc_metadata.py(L1-582)\n  C6=X:epistemic-gate.ts(L1-678) | C7=X:workspace-guard.ts(L1-863) | C8=X:model-router.ts(L1-3283)\n  C9=X:session-handover.ts(L1-112) | C10=X:web-research.ts(L1-591) | C11=XS:agents.ts(L1-157)\n  C12=XS:index.ts(L1-1185) | C13=S:test_netark_enterprise_guard.py(L1-314) | C14=S:test_netark_harness.py(L1-169)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C3,C7 | 200 => C2,C4,C6 | 900 => C6\n  [AST] C2 -> C1,C0 | C3 -> C1 | C5 -> C0 | C12 -> C11 | C13 -> C1,C3,C4 | C14 -> C0\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
     "reverse_lookup": {
       "C0": {
         "kind": "script",
@@ -1696,6 +1996,184 @@
       "C3": {
         "kind": "script",
         "code": "C3",
+        "path": "scripts/netark_guard_daemon.py",
+        "dir_code": "S",
+        "line_range": "L1-392",
+        "total_lines": 392,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "GuardModelSlot",
+            "kind": "class",
+            "line_start": 33,
+            "line_end": 38
+          },
+          {
+            "name": "Tier1ClassifierSlot",
+            "kind": "class",
+            "line_start": 41,
+            "line_end": 102
+          },
+          {
+            "name": "Tier2SemanticSlot",
+            "kind": "class",
+            "line_start": 105,
+            "line_end": 129
+          },
+          {
+            "name": "generate_offline_license_token",
+            "kind": "function",
+            "line_start": 132,
+            "line_end": 137
+          },
+          {
+            "name": "verify_enterprise_license",
+            "kind": "function",
+            "line_start": 140,
+            "line_end": 154
+          },
+          {
+            "name": "append_signed_audit_log",
+            "kind": "function",
+            "line_start": 157,
+            "line_end": 175
+          },
+          {
+            "name": "NetArkGuardEngine",
+            "kind": "class",
+            "line_start": 178,
+            "line_end": 212
+          },
+          {
+            "name": "_check_governance_pre_write",
+            "kind": "function",
+            "line_start": 218,
+            "line_end": 247
+          },
+          {
+            "name": "_parse_stdin_json",
+            "kind": "function",
+            "line_start": 250,
+            "line_end": 255
+          },
+          {
+            "name": "_resolve_cwd_and_tool",
+            "kind": "function",
+            "line_start": 258,
+            "line_end": 270
+          },
+          {
+            "name": "_run_hook_mode",
+            "kind": "function",
+            "line_start": 273,
+            "line_end": 295
+          },
+          {
+            "name": "_run_post_hook_mode",
+            "kind": "function",
+            "line_start": 298,
+            "line_end": 315
+          },
+          {
+            "name": "_run_session_start_mode",
+            "kind": "function",
+            "line_start": 318,
+            "line_end": 344
+          },
+          {
+            "name": "_run_stop_mode",
+            "kind": "function",
+            "line_start": 347,
+            "line_end": 355
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": [
+          {
+            "node_id": "MEM-2026-0002",
+            "node_key": "100.ARCH-RULES.v1",
+            "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
+            "path": "memory/codex/100_ARCH_RULES.md"
+          }
+        ]
+      },
+      "C4": {
+        "kind": "script",
+        "code": "C4",
+        "path": "scripts/netark_init.py",
+        "dir_code": "S",
+        "line_range": "L1-317",
+        "total_lines": 317,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "ensure_enterprise_policy",
+            "kind": "function",
+            "line_start": 50,
+            "line_end": 61
+          },
+          {
+            "name": "_sync_workflow_commands",
+            "kind": "function",
+            "line_start": 64,
+            "line_end": 73
+          },
+          {
+            "name": "_sync_skills",
+            "kind": "function",
+            "line_start": 76,
+            "line_end": 87
+          },
+          {
+            "name": "install_agy_adapter",
+            "kind": "function",
+            "line_start": 90,
+            "line_end": 133
+          },
+          {
+            "name": "install_claude_adapter",
+            "kind": "function",
+            "line_start": 136,
+            "line_end": 176
+          },
+          {
+            "name": "install_pi_adapter",
+            "kind": "function",
+            "line_start": 179,
+            "line_end": 208
+          },
+          {
+            "name": "_sync_python_core_if_external",
+            "kind": "function",
+            "line_start": 211,
+            "line_end": 237
+          },
+          {
+            "name": "bootstrap_bilingual_memory",
+            "kind": "function",
+            "line_start": 240,
+            "line_end": 255
+          },
+          {
+            "name": "initialize_workspace",
+            "kind": "function",
+            "line_start": 258,
+            "line_end": 286
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": [
+          {
+            "node_id": "MEM-2026-0003",
+            "node_key": "200.ADR-001.v1",
+            "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
+            "path": "memory/codex/200_DECISIONS.md"
+          }
+        ]
+      },
+      "C5": {
+        "kind": "script",
+        "code": "C5",
         "path": "scripts/sync_doc_metadata.py",
         "dir_code": "S",
         "line_range": "L1-582",
@@ -1766,9 +2244,9 @@
         "pi_registrations": [],
         "governing_specs": []
       },
-      "C4": {
+      "C6": {
         "kind": "script",
-        "code": "C4",
+        "code": "C6",
         "path": ".netark/extensions/epistemic-gate.ts",
         "dir_code": "X",
         "line_range": "L1-678",
@@ -1895,9 +2373,9 @@
           }
         ]
       },
-      "C5": {
+      "C7": {
         "kind": "script",
-        "code": "C5",
+        "code": "C7",
         "path": ".netark/extensions/workspace-guard.ts",
         "dir_code": "X",
         "line_range": "L1-863",
@@ -1966,9 +2444,9 @@
           }
         ]
       },
-      "C6": {
+      "C8": {
         "kind": "script",
-        "code": "C6",
+        "code": "C8",
         "path": ".netark/extensions/model-router.ts",
         "dir_code": "X",
         "line_range": "L1-3283",
@@ -2110,9 +2588,9 @@
         ],
         "governing_specs": []
       },
-      "C7": {
+      "C9": {
         "kind": "script",
-        "code": "C7",
+        "code": "C9",
         "path": ".netark/extensions/session-handover.ts",
         "dir_code": "X",
         "line_range": "L1-112",
@@ -2169,9 +2647,9 @@
         ],
         "governing_specs": []
       },
-      "C8": {
+      "C10": {
         "kind": "script",
-        "code": "C8",
+        "code": "C10",
         "path": ".netark/extensions/web-research.ts",
         "dir_code": "X",
         "line_range": "L1-591",
@@ -2254,9 +2732,9 @@
         ],
         "governing_specs": []
       },
-      "C9": {
+      "C11": {
         "kind": "script",
-        "code": "C9",
+        "code": "C11",
         "path": ".netark/extensions/subagent/agents.ts",
         "dir_code": "XS",
         "line_range": "L1-157",
@@ -2297,9 +2775,9 @@
         "pi_registrations": [],
         "governing_specs": []
       },
-      "C10": {
+      "C12": {
         "kind": "script",
-        "code": "C10",
+        "code": "C12",
         "path": ".netark/extensions/subagent/index.ts",
         "dir_code": "XS",
         "line_range": "L1-1185",
@@ -2313,6 +2791,86 @@
             "line": 578
           }
         ],
+        "governing_specs": []
+      },
+      "C13": {
+        "kind": "script",
+        "code": "C13",
+        "path": "scripts/test_netark_enterprise_guard.py",
+        "dir_code": "S",
+        "line_range": "L1-314",
+        "total_lines": 314,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "test_01_tier0_ast_73_vectors_and_g01_to_g05",
+            "kind": "function",
+            "line_start": 46,
+            "line_end": 172
+          },
+          {
+            "name": "test_02_daemon_slots_vaultless_dlp_and_soc2",
+            "kind": "function",
+            "line_start": 175,
+            "line_end": 216
+          },
+          {
+            "name": "test_03_multi_host_init_and_agy_nested_hooks",
+            "kind": "function",
+            "line_start": 219,
+            "line_end": 284
+          },
+          {
+            "name": "test_04_bilingual_docs_and_line_budgets",
+            "kind": "function",
+            "line_start": 287,
+            "line_end": 306
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C14": {
+        "kind": "script",
+        "code": "C14",
+        "path": "scripts/test_netark_harness.py",
+        "dir_code": "S",
+        "line_range": "L1-169",
+        "total_lines": 169,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "test_01_clean_5_core_nodes_and_oracle",
+            "kind": "function",
+            "line_start": 34,
+            "line_end": 58
+          },
+          {
+            "name": "test_02_block_gitignored_affected_paths",
+            "kind": "function",
+            "line_start": 61,
+            "line_end": 94
+          },
+          {
+            "name": "test_03_codebook_topology_map_and_reverse_lookup",
+            "kind": "function",
+            "line_start": 97,
+            "line_end": 127
+          },
+          {
+            "name": "test_04_role_models_and_subagent_alignment",
+            "kind": "function",
+            "line_start": 130,
+            "line_end": 149
+          },
+          {
+            "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
+            "kind": "function",
+            "line_start": 152,
+            "line_end": 160
+          }
+        ],
+        "pi_registrations": [],
         "governing_specs": []
       },
       "M": {
@@ -2411,10 +2969,12 @@
         ],
         "governed_scripts": [
           "C1",
-          "C5"
+          "C3",
+          "C7"
         ],
         "affected_paths": [
           "schemas/netark_guard_core.py",
+          "scripts/netark_guard_daemon.py",
           ".netark/extensions/workspace-guard.ts"
         ]
       },
@@ -2431,10 +2991,12 @@
         ],
         "governed_scripts": [
           "C1",
-          "C5"
+          "C3",
+          "C7"
         ],
         "affected_paths": [
           "schemas/netark_guard_core.py",
+          "scripts/netark_guard_daemon.py",
           ".netark/extensions/workspace-guard.ts"
         ]
       },
@@ -2451,10 +3013,12 @@
         ],
         "governed_scripts": [
           "C1",
-          "C5"
+          "C3",
+          "C7"
         ],
         "affected_paths": [
           "schemas/netark_guard_core.py",
+          "scripts/netark_guard_daemon.py",
           ".netark/extensions/workspace-guard.ts"
         ]
       },
@@ -2472,10 +3036,12 @@
         ],
         "governed_scripts": [
           "C2",
-          "C4"
+          "C4",
+          "C6"
         ],
         "affected_paths": [
           "scripts/auto_update_map.py",
+          "scripts/netark_init.py",
           ".netark/extensions/epistemic-gate.ts"
         ]
       },
@@ -2493,10 +3059,12 @@
         ],
         "governed_scripts": [
           "C2",
-          "C4"
+          "C4",
+          "C6"
         ],
         "affected_paths": [
           "scripts/auto_update_map.py",
+          "scripts/netark_init.py",
           ".netark/extensions/epistemic-gate.ts"
         ]
       },
@@ -2514,10 +3082,12 @@
         ],
         "governed_scripts": [
           "C2",
-          "C4"
+          "C4",
+          "C6"
         ],
         "affected_paths": [
           "scripts/auto_update_map.py",
+          "scripts/netark_init.py",
           ".netark/extensions/epistemic-gate.ts"
         ]
       },
@@ -2575,7 +3145,7 @@
           "000.SOUL.v1"
         ],
         "governed_scripts": [
-          "C4"
+          "C6"
         ],
         "affected_paths": [
           ".netark/extensions/epistemic-gate.ts"
@@ -2593,7 +3163,7 @@
           "000.SOUL.v1"
         ],
         "governed_scripts": [
-          "C4"
+          "C6"
         ],
         "affected_paths": [
           ".netark/extensions/epistemic-gate.ts"
@@ -2611,7 +3181,7 @@
           "000.SOUL.v1"
         ],
         "governed_scripts": [
-          "C4"
+          "C6"
         ],
         "affected_paths": [
           ".netark/extensions/epistemic-gate.ts"

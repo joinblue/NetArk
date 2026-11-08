@@ -1,25 +1,26 @@
 # 🗺️ NetArk × NetArk Context Registry & Topology Map (CONTEXT_MAP.md)
 
-> **自動生成時間**: `2026-11-08T15:12:03Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
+> **自動生成時間**: `2026-11-08T16:21:25Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
 > **漸進式揭露原則 (Progressive Disclosure)**: Agent 啟動時於 Turn 1 凍結注入 `@D/@C/@G` 代號壓縮地圖，按短代號 (`C0..Cn` / `000..900`) 或節點鍵值 (`node_key`) 按需調閱對應檔案。
 
 ## 0. Turn-1 凍結代號壓縮地圖 (`@D/@C/@G` Codebook Map)
 
 ```text
-## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 11 | Tier: L1-Full)
+## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 15 | Tier: L1-Full)
 @D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/
 @M (Nodes):
   000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]
   300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]
 @C (Scripts):
   C0=H:schema_validator.py(L1-758) | C1=H:netark_guard_core.py(L1-399) | C2=S:auto_update_map.py(L1-1192)
-  C3=S:sync_doc_metadata.py(L1-582) | C4=X:epistemic-gate.ts(L1-678) | C5=X:workspace-guard.ts(L1-863)
-  C6=X:model-router.ts(L1-3283) | C7=X:session-handover.ts(L1-112) | C8=X:web-research.ts(L1-591)
-  C9=XS:agents.ts(L1-157) | C10=XS:index.ts(L1-1185)
+  C3=S:netark_guard_daemon.py(L1-392) | C4=S:netark_init.py(L1-317) | C5=S:sync_doc_metadata.py(L1-582)
+  C6=X:epistemic-gate.ts(L1-678) | C7=X:workspace-guard.ts(L1-863) | C8=X:model-router.ts(L1-3283)
+  C9=X:session-handover.ts(L1-112) | C10=X:web-research.ts(L1-591) | C11=XS:agents.ts(L1-157)
+  C12=XS:index.ts(L1-1185) | C13=S:test_netark_enterprise_guard.py(L1-314) | C14=S:test_netark_harness.py(L1-169)
 @G (Topology Graph — DAG / Governance Synapses / Code AST Imports):
   [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000
-  [SYN] 000 => C0 | 100 => C1,C5 | 200 => C2,C4 | 900 => C4
-  [AST] C2 -> C1,C0 | C3 -> C0 | C10 -> C9
+  [SYN] 000 => C0 | 100 => C1,C3,C7 | 200 => C2,C4,C6 | 900 => C6
+  [AST] C2 -> C1,C0 | C3 -> C1 | C5 -> C0 | C12 -> C11 | C13 -> C1,C3,C4 | C14 -> C0
 💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query="200"|"C1")` 查閱完整中文摘要與符號。
 ```
 
@@ -71,7 +72,12 @@
 | :--- | :--- | :---: |
 | `scripts/auto_update_map.py` | `schemas/netark_guard_core.py` | `py_from_import` |
 | `scripts/auto_update_map.py` | `schemas/schema_validator.py` | `py_from_import` |
+| `scripts/netark_guard_daemon.py` | `schemas/netark_guard_core.py` | `py_from_import` |
 | `scripts/sync_doc_metadata.py` | `schemas/schema_validator.py` | `py_import` |
+| `scripts/test_netark_enterprise_guard.py` | `schemas/netark_guard_core.py` | `py_from_import` |
+| `scripts/test_netark_enterprise_guard.py` | `scripts/netark_guard_daemon.py` | `py_from_import` |
+| `scripts/test_netark_enterprise_guard.py` | `scripts/netark_init.py` | `py_from_import` |
+| `scripts/test_netark_harness.py` | `schemas/schema_validator.py` | `py_from_import` |
 | `.netark/extensions/epistemic-gate.ts` | `@earendil-works/pi-coding-agent` | `ts_sdk_import` |
 | `.netark/extensions/model-router.ts` | `@earendil-works/pi-ai` | `ts_sdk_import` |
 | `.netark/extensions/model-router.ts` | `@earendil-works/pi-coding-agent` | `ts_sdk_import` |
@@ -94,10 +100,14 @@
 | `.netark/extensions/subagent/index.ts` | — | `tool:subagent`(L578) | — | — |
 | `.netark/extensions/web-research.ts` | `OutboundCheckResult`(L5-L5), `WebPageSnippet`(L10-L10), `NemotronGuardVerdict`(L17-L17), `IPI_DETERMINISTIC_RE`(L32-L32), `validateOutboundSafety`(L35-L35), `loadNvidiaApiKeys`(L74-L74) | `tool:web_research`(L513) | — | — |
 | `.netark/extensions/workspace-guard.ts` | `formatRemediation`(L128-L128), `parseShellCommandQuoteAware`(L140-L140), `isReadOnlyBashCommand`(L266-L266), `checkPortabilityViolation`(L354-L354), `extractPathsFromBash`(L404-L404) | `hook:session_start`(L597), `hook:user_bash`(L603), `hook:tool_call`(L627), `command:/guard`(L802) | — | `100.ARCH-RULES.v1` |
-| `schemas/netark_guard_core.py` | `_is_printable_text`(L47-L52), `normalize_and_deobfuscate`(L55-L97), `calculate_shannon_entropy`(L100-L107), `load_enterprise_policy`(L110-L120), `scan_plaintext_secrets`(L123-L150), `redact_sensitive_payload`(L156-L174) | — | `scripts/auto_update_map.py` | `100.ARCH-RULES.v1` |
-| `schemas/schema_validator.py` | `load_valid_taxonomy_codes`(L66-L86), `parse_markdown_frontmatter`(L96-L111), `count_prose_lines`(L114-L140), `check_as05_portability`(L143-L152), `load_all_memory_nodes`(L155-L169), `check_as06_node_exclusivity`(L172-L211) | — | `scripts/auto_update_map.py`, `scripts/sync_doc_metadata.py` | `000.SOUL.v1` |
+| `schemas/netark_guard_core.py` | `_is_printable_text`(L47-L52), `normalize_and_deobfuscate`(L55-L97), `calculate_shannon_entropy`(L100-L107), `load_enterprise_policy`(L110-L120), `scan_plaintext_secrets`(L123-L150), `redact_sensitive_payload`(L156-L174) | — | `scripts/auto_update_map.py`, `scripts/netark_guard_daemon.py`, `scripts/test_netark_enterprise_guard.py` | `100.ARCH-RULES.v1` |
+| `schemas/schema_validator.py` | `load_valid_taxonomy_codes`(L66-L86), `parse_markdown_frontmatter`(L96-L111), `count_prose_lines`(L114-L140), `check_as05_portability`(L143-L152), `load_all_memory_nodes`(L155-L169), `check_as06_node_exclusivity`(L172-L211) | — | `scripts/auto_update_map.py`, `scripts/sync_doc_metadata.py`, `scripts/test_netark_harness.py` | `000.SOUL.v1` |
 | `scripts/auto_update_map.py` | `get_brain_rel_dir`(L84-L92), `load_domain_layers`(L95-L117), `extract_wikilinks_outside_fenced_blocks`(L120-L132), `sha256_file`(L135-L136), `discover_workspace_code_files`(L139-L175), `heal_dead_links`(L178-L243) | — | — | `200.ADR-001.v1` |
+| `scripts/netark_guard_daemon.py` | `GuardModelSlot`(L33-L38), `Tier1ClassifierSlot`(L41-L102), `Tier2SemanticSlot`(L105-L129), `generate_offline_license_token`(L132-L137), `verify_enterprise_license`(L140-L154), `append_signed_audit_log`(L157-L175) | — | `scripts/test_netark_enterprise_guard.py` | `100.ARCH-RULES.v1` |
+| `scripts/netark_init.py` | `ensure_enterprise_policy`(L50-L61), `_sync_workflow_commands`(L64-L73), `_sync_skills`(L76-L87), `install_agy_adapter`(L90-L133), `install_claude_adapter`(L136-L176), `install_pi_adapter`(L179-L208) | — | `scripts/test_netark_enterprise_guard.py` | `200.ADR-001.v1` |
 | `scripts/sync_doc_metadata.py` | `split_frontmatter_raw`(L52-L59), `surgical_set_scalar`(L62-L88), `surgical_remove_from_yaml_list`(L91-L151), `render_role_models_ssot_block`(L154-L182), `compute_actual_epistemic_counts`(L185-L190), `load_all_node_paths`(L193-L216) | — | — | — |
+| `scripts/test_netark_enterprise_guard.py` | `test_01_tier0_ast_73_vectors_and_g01_to_g05`(L46-L172), `test_02_daemon_slots_vaultless_dlp_and_soc2`(L175-L216), `test_03_multi_host_init_and_agy_nested_hooks`(L219-L284), `test_04_bilingual_docs_and_line_budgets`(L287-L306) | — | — | — |
+| `scripts/test_netark_harness.py` | `test_01_clean_5_core_nodes_and_oracle`(L34-L58), `test_02_block_gitignored_affected_paths`(L61-L94), `test_03_codebook_topology_map_and_reverse_lookup`(L97-L127), `test_04_role_models_and_subagent_alignment`(L130-L149), `test_05_extensions_turn1_codebook_and_guard_hooks`(L152-L160) | — | — | — |
 
 ## 4. 專案治理目錄結構摘要
 

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>P.R.I.S.M. — 專案結構與知識圖譜控管中心</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="patina-emblem">◈</div>
+      <div>
+        <h1>P.R.I.S.M. 專案控管中心</h1>
+        <p class="subtitle">跨專案結構樹・節點關聯圖譜・工單台帳・程式碼行數監控</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <select id="projectSelect" aria-label="選擇監控專案"></select>
+      <input id="searchInput" type="search" placeholder="🔍 搜尋節點、中文標題或檔案 (如 650, 910, 物理)..." />
+      <button id="rescanBtn" class="btn-primary" title="立即重新掃描專案索引">🔄 重掃架構</button>
+    </div>
+  </header>
+
+  <section id="statsBar" class="stats-bar"></section>
+
+  <nav class="view-tabs">
+    <div class="tab-buttons">
+      <button class="tab-btn active" data-tab="matrix">🌳 專案結構樹 (Structure Tree)</button>
+      <button class="tab-btn" data-tab="graph">🌌 節點關聯圖譜 (Graph View)</button>
+      <button class="tab-btn" data-tab="pm">📋 工單與交接看板 (Ledger & Handover)</button>
+      <button class="tab-btn" data-tab="code">🛡️ 程式碼行數監控 (Code Health)</button>
+    </div>
+    <div class="filter-pills" id="filterPills">
+      <button class="pill active" data-filter="all">全部節點</button>
+      <button class="pill" data-filter="verified">🟢 已驗證</button>
+      <button class="pill" data-filter="blueprint">🏛️ 藍圖母體</button>
+      <button class="pill" data-filter="stub_ready">🟡 Stub就緒</button>
+      <button class="pill" data-filter="draft">🟠 草案</button>
+      <button class="pill" data-filter="code">⚙️ 程式碼</button>
+    </div>
+  </nav>
+
+  <main class="workspace">
+    <section class="main-stage">
+      <!-- Tab 1 (Default): Hierarchical Project Structure Tree -->
+      <div id="tab-matrix" class="tab-panel active">
+        <div id="matrixContent" class="scroll-container"></div>
+      </div>
+
+      <!-- Tab 2: Layered Hierarchy Graph -->
+      <div id="tab-graph" class="tab-panel">
+        <div class="graph-toolbar">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span>💡 點擊節點啟動<strong>「聚光燈隔離」</strong>（僅高亮上下游關聯）；點空白處或按鈕解除。</span>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--gold-bright);font-weight:600">
+              <input type="checkbox" id="showCodeNodesToggle" /> 顯示第 4 層程式碼節點
+            </label>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button id="clearSelBtn" class="btn-ghost">✨ 解除聚光燈</button>
+            <button id="resetViewBtn" class="btn-ghost">🎯 置中視角</button>
+          </div>
+        </div>
+        <canvas id="graphCanvas"></canvas>
+        <div class="graph-legend">
+          <span><i class="dot dot-verified"></i>已驗證 (Verified)</span>
+          <span><i class="dot dot-blueprint"></i>藍圖母體 (Blueprint)</span>
+          <span><i class="dot dot-stub"></i>Stub就緒</span>
+          <span><i class="dot dot-draft"></i>規劃草案</span>
+          <span><i class="dot dot-code"></i>程式碼模組</span>
+          <span><i class="dot dot-god"></i>上帝腳本(>600行)</span>
+        </div>
+      </div>
+
+      <!-- Tab 3: PM Ledger & Handover Capsule -->
+      <div id="tab-pm" class="tab-panel">
+        <div id="pmContent" class="scroll-container"></div>
+      </div>
+
+      <!-- Tab 4: Code Health & Anti-God-Script Monitor -->
+      <div id="tab-code" class="tab-panel">
+        <div id="codeContent" class="scroll-container"></div>
+      </div>
+    </section>
+
+    <!-- Mobile Backdrop -->
+    <div id="inspectorBackdrop" class="inspector-backdrop" onclick="closeInspectorMobile()"></div>
+
+    <!-- Right Inspector Sidebar (Desktop) / Bottom Sheet Drawer (Mobile) -->
+    <aside class="inspector" id="inspectorPanel">
+      <div class="inspector-empty">
+        <h3>👈 點擊任一節點查看關聯與內容</h3>
+        <p>在左側結構樹或關聯圖譜點擊任一節點，即可在此檢視：</p>
+        <ul>
+          <li>🔗 <strong>上下游關聯節點</strong>：它依賴誰、被誰引用、拆出哪些子切片</li>
+          <li>⚙️ <strong>綁定程式碼與 AST 函式座標</strong>：精準到行號 <code>Lxx-Lyy</code></li>
+          <li>📖 <strong>完整 Markdown 規格筆記內容</strong></li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/graph_canvas.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

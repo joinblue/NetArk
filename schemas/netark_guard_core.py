@@ -35,7 +35,7 @@ SECRET_PATTERNS: List[Tuple[str, re.Pattern[str]]] = [
 PROTECTED_CONTROL_PATHS = (".netark/", ".agents/", ".claude/", ".github/workflows/", "schemas/")
 # G-01 Fix: Explicitly block any *vault*.json alongside .env, auth.json, and SSH/GCP private keys
 SECRET_FILENAME_RE = re.compile(
-    r"^(?:\.env(?!(?:\.example|\.sample|\.template)$)(?:\.[A-Za-z0-9._-]+)?|auth\.json|.*vault.*\.json|id_rsa|id_ed25519|id_ecdsa|application_default_credentials\.json)$",
+    r"^(?:\.env(?!(?:\.example|\.sample|\.template)$)(?:\.[A-Za-z0-9._-]+)?|auth\.json|models-store\.json|.*vault.*\.json|id_rsa|id_ed25519|id_ecdsa|application_default_credentials\.json|\.npmrc|\.pypirc|\.netrc|\.git-credentials|.*\.(?:pem|key|p12|pfx))$",
     re.I,
 )
 ENV_SECRET_REF_RE = re.compile(r"\$\{?[A-Za-z0-9_]*(?:KEY|TOKEN|SECRET|PASS|CRED|ENV)[A-Za-z0-9_]*\}?", re.I)
@@ -327,7 +327,7 @@ def _analyze_shell_ast(cmd_str: str, cwd: str = ".", depth: int = 0) -> Optional
         if cmd == "rm" and any(a == "--recursive" or (a.startswith("-") and "r" in a.lower()) for a in args):
             if any(not a.startswith("-") and (a in {"/", "~", "..", "../", "$HOME", "${HOME}"} or a.startswith("/dev")) for a in args):
                 return {"allowed": False, "code": "SEC-CMD-01", "reason": "Recursive deletion of root, parent, or home is forbidden."}
-        elif cmd in {"mkfs", "fdisk", "parted", "wipefs"} or (cmd == "dd" and any(a.startswith("of=/dev/") for a in args)):
+        elif cmd.startswith("mkfs") or cmd in {"fdisk", "parted", "wipefs"} or (cmd == "dd" and any(a.startswith("of=/dev/") for a in args)):
             return {"allowed": False, "code": "SEC-CMD-02", "reason": "Raw disk formatting or block device overwrite is forbidden."}
         elif cmd in {"chmod", "chown"} and "-R" in args and "777" in args and "/" in args:
             return {"allowed": False, "code": "SEC-CMD-05", "reason": "Global permission destruction (chmod -R 777 /) is forbidden."}

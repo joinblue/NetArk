@@ -262,19 +262,19 @@ def scan_code_dependencies(project_root: Path) -> List[Dict[str, str]]:
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    top_mod = alias.name.split(".")[0]
-                    if top_mod in py_module_map and py_module_map[top_mod] != src_rel:
-                        target = py_module_map[top_mod]
+                    for mod_cand in (alias.name.split(".")[0], alias.name.split(".")[-1]):
+                        if mod_cand in py_module_map and py_module_map[mod_cand] != src_rel:
+                            target = py_module_map[mod_cand]
+                            if target not in seen_targets:
+                                seen_targets.add(target)
+                                code_edges.append({"from": src_rel, "to": target, "type": "py_import"})
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                for mod_cand in (node.module.split(".")[0], node.module.split(".")[-1]):
+                    if mod_cand in py_module_map and py_module_map[mod_cand] != src_rel:
+                        target = py_module_map[mod_cand]
                         if target not in seen_targets:
                             seen_targets.add(target)
-                            code_edges.append({"from": src_rel, "to": target, "type": "py_import"})
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                top_mod = node.module.split(".")[0]
-                if top_mod in py_module_map and py_module_map[top_mod] != src_rel:
-                    target = py_module_map[top_mod]
-                    if target not in seen_targets:
-                        seen_targets.add(target)
-                        code_edges.append({"from": src_rel, "to": target, "type": "py_from_import"})
+                            code_edges.append({"from": src_rel, "to": target, "type": "py_from_import"})
 
     for ts_file in ts_js_files:
         src_rel = str(ts_file.relative_to(project_root)).replace("\\", "/")

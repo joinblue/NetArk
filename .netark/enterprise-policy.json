@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0",
-  "entropy_threshold": 4.35,
   "tier1_onnx_scope": "untrusted_and_network",
+  "prewrite_secret_lint": true,
+  "session_vault_disabled": true,
   "custom_redact_literals": [],
   "custom_secret_patterns": [],
   "protected_paths": [
@@ -10,5 +11,6 @@
     ".claude/",
     ".github/workflows/",
     "schemas/"
-  ]
+  ],
+  "entropy_threshold": 4.35
 }
