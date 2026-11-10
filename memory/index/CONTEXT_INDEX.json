@@ -2,7 +2,7 @@
   "schema_version": "2.3.0",
   "project": "NetArk",
   "harness": "NetArk",
-  "generated_at": "2026-11-08T16:21:25Z",
+  "generated_at": "2026-11-10T15:06:04Z",
   "total_nodes": 5,
   "healed_links": [],
   "pending_topology_alignments": [],
@@ -72,6 +72,7 @@
           "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
           "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
           "depends_on": [],
+          "supersedes": [],
           "affected_paths": [
             "schemas/schema_validator.py"
           ],
@@ -114,12 +115,13 @@
           ],
           "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
           "path": "memory/codex/100_ARCH_RULES.md",
-          "sha256_16": "24b24629260e94e4",
+          "sha256_16": "2894fed284015413",
           "author_model": "nvidia/nemotron-3-ultra-550b-a55b",
           "reviewer_model": "deepseek-ai/deepseek-v4.1-flash",
           "depends_on": [
             "000.SOUL.v1"
           ],
+          "supersedes": [],
           "affected_paths": [
             "schemas/netark_guard_core.py",
             "scripts/netark_guard_daemon.py",
@@ -170,6 +172,7 @@
             "000.SOUL.v1",
             "100.ARCH-RULES.v1"
           ],
+          "supersedes": [],
           "affected_paths": [
             "scripts/auto_update_map.py",
             "scripts/netark_init.py",
@@ -215,6 +218,7 @@
           "depends_on": [
             "000.SOUL.v1"
           ],
+          "supersedes": [],
           "affected_paths": [],
           "parent_blueprint": null,
           "shard_modules": [],
@@ -301,6 +305,7 @@
           "depends_on": [
             "000.SOUL.v1"
           ],
+          "supersedes": [],
           "affected_paths": [
             ".netark/extensions/epistemic-gate.ts"
           ],
@@ -345,6 +350,36 @@
   ],
   "code_dependency_edges": [
     {
+      "from": "schemas/code_hygiene_ast.py",
+      "to": "schemas/topology_graph.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "schemas/codebook_compiler.py",
+      "to": "schemas/code_hygiene_ast.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "schemas/doc_initializer.py",
+      "to": "schemas/schema_validator.py",
+      "type": "py_import"
+    },
+    {
+      "from": "schemas/schema_validator.py",
+      "to": "schemas/topology_graph.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/auto_update_map.py",
+      "to": "schemas/code_hygiene_ast.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/auto_update_map.py",
+      "to": "schemas/codebook_compiler.py",
+      "type": "py_from_import"
+    },
+    {
       "from": "scripts/auto_update_map.py",
       "to": "schemas/netark_guard_core.py",
       "type": "py_from_import"
@@ -356,6 +391,11 @@
     },
     {
       "from": "scripts/netark_guard_daemon.py",
+      "to": "schemas/code_hygiene_ast.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/netark_guard_daemon.py",
       "to": "schemas/netark_guard_core.py",
       "type": "py_from_import"
     },
@@ -363,6 +403,11 @@
       "from": "scripts/sync_doc_metadata.py",
       "to": "schemas/schema_validator.py",
       "type": "py_import"
+    },
+    {
+      "from": "scripts/sync_doc_metadata.py",
+      "to": "schemas/doc_initializer.py",
+      "type": "py_from_import"
     },
     {
       "from": "scripts/test_netark_enterprise_guard.py",
@@ -381,11 +426,31 @@
     },
     {
       "from": "scripts/test_netark_harness.py",
+      "to": "schemas/code_hygiene_ast.py",
+      "type": "py_from_import"
+    },
+    {
+      "from": "scripts/test_netark_harness.py",
       "to": "schemas/schema_validator.py",
       "type": "py_from_import"
     },
     {
+      "from": "scripts/test_netark_harness.py",
+      "to": "scripts/netark_guard_daemon.py",
+      "type": "py_from_import"
+    },
+    {
       "from": ".netark/extensions/epistemic-gate.ts",
+      "to": "@earendil-works/pi-coding-agent",
+      "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/epistemic-gate.ts",
+      "to": ".netark/extensions/epistemic-library-tools.ts",
+      "type": "ts_local_import"
+    },
+    {
+      "from": ".netark/extensions/epistemic-library-tools.ts",
       "to": "@earendil-works/pi-coding-agent",
       "type": "ts_sdk_import"
     },
@@ -403,6 +468,11 @@
       "from": ".netark/extensions/workspace-guard.ts",
       "to": "@earendil-works/pi-coding-agent",
       "type": "ts_sdk_import"
+    },
+    {
+      "from": ".netark/extensions/workspace-guard.ts",
+      "to": ".netark/extensions/guard-shell-parser.ts",
+      "type": "ts_local_import"
     },
     {
       "from": ".netark/extensions/subagent/agents.ts",
@@ -436,6 +506,183 @@
     }
   ],
   "code_intelligence_map": {
+    "schemas/code_hygiene_ast.py": {
+      "file_path": "schemas/code_hygiene_ast.py",
+      "language": "python",
+      "total_lines": 256,
+      "symbols": [
+        {
+          "name": "get_brain_rel_dir",
+          "kind": "function",
+          "line_start": 31,
+          "line_end": 38
+        },
+        {
+          "name": "_max_cf_depth",
+          "kind": "function",
+          "line_start": 41,
+          "line_end": 60
+        },
+        {
+          "name": "_is_silent_except_body",
+          "kind": "function",
+          "line_start": 63,
+          "line_end": 67
+        },
+        {
+          "name": "check_python_ast_hygiene",
+          "kind": "function",
+          "line_start": 70,
+          "line_end": 100
+        },
+        {
+          "name": "discover_workspace_code_files",
+          "kind": "function",
+          "line_start": 103,
+          "line_end": 127
+        },
+        {
+          "name": "_add_py_edge",
+          "kind": "function",
+          "line_start": 130,
+          "line_end": 134
+        },
+        {
+          "name": "_analyze_python_ast_single_pass",
+          "kind": "function",
+          "line_start": 137,
+          "line_end": 166
+        },
+        {
+          "name": "_scan_ts_file_single_pass",
+          "kind": "function",
+          "line_start": 169,
+          "line_end": 209
+        },
+        {
+          "name": "scan_code_intelligence_single_pass",
+          "kind": "function",
+          "line_start": 212,
+          "line_end": 253
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/topology_graph.py"
+      ],
+      "imported_by": [
+        "schemas/codebook_compiler.py",
+        "scripts/auto_update_map.py",
+        "scripts/netark_guard_daemon.py",
+        "scripts/test_netark_harness.py"
+      ],
+      "governing_specs": [],
+      "max_nesting_depth": 4,
+      "unused_imports": []
+    },
+    "schemas/codebook_compiler.py": {
+      "file_path": "schemas/codebook_compiler.py",
+      "language": "python",
+      "total_lines": 322,
+      "symbols": [
+        {
+          "name": "_select_codebook_scripts",
+          "kind": "function",
+          "line_start": 21,
+          "line_end": 41
+        },
+        {
+          "name": "_build_node_short_map",
+          "kind": "function",
+          "line_start": 44,
+          "line_end": 61
+        },
+        {
+          "name": "_collect_governed_script_codes",
+          "kind": "function",
+          "line_start": 64,
+          "line_end": 77
+        },
+        {
+          "name": "compile_codebook_map",
+          "kind": "function",
+          "line_start": 80,
+          "line_end": 237
+        },
+        {
+          "name": "render_context_map",
+          "kind": "function",
+          "line_start": 243,
+          "line_end": 308
+        },
+        {
+          "name": "render_private_context_map",
+          "kind": "function",
+          "line_start": 314,
+          "line_end": 319
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/code_hygiene_ast.py"
+      ],
+      "imported_by": [
+        "scripts/auto_update_map.py"
+      ],
+      "governing_specs": [],
+      "max_nesting_depth": 3,
+      "unused_imports": []
+    },
+    "schemas/doc_initializer.py": {
+      "file_path": "schemas/doc_initializer.py",
+      "language": "python",
+      "total_lines": 205,
+      "symbols": [
+        {
+          "name": "_compute_epistemic_counts",
+          "kind": "function",
+          "line_start": 31,
+          "line_end": 35
+        },
+        {
+          "name": "_scan_max_node_seq_in_file",
+          "kind": "function",
+          "line_start": 38,
+          "line_end": 52
+        },
+        {
+          "name": "allocate_next_node_id",
+          "kind": "function",
+          "line_start": 55,
+          "line_end": 60
+        },
+        {
+          "name": "init_memory_node",
+          "kind": "function",
+          "line_start": 63,
+          "line_end": 185
+        },
+        {
+          "name": "auto_initialize_wiki_node",
+          "kind": "function",
+          "line_start": 191,
+          "line_end": 205
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [
+        "schemas/schema_validator.py"
+      ],
+      "imported_by": [
+        "scripts/sync_doc_metadata.py"
+      ],
+      "governing_specs": [],
+      "max_nesting_depth": 2,
+      "unused_imports": []
+    },
     "schemas/netark_guard_core.py": {
       "file_path": "schemas/netark_guard_core.py",
       "language": "python",
@@ -529,96 +776,71 @@
           "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
           "path": "memory/codex/100_ARCH_RULES.md"
         }
-      ]
+      ],
+      "max_nesting_depth": 5,
+      "unused_imports": []
     },
     "schemas/schema_validator.py": {
       "file_path": "schemas/schema_validator.py",
       "language": "python",
-      "total_lines": 758,
+      "total_lines": 369,
       "symbols": [
         {
           "name": "load_valid_taxonomy_codes",
           "kind": "function",
-          "line_start": 66,
-          "line_end": 86
-        },
-        {
-          "name": "parse_markdown_frontmatter",
-          "kind": "function",
-          "line_start": 96,
-          "line_end": 111
+          "line_start": 56,
+          "line_end": 74
         },
         {
           "name": "count_prose_lines",
           "kind": "function",
-          "line_start": 114,
-          "line_end": 140
+          "line_start": 77,
+          "line_end": 90
         },
         {
           "name": "check_as05_portability",
           "kind": "function",
-          "line_start": 143,
-          "line_end": 152
-        },
-        {
-          "name": "load_all_memory_nodes",
-          "kind": "function",
-          "line_start": 155,
-          "line_end": 169
-        },
-        {
-          "name": "check_as06_node_exclusivity",
-          "kind": "function",
-          "line_start": 172,
-          "line_end": 211
-        },
-        {
-          "name": "detect_unlinked_topology_references",
-          "kind": "function",
-          "line_start": 214,
-          "line_end": 262
+          "line_start": 93,
+          "line_end": 102
         },
         {
           "name": "generate_prescription_skeleton",
           "kind": "function",
-          "line_start": 265,
-          "line_end": 350
+          "line_start": 105,
+          "line_end": 149
         },
         {
           "name": "validate_against_schema",
           "kind": "function",
-          "line_start": 353,
-          "line_end": 364
+          "line_start": 152,
+          "line_end": 163
         },
         {
           "name": "validate_document",
           "kind": "function",
-          "line_start": 367,
-          "line_end": 562
+          "line_start": 166,
+          "line_end": 286
         },
         {
-          "name": "check_topology_graph",
+          "name": "_emit_post_pass_warnings",
           "kind": "function",
-          "line_start": 565,
-          "line_end": 624
-        },
-        {
-          "name": "is_gitignored_path",
-          "kind": "function",
-          "line_start": 627,
-          "line_end": 666
+          "line_start": 289,
+          "line_end": 307
         },
         {
           "name": "main",
           "kind": "function",
-          "line_start": 669,
-          "line_end": 754
+          "line_start": 310,
+          "line_end": 365
         }
       ],
       "pi_registrations": [],
       "command_conflicts": [],
-      "imports": [],
+      "imports": [
+        "schemas/topology_graph.py"
+      ],
       "imported_by": [
+        "schemas/doc_initializer.py",
         "scripts/auto_update_map.py",
         "scripts/sync_doc_metadata.py",
         "scripts/test_netark_harness.py"
@@ -630,113 +852,146 @@
           "summary_1line": "NetArk核心憲法：四級認知標籤、Official/Wiki雙軌制與反盲從Oracle鐵律",
           "path": "memory/codex/000_SOUL.md"
         }
-      ]
+      ],
+      "max_nesting_depth": 4,
+      "unused_imports": []
+    },
+    "schemas/topology_graph.py": {
+      "file_path": "schemas/topology_graph.py",
+      "language": "python",
+      "total_lines": 234,
+      "symbols": [
+        {
+          "name": "parse_markdown_frontmatter",
+          "kind": "function",
+          "line_start": 29,
+          "line_end": 40
+        },
+        {
+          "name": "load_all_memory_nodes",
+          "kind": "function",
+          "line_start": 43,
+          "line_end": 57
+        },
+        {
+          "name": "check_as06_node_exclusivity",
+          "kind": "function",
+          "line_start": 60,
+          "line_end": 97
+        },
+        {
+          "name": "detect_unlinked_topology_references",
+          "kind": "function",
+          "line_start": 100,
+          "line_end": 141
+        },
+        {
+          "name": "check_topology_graph",
+          "kind": "function",
+          "line_start": 144,
+          "line_end": 193
+        },
+        {
+          "name": "_match_gitignore_rule",
+          "kind": "function",
+          "line_start": 196,
+          "line_end": 213
+        },
+        {
+          "name": "is_gitignored_path",
+          "kind": "function",
+          "line_start": 216,
+          "line_end": 234
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [],
+      "imported_by": [
+        "schemas/code_hygiene_ast.py",
+        "schemas/schema_validator.py"
+      ],
+      "governing_specs": [],
+      "max_nesting_depth": 4,
+      "unused_imports": []
     },
     "scripts/auto_update_map.py": {
       "file_path": "scripts/auto_update_map.py",
       "language": "python",
-      "total_lines": 1192,
+      "total_lines": 349,
       "symbols": [
         {
-          "name": "get_brain_rel_dir",
+          "name": "_extract_subdomain_layers",
           "kind": "function",
-          "line_start": 84,
-          "line_end": 92
+          "line_start": 47,
+          "line_end": 52
         },
         {
           "name": "load_domain_layers",
           "kind": "function",
-          "line_start": 95,
-          "line_end": 117
+          "line_start": 55,
+          "line_end": 69
         },
         {
           "name": "extract_wikilinks_outside_fenced_blocks",
           "kind": "function",
-          "line_start": 120,
-          "line_end": 132
+          "line_start": 72,
+          "line_end": 79
         },
         {
           "name": "sha256_file",
           "kind": "function",
-          "line_start": 135,
-          "line_end": 136
-        },
-        {
-          "name": "discover_workspace_code_files",
-          "kind": "function",
-          "line_start": 139,
-          "line_end": 175
+          "line_start": 82,
+          "line_end": 83
         },
         {
           "name": "heal_dead_links",
           "kind": "function",
-          "line_start": 178,
-          "line_end": 243
-        },
-        {
-          "name": "scan_code_dependencies",
-          "kind": "function",
-          "line_start": 246,
-          "line_end": 306
-        },
-        {
-          "name": "build_code_intelligence_map",
-          "kind": "function",
-          "line_start": 309,
-          "line_end": 451
-        },
-        {
-          "name": "build_codebook_map",
-          "kind": "function",
-          "line_start": 454,
-          "line_end": 746
+          "line_start": 86,
+          "line_end": 130
         },
         {
           "name": "is_private_memory_path",
           "kind": "function",
-          "line_start": 749,
-          "line_end": 751
+          "line_start": 133,
+          "line_end": 134
+        },
+        {
+          "name": "_find_pending_topology_alignments",
+          "kind": "function",
+          "line_start": 137,
+          "line_end": 158
         },
         {
           "name": "_compile_index_subset",
           "kind": "function",
-          "line_start": 754,
-          "line_end": 963
-        },
-        {
-          "name": "build_context_index",
-          "kind": "function",
-          "line_start": 966,
-          "line_end": 968
+          "line_start": 161,
+          "line_end": 258
         },
         {
           "name": "build_public_and_private_indices",
           "kind": "function",
-          "line_start": 971,
-          "line_end": 1018
-        },
-        {
-          "name": "render_context_map_md",
-          "kind": "function",
-          "line_start": 1021,
-          "line_end": 1111
+          "line_start": 261,
+          "line_end": 290
         },
         {
           "name": "verify_no_plaintext_secrets_before_index_write",
           "kind": "function",
-          "line_start": 1114,
-          "line_end": 1130
+          "line_start": 293,
+          "line_end": 299
         },
         {
           "name": "main",
           "kind": "function",
-          "line_start": 1133,
-          "line_end": 1188
+          "line_start": 302,
+          "line_end": 345
         }
       ],
       "pi_registrations": [],
       "command_conflicts": [],
       "imports": [
+        "schemas/code_hygiene_ast.py",
+        "schemas/codebook_compiler.py",
         "schemas/netark_guard_core.py",
         "schemas/schema_validator.py"
       ],
@@ -748,105 +1003,111 @@
           "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
           "path": "memory/codex/200_DECISIONS.md"
         }
+      ],
+      "max_nesting_depth": 3,
+      "unused_imports": [
+        "discover_workspace_code_files"
       ]
     },
     "scripts/netark_guard_daemon.py": {
       "file_path": "scripts/netark_guard_daemon.py",
       "language": "python",
-      "total_lines": 392,
+      "total_lines": 391,
       "symbols": [
         {
           "name": "GuardModelSlot",
           "kind": "class",
-          "line_start": 33,
-          "line_end": 38
+          "line_start": 34,
+          "line_end": 39
         },
         {
           "name": "Tier1ClassifierSlot",
           "kind": "class",
-          "line_start": 41,
-          "line_end": 102
+          "line_start": 42,
+          "line_end": 103
         },
         {
           "name": "Tier2SemanticSlot",
           "kind": "class",
-          "line_start": 105,
-          "line_end": 129
+          "line_start": 106,
+          "line_end": 130
         },
         {
           "name": "generate_offline_license_token",
           "kind": "function",
-          "line_start": 132,
-          "line_end": 137
+          "line_start": 133,
+          "line_end": 138
         },
         {
           "name": "verify_enterprise_license",
           "kind": "function",
-          "line_start": 140,
-          "line_end": 154
+          "line_start": 141,
+          "line_end": 155
         },
         {
           "name": "append_signed_audit_log",
           "kind": "function",
-          "line_start": 157,
-          "line_end": 175
+          "line_start": 158,
+          "line_end": 176
         },
         {
           "name": "NetArkGuardEngine",
           "kind": "class",
-          "line_start": 178,
-          "line_end": 212
+          "line_start": 179,
+          "line_end": 213
         },
         {
           "name": "_check_governance_pre_write",
           "kind": "function",
-          "line_start": 218,
-          "line_end": 247
+          "line_start": 219,
+          "line_end": 257
         },
         {
           "name": "_parse_stdin_json",
           "kind": "function",
-          "line_start": 250,
-          "line_end": 255
+          "line_start": 260,
+          "line_end": 265
         },
         {
           "name": "_resolve_cwd_and_tool",
           "kind": "function",
-          "line_start": 258,
-          "line_end": 270
+          "line_start": 268,
+          "line_end": 279
         },
         {
           "name": "_run_hook_mode",
           "kind": "function",
-          "line_start": 273,
-          "line_end": 295
+          "line_start": 282,
+          "line_end": 306
         },
         {
           "name": "_run_post_hook_mode",
           "kind": "function",
-          "line_start": 298,
-          "line_end": 315
+          "line_start": 309,
+          "line_end": 324
         },
         {
           "name": "_run_session_start_mode",
           "kind": "function",
-          "line_start": 318,
-          "line_end": 344
+          "line_start": 327,
+          "line_end": 351
         },
         {
           "name": "_run_stop_mode",
           "kind": "function",
-          "line_start": 347,
-          "line_end": 355
+          "line_start": 354,
+          "line_end": 361
         }
       ],
       "pi_registrations": [],
       "command_conflicts": [],
       "imports": [
+        "schemas/code_hygiene_ast.py",
         "schemas/netark_guard_core.py"
       ],
       "imported_by": [
-        "scripts/test_netark_enterprise_guard.py"
+        "scripts/test_netark_enterprise_guard.py",
+        "scripts/test_netark_harness.py"
       ],
       "governing_specs": [
         {
@@ -855,12 +1116,14 @@
           "summary_1line": "邊界與零外洩護欄：工作區鎖定、.netark保護、SEC-CRED與Pre-Write防呆",
           "path": "memory/codex/100_ARCH_RULES.md"
         }
-      ]
+      ],
+      "max_nesting_depth": 3,
+      "unused_imports": []
     },
     "scripts/netark_init.py": {
       "file_path": "scripts/netark_init.py",
       "language": "python",
-      "total_lines": 317,
+      "total_lines": 319,
       "symbols": [
         {
           "name": "ensure_enterprise_policy",
@@ -884,37 +1147,37 @@
           "name": "install_agy_adapter",
           "kind": "function",
           "line_start": 90,
-          "line_end": 133
+          "line_end": 129
         },
         {
           "name": "install_claude_adapter",
           "kind": "function",
-          "line_start": 136,
-          "line_end": 176
+          "line_start": 132,
+          "line_end": 174
         },
         {
           "name": "install_pi_adapter",
           "kind": "function",
-          "line_start": 179,
-          "line_end": 208
+          "line_start": 177,
+          "line_end": 206
         },
         {
           "name": "_sync_python_core_if_external",
           "kind": "function",
-          "line_start": 211,
-          "line_end": 237
+          "line_start": 209,
+          "line_end": 239
         },
         {
           "name": "bootstrap_bilingual_memory",
           "kind": "function",
-          "line_start": 240,
-          "line_end": 255
+          "line_start": 242,
+          "line_end": 257
         },
         {
           "name": "initialize_workspace",
           "kind": "function",
-          "line_start": 258,
-          "line_end": 286
+          "line_start": 260,
+          "line_end": 288
         }
       ],
       "pi_registrations": [],
@@ -930,81 +1193,80 @@
           "summary_1line": "架構決策錄：採用雙層可攜式大腦、Turn-1代號壓縮地圖與確定性邊界防禦",
           "path": "memory/codex/200_DECISIONS.md"
         }
-      ]
+      ],
+      "max_nesting_depth": 3,
+      "unused_imports": []
     },
     "scripts/sync_doc_metadata.py": {
       "file_path": "scripts/sync_doc_metadata.py",
       "language": "python",
-      "total_lines": 582,
+      "total_lines": 304,
       "symbols": [
         {
           "name": "split_frontmatter_raw",
           "kind": "function",
-          "line_start": 52,
-          "line_end": 59
+          "line_start": 33,
+          "line_end": 40
         },
         {
           "name": "surgical_set_scalar",
           "kind": "function",
-          "line_start": 62,
-          "line_end": 88
+          "line_start": 43,
+          "line_end": 58
+        },
+        {
+          "name": "surgical_try_set_scalar",
+          "kind": "function",
+          "line_start": 61,
+          "line_end": 66
         },
         {
           "name": "surgical_remove_from_yaml_list",
           "kind": "function",
-          "line_start": 91,
-          "line_end": 151
+          "line_start": 69,
+          "line_end": 111
         },
         {
           "name": "render_role_models_ssot_block",
           "kind": "function",
-          "line_start": 154,
-          "line_end": 182
+          "line_start": 114,
+          "line_end": 132
         },
         {
           "name": "compute_actual_epistemic_counts",
           "kind": "function",
-          "line_start": 185,
-          "line_end": 190
+          "line_start": 135,
+          "line_end": 137
         },
         {
           "name": "load_all_node_paths",
           "kind": "function",
-          "line_start": 193,
-          "line_end": 216
+          "line_start": 140,
+          "line_end": 162
         },
         {
           "name": "sync_governed_markdown",
           "kind": "function",
-          "line_start": 219,
-          "line_end": 371
-        },
-        {
-          "name": "allocate_next_node_id",
-          "kind": "function",
-          "line_start": 378,
-          "line_end": 401
-        },
-        {
-          "name": "init_governed_markdown",
-          "kind": "function",
-          "line_start": 404,
-          "line_end": 521
+          "line_start": 165,
+          "line_end": 263
         },
         {
           "name": "main",
           "kind": "function",
-          "line_start": 524,
-          "line_end": 578
+          "line_start": 266,
+          "line_end": 300
         }
       ],
       "pi_registrations": [],
       "command_conflicts": [],
       "imports": [
-        "schemas/schema_validator.py"
+        "schemas/schema_validator.py",
+        "schemas/doc_initializer.py"
       ],
       "imported_by": [],
-      "governing_specs": []
+      "governing_specs": [],
+      "max_nesting_depth": 4,
+      "unused_imports": []
     },
     "scripts/test_netark_enterprise_guard.py": {
       "file_path": "scripts/test_netark_enterprise_guard.py",
@@ -1044,165 +1306,161 @@
         "scripts/netark_init.py"
       ],
       "imported_by": [],
-      "governing_specs": []
+      "governing_specs": [],
+      "max_nesting_depth": 1,
+      "unused_imports": []
     },
     "scripts/test_netark_harness.py": {
       "file_path": "scripts/test_netark_harness.py",
       "language": "python",
-      "total_lines": 169,
+      "total_lines": 261,
       "symbols": [
         {
           "name": "test_01_clean_5_core_nodes_and_oracle",
           "kind": "function",
-          "line_start": 34,
-          "line_end": 58
+          "line_start": 38,
+          "line_end": 64
         },
         {
           "name": "test_02_block_gitignored_affected_paths",
           "kind": "function",
-          "line_start": 61,
-          "line_end": 94
+          "line_start": 67,
+          "line_end": 100
         },
         {
           "name": "test_03_codebook_topology_map_and_reverse_lookup",
           "kind": "function",
-          "line_start": 97,
-          "line_end": 127
+          "line_start": 103,
+          "line_end": 151
         },
         {
           "name": "test_04_role_models_and_subagent_alignment",
           "kind": "function",
-          "line_start": 130,
-          "line_end": 149
+          "line_start": 154,
+          "line_end": 173
         },
         {
           "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
           "kind": "function",
-          "line_start": 152,
-          "line_end": 160
+          "line_start": 176,
+          "line_end": 192
+        },
+        {
+          "name": "test_06_code_hygiene_p1_p2_and_modularity_gates",
+          "kind": "function",
+          "line_start": 195,
+          "line_end": 251
         }
       ],
       "pi_registrations": [],
       "command_conflicts": [],
       "imports": [
-        "schemas/schema_validator.py"
+        "schemas/code_hygiene_ast.py",
+        "schemas/schema_validator.py",
+        "scripts/netark_guard_daemon.py"
       ],
       "imported_by": [],
-      "governing_specs": []
+      "governing_specs": [],
+      "max_nesting_depth": 2,
+      "unused_imports": []
     },
     ".netark/extensions/epistemic-gate.ts": {
       "file_path": ".netark/extensions/epistemic-gate.ts",
       "language": "typescript",
-      "total_lines": 678,
+      "total_lines": 328,
       "symbols": [
         {
           "name": "CATALOG_STAGE2_THRESHOLD",
           "kind": "const",
-          "line_start": 19,
-          "line_end": 19
-        },
-        {
-          "name": "CODE_SOFT_LINE_LIMIT",
-          "kind": "const",
-          "line_start": 20,
-          "line_end": 20
-        },
-        {
-          "name": "CODE_HARD_LINE_LIMIT",
-          "kind": "const",
-          "line_start": 21,
-          "line_end": 21
-        },
-        {
-          "name": "readHandoverBodySnapshot",
-          "kind": "function",
           "line_start": 23,
           "line_end": 23
         },
         {
-          "name": "buildProgressiveContextSummary",
-          "kind": "function",
-          "line_start": 41,
-          "line_end": 41
+          "name": "CODE_SOFT_LINE_LIMIT",
+          "kind": "const",
+          "line_start": 24,
+          "line_end": 24
         },
         {
-          "name": "findAffectedMemoryNodes",
+          "name": "CODE_HARD_LINE_LIMIT",
+          "kind": "const",
+          "line_start": 25,
+          "line_end": 25
+        },
+        {
+          "name": "readHandoverBodySnapshot",
           "kind": "function",
-          "line_start": 150,
-          "line_end": 150
+          "line_start": 27,
+          "line_end": 27
+        },
+        {
+          "name": "buildProgressiveContextSummary",
+          "kind": "function",
+          "line_start": 44,
+          "line_end": 44
         },
         {
           "name": "getSessionPinnedContextSummary",
           "kind": "function",
-          "line_start": 195,
-          "line_end": 195
+          "line_start": 144,
+          "line_end": 144
         },
         {
           "name": "clearSessionPinnedContextSummaries",
           "kind": "function",
-          "line_start": 206,
-          "line_end": 206
+          "line_start": 151,
+          "line_end": 151
         },
         {
           "name": "NetArkEpistemicBridge",
           "kind": "interface",
-          "line_start": 210,
-          "line_end": 210
-        },
-        {
-          "name": "queryLibraryNodes",
-          "kind": "function",
-          "line_start": 227,
-          "line_end": 227
+          "line_start": 155,
+          "line_end": 155
         },
         {
           "name": "netarkEpistemicBridge",
           "kind": "const",
-          "line_start": 365,
-          "line_end": 365
+          "line_start": 163,
+          "line_end": 163
         },
         {
           "name": "fridayEpistemicBridge",
           "kind": "const",
-          "line_start": 375,
-          "line_end": 375
+          "line_start": 173,
+          "line_end": 173
         }
       ],
       "pi_registrations": [
         {
-          "kind": "tool",
-          "name": "query_library",
-          "line": 384
-        },
-        {
           "kind": "hook",
           "name": "session_shutdown",
-          "line": 406
+          "line": 184
         },
         {
           "kind": "hook",
           "name": "session_start",
-          "line": 490
+          "line": 193
         },
         {
           "kind": "hook",
           "name": "before_agent_start",
-          "line": 495
+          "line": 198
         },
         {
           "kind": "hook",
           "name": "tool_call",
-          "line": 509
+          "line": 205
         },
         {
           "kind": "hook",
           "name": "tool_result",
-          "line": 551
+          "line": 240
         }
       ],
       "command_conflicts": [],
       "imports": [
-        "@earendil-works/pi-coding-agent"
+        "@earendil-works/pi-coding-agent",
+        ".netark/extensions/epistemic-library-tools.ts"
       ],
       "imported_by": [],
       "governing_specs": [
@@ -1219,6 +1477,161 @@
           "path": "memory/episodic/HANDOVER.md"
         }
       ]
+    },
+    ".netark/extensions/epistemic-library-tools.ts": {
+      "file_path": ".netark/extensions/epistemic-library-tools.ts",
+      "language": "typescript",
+      "total_lines": 298,
+      "symbols": [
+        {
+          "name": "findAffectedMemoryNodes",
+          "kind": "function",
+          "line_start": 19,
+          "line_end": 19
+        },
+        {
+          "name": "queryLibraryNodes",
+          "kind": "function",
+          "line_start": 62,
+          "line_end": 62
+        },
+        {
+          "name": "queryCodeIntelligenceMap",
+          "kind": "function",
+          "line_start": 177,
+          "line_end": 177
+        },
+        {
+          "name": "runSessionShutdownConsolidation",
+          "kind": "function",
+          "line_start": 212,
+          "line_end": 212
+        },
+        {
+          "name": "registerEpistemicLibraryTools",
+          "kind": "function",
+          "line_start": 261,
+          "line_end": 261
+        }
+      ],
+      "pi_registrations": [
+        {
+          "kind": "tool",
+          "name": "query_library",
+          "line": 265
+        },
+        {
+          "kind": "tool",
+          "name": "code_intelligence_map",
+          "line": 283
+        }
+      ],
+      "command_conflicts": [],
+      "imports": [
+        "@earendil-works/pi-coding-agent"
+      ],
+      "imported_by": [
+        ".netark/extensions/epistemic-gate.ts"
+      ],
+      "governing_specs": []
+    },
+    ".netark/extensions/guard-shell-parser.ts": {
+      "file_path": ".netark/extensions/guard-shell-parser.ts",
+      "language": "typescript",
+      "total_lines": 265,
+      "symbols": [
+        {
+          "name": "FILE_TOOLS",
+          "kind": "const",
+          "line_start": 14,
+          "line_end": 14
+        },
+        {
+          "name": "SECRET_FILE_PATTERNS",
+          "kind": "const",
+          "line_start": 16,
+          "line_end": 16
+        },
+        {
+          "name": "PREWRITE_SECRET_PATTERNS",
+          "kind": "const",
+          "line_start": 27,
+          "line_end": 27
+        },
+        {
+          "name": "DESTRUCTIVE_BASH_PATTERNS",
+          "kind": "const",
+          "line_start": 42,
+          "line_end": 42
+        },
+        {
+          "name": "SAFE_SYSTEM_PREFIXES",
+          "kind": "const",
+          "line_start": 56,
+          "line_end": 56
+        },
+        {
+          "name": "READ_ONLY_COMMANDS",
+          "kind": "const",
+          "line_start": 58,
+          "line_end": 58
+        },
+        {
+          "name": "formatRemediation",
+          "kind": "function",
+          "line_start": 70,
+          "line_end": 70
+        },
+        {
+          "name": "parseShellCommandQuoteAware",
+          "kind": "function",
+          "line_start": 74,
+          "line_end": 74
+        },
+        {
+          "name": "isReadOnlyBashCommand",
+          "kind": "function",
+          "line_start": 151,
+          "line_end": 151
+        },
+        {
+          "name": "checkPortabilityViolation",
+          "kind": "function",
+          "line_start": 188,
+          "line_end": 188
+        },
+        {
+          "name": "resolveRealTarget",
+          "kind": "function",
+          "line_start": 204,
+          "line_end": 204
+        },
+        {
+          "name": "isWithinDir",
+          "kind": "function",
+          "line_start": 220,
+          "line_end": 220
+        },
+        {
+          "name": "extractPathsFromBash",
+          "kind": "function",
+          "line_start": 227,
+          "line_end": 227
+        },
+        {
+          "name": "summarizeGuardAuditLog",
+          "kind": "function",
+          "line_start": 241,
+          "line_end": 241
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [],
+      "imported_by": [
+        ".netark/extensions/workspace-guard.ts"
+      ],
+      "governing_specs": []
     },
     ".netark/extensions/model-router.ts": {
       "file_path": ".netark/extensions/model-router.ts",
@@ -1513,64 +1926,34 @@
     ".netark/extensions/workspace-guard.ts": {
       "file_path": ".netark/extensions/workspace-guard.ts",
       "language": "typescript",
-      "total_lines": 863,
-      "symbols": [
-        {
-          "name": "formatRemediation",
-          "kind": "function",
-          "line_start": 128,
-          "line_end": 128
-        },
-        {
-          "name": "parseShellCommandQuoteAware",
-          "kind": "function",
-          "line_start": 140,
-          "line_end": 140
-        },
-        {
-          "name": "isReadOnlyBashCommand",
-          "kind": "function",
-          "line_start": 266,
-          "line_end": 266
-        },
-        {
-          "name": "checkPortabilityViolation",
-          "kind": "function",
-          "line_start": 354,
-          "line_end": 354
-        },
-        {
-          "name": "extractPathsFromBash",
-          "kind": "function",
-          "line_start": 404,
-          "line_end": 404
-        }
-      ],
+      "total_lines": 350,
+      "symbols": [],
       "pi_registrations": [
         {
           "kind": "hook",
           "name": "session_start",
-          "line": 597
+          "line": 134
         },
         {
           "kind": "hook",
           "name": "user_bash",
-          "line": 603
+          "line": 154
         },
         {
           "kind": "hook",
           "name": "tool_call",
-          "line": 627
+          "line": 169
         },
         {
           "kind": "command",
           "name": "/guard",
-          "line": 802
+          "line": 301
         }
       ],
       "command_conflicts": [],
       "imports": [
-        "@earendil-works/pi-coding-agent"
+        "@earendil-works/pi-coding-agent",
+        ".netark/extensions/guard-shell-parser.ts"
       ],
       "imported_by": [],
       "governing_specs": [
@@ -1655,10 +2038,10 @@
   "codebook_map": {
     "tier": "L1-Full",
     "total_nodes": 5,
-    "total_scripts": 15,
-    "raw_char_estimate": 25950,
-    "compact_char_count": 1410,
-    "compression_ratio_pct": 94.6,
+    "total_scripts": 21,
+    "raw_char_estimate": 32168,
+    "compact_char_count": 2453,
+    "compression_ratio_pct": 92.4,
     "dirs": {
       "M": "memory/",
       "C": "memory/codex/",
@@ -1671,108 +2054,84 @@
     "scripts": {
       "C0": "schemas/schema_validator.py",
       "C1": "schemas/netark_guard_core.py",
-      "C2": "scripts/auto_update_map.py",
-      "C3": "scripts/netark_guard_daemon.py",
-      "C4": "scripts/netark_init.py",
-      "C5": "scripts/sync_doc_metadata.py",
-      "C6": ".netark/extensions/epistemic-gate.ts",
-      "C7": ".netark/extensions/workspace-guard.ts",
-      "C8": ".netark/extensions/model-router.ts",
-      "C9": ".netark/extensions/session-handover.ts",
-      "C10": ".netark/extensions/web-research.ts",
-      "C11": ".netark/extensions/subagent/agents.ts",
-      "C12": ".netark/extensions/subagent/index.ts",
-      "C13": "scripts/test_netark_enterprise_guard.py",
-      "C14": "scripts/test_netark_harness.py"
+      "C2": "schemas/code_hygiene_ast.py",
+      "C3": "schemas/codebook_compiler.py",
+      "C4": "schemas/topology_graph.py",
+      "C5": "schemas/doc_initializer.py",
+      "C6": "scripts/auto_update_map.py",
+      "C7": "scripts/netark_guard_daemon.py",
+      "C8": "scripts/netark_init.py",
+      "C9": "scripts/sync_doc_metadata.py",
+      "C10": ".netark/extensions/epistemic-gate.ts",
+      "C11": ".netark/extensions/workspace-guard.ts",
+      "C12": ".netark/extensions/model-router.ts",
+      "C13": ".netark/extensions/session-handover.ts",
+      "C14": ".netark/extensions/web-research.ts",
+      "C15": ".netark/extensions/epistemic-library-tools.ts",
+      "C16": ".netark/extensions/guard-shell-parser.ts",
+      "C17": ".netark/extensions/subagent/agents.ts",
+      "C18": ".netark/extensions/subagent/index.ts",
+      "C19": "scripts/test_netark_enterprise_guard.py",
+      "C20": "scripts/test_netark_harness.py"
     },
-    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 15 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-758) | C1=H:netark_guard_core.py(L1-399) | C2=S:auto_update_map.py(L1-1192)\n  C3=S:netark_guard_daemon.py(L1-392) | C4=S:netark_init.py(L1-317) | C5=S:sync_doc_metadata.py(L1-582)\n  C6=X:epistemic-gate.ts(L1-678) | C7=X:workspace-guard.ts(L1-863) | C8=X:model-router.ts(L1-3283)\n  C9=X:session-handover.ts(L1-112) | C10=X:web-research.ts(L1-591) | C11=XS:agents.ts(L1-157)\n  C12=XS:index.ts(L1-1185) | C13=S:test_netark_enterprise_guard.py(L1-314) | C14=S:test_netark_harness.py(L1-169)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C3,C7 | 200 => C2,C4,C6 | 900 => C6\n  [AST] C2 -> C1,C0 | C3 -> C1 | C5 -> C0 | C12 -> C11 | C13 -> C1,C3,C4 | C14 -> C0\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
+    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-322) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-319)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-298) | C16=X:guard-shell-parser.ts(L1-265) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-261)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
     "reverse_lookup": {
       "C0": {
         "kind": "script",
         "code": "C0",
         "path": "schemas/schema_validator.py",
         "dir_code": "H",
-        "line_range": "L1-758",
-        "total_lines": 758,
+        "line_range": "L1-369",
+        "total_lines": 369,
         "language": "python",
         "symbols": [
           {
             "name": "load_valid_taxonomy_codes",
             "kind": "function",
-            "line_start": 66,
-            "line_end": 86
-          },
-          {
-            "name": "parse_markdown_frontmatter",
-            "kind": "function",
-            "line_start": 96,
-            "line_end": 111
+            "line_start": 56,
+            "line_end": 74
           },
           {
             "name": "count_prose_lines",
             "kind": "function",
-            "line_start": 114,
-            "line_end": 140
+            "line_start": 77,
+            "line_end": 90
           },
           {
             "name": "check_as05_portability",
             "kind": "function",
-            "line_start": 143,
-            "line_end": 152
-          },
-          {
-            "name": "load_all_memory_nodes",
-            "kind": "function",
-            "line_start": 155,
-            "line_end": 169
-          },
-          {
-            "name": "check_as06_node_exclusivity",
-            "kind": "function",
-            "line_start": 172,
-            "line_end": 211
-          },
-          {
-            "name": "detect_unlinked_topology_references",
-            "kind": "function",
-            "line_start": 214,
-            "line_end": 262
+            "line_start": 93,
+            "line_end": 102
           },
           {
             "name": "generate_prescription_skeleton",
             "kind": "function",
-            "line_start": 265,
-            "line_end": 350
+            "line_start": 105,
+            "line_end": 149
           },
           {
             "name": "validate_against_schema",
             "kind": "function",
-            "line_start": 353,
-            "line_end": 364
+            "line_start": 152,
+            "line_end": 163
           },
           {
             "name": "validate_document",
             "kind": "function",
-            "line_start": 367,
-            "line_end": 562
+            "line_start": 166,
+            "line_end": 286
           },
           {
-            "name": "check_topology_graph",
+            "name": "_emit_post_pass_warnings",
             "kind": "function",
-            "line_start": 565,
-            "line_end": 624
-          },
-          {
-            "name": "is_gitignored_path",
-            "kind": "function",
-            "line_start": 627,
-            "line_end": 666
+            "line_start": 289,
+            "line_end": 307
           },
           {
             "name": "main",
             "kind": "function",
-            "line_start": 669,
-            "line_end": 754
+            "line_start": 310,
+            "line_end": 365
           }
         ],
         "pi_registrations": [],
@@ -1880,107 +2239,291 @@
       "C2": {
         "kind": "script",
         "code": "C2",
-        "path": "scripts/auto_update_map.py",
-        "dir_code": "S",
-        "line_range": "L1-1192",
-        "total_lines": 1192,
+        "path": "schemas/code_hygiene_ast.py",
+        "dir_code": "H",
+        "line_range": "L1-256",
+        "total_lines": 256,
         "language": "python",
         "symbols": [
           {
             "name": "get_brain_rel_dir",
             "kind": "function",
-            "line_start": 84,
-            "line_end": 92
+            "line_start": 31,
+            "line_end": 38
           },
           {
-            "name": "load_domain_layers",
+            "name": "_max_cf_depth",
             "kind": "function",
-            "line_start": 95,
-            "line_end": 117
+            "line_start": 41,
+            "line_end": 60
           },
           {
-            "name": "extract_wikilinks_outside_fenced_blocks",
+            "name": "_is_silent_except_body",
             "kind": "function",
-            "line_start": 120,
-            "line_end": 132
+            "line_start": 63,
+            "line_end": 67
           },
           {
-            "name": "sha256_file",
+            "name": "check_python_ast_hygiene",
             "kind": "function",
-            "line_start": 135,
-            "line_end": 136
+            "line_start": 70,
+            "line_end": 100
           },
           {
             "name": "discover_workspace_code_files",
             "kind": "function",
-            "line_start": 139,
-            "line_end": 175
+            "line_start": 103,
+            "line_end": 127
+          },
+          {
+            "name": "_add_py_edge",
+            "kind": "function",
+            "line_start": 130,
+            "line_end": 134
+          },
+          {
+            "name": "_analyze_python_ast_single_pass",
+            "kind": "function",
+            "line_start": 137,
+            "line_end": 166
+          },
+          {
+            "name": "_scan_ts_file_single_pass",
+            "kind": "function",
+            "line_start": 169,
+            "line_end": 209
+          },
+          {
+            "name": "scan_code_intelligence_single_pass",
+            "kind": "function",
+            "line_start": 212,
+            "line_end": 253
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C3": {
+        "kind": "script",
+        "code": "C3",
+        "path": "schemas/codebook_compiler.py",
+        "dir_code": "H",
+        "line_range": "L1-322",
+        "total_lines": 322,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "_select_codebook_scripts",
+            "kind": "function",
+            "line_start": 21,
+            "line_end": 41
+          },
+          {
+            "name": "_build_node_short_map",
+            "kind": "function",
+            "line_start": 44,
+            "line_end": 61
+          },
+          {
+            "name": "_collect_governed_script_codes",
+            "kind": "function",
+            "line_start": 64,
+            "line_end": 77
+          },
+          {
+            "name": "compile_codebook_map",
+            "kind": "function",
+            "line_start": 80,
+            "line_end": 237
+          },
+          {
+            "name": "render_context_map",
+            "kind": "function",
+            "line_start": 243,
+            "line_end": 308
+          },
+          {
+            "name": "render_private_context_map",
+            "kind": "function",
+            "line_start": 314,
+            "line_end": 319
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C4": {
+        "kind": "script",
+        "code": "C4",
+        "path": "schemas/topology_graph.py",
+        "dir_code": "H",
+        "line_range": "L1-234",
+        "total_lines": 234,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "parse_markdown_frontmatter",
+            "kind": "function",
+            "line_start": 29,
+            "line_end": 40
+          },
+          {
+            "name": "load_all_memory_nodes",
+            "kind": "function",
+            "line_start": 43,
+            "line_end": 57
+          },
+          {
+            "name": "check_as06_node_exclusivity",
+            "kind": "function",
+            "line_start": 60,
+            "line_end": 97
+          },
+          {
+            "name": "detect_unlinked_topology_references",
+            "kind": "function",
+            "line_start": 100,
+            "line_end": 141
+          },
+          {
+            "name": "check_topology_graph",
+            "kind": "function",
+            "line_start": 144,
+            "line_end": 193
+          },
+          {
+            "name": "_match_gitignore_rule",
+            "kind": "function",
+            "line_start": 196,
+            "line_end": 213
+          },
+          {
+            "name": "is_gitignored_path",
+            "kind": "function",
+            "line_start": 216,
+            "line_end": 234
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C5": {
+        "kind": "script",
+        "code": "C5",
+        "path": "schemas/doc_initializer.py",
+        "dir_code": "H",
+        "line_range": "L1-205",
+        "total_lines": 205,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "_compute_epistemic_counts",
+            "kind": "function",
+            "line_start": 31,
+            "line_end": 35
+          },
+          {
+            "name": "_scan_max_node_seq_in_file",
+            "kind": "function",
+            "line_start": 38,
+            "line_end": 52
+          },
+          {
+            "name": "allocate_next_node_id",
+            "kind": "function",
+            "line_start": 55,
+            "line_end": 60
+          },
+          {
+            "name": "init_memory_node",
+            "kind": "function",
+            "line_start": 63,
+            "line_end": 185
+          },
+          {
+            "name": "auto_initialize_wiki_node",
+            "kind": "function",
+            "line_start": 191,
+            "line_end": 205
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C6": {
+        "kind": "script",
+        "code": "C6",
+        "path": "scripts/auto_update_map.py",
+        "dir_code": "S",
+        "line_range": "L1-349",
+        "total_lines": 349,
+        "language": "python",
+        "symbols": [
+          {
+            "name": "_extract_subdomain_layers",
+            "kind": "function",
+            "line_start": 47,
+            "line_end": 52
+          },
+          {
+            "name": "load_domain_layers",
+            "kind": "function",
+            "line_start": 55,
+            "line_end": 69
+          },
+          {
+            "name": "extract_wikilinks_outside_fenced_blocks",
+            "kind": "function",
+            "line_start": 72,
+            "line_end": 79
+          },
+          {
+            "name": "sha256_file",
+            "kind": "function",
+            "line_start": 82,
+            "line_end": 83
           },
           {
             "name": "heal_dead_links",
             "kind": "function",
-            "line_start": 178,
-            "line_end": 243
-          },
-          {
-            "name": "scan_code_dependencies",
-            "kind": "function",
-            "line_start": 246,
-            "line_end": 306
-          },
-          {
-            "name": "build_code_intelligence_map",
-            "kind": "function",
-            "line_start": 309,
-            "line_end": 451
-          },
-          {
-            "name": "build_codebook_map",
-            "kind": "function",
-            "line_start": 454,
-            "line_end": 746
+            "line_start": 86,
+            "line_end": 130
           },
           {
             "name": "is_private_memory_path",
             "kind": "function",
-            "line_start": 749,
-            "line_end": 751
+            "line_start": 133,
+            "line_end": 134
+          },
+          {
+            "name": "_find_pending_topology_alignments",
+            "kind": "function",
+            "line_start": 137,
+            "line_end": 158
           },
           {
             "name": "_compile_index_subset",
             "kind": "function",
-            "line_start": 754,
-            "line_end": 963
-          },
-          {
-            "name": "build_context_index",
-            "kind": "function",
-            "line_start": 966,
-            "line_end": 968
+            "line_start": 161,
+            "line_end": 258
           },
           {
             "name": "build_public_and_private_indices",
             "kind": "function",
-            "line_start": 971,
-            "line_end": 1018
-          },
-          {
-            "name": "render_context_map_md",
-            "kind": "function",
-            "line_start": 1021,
-            "line_end": 1111
+            "line_start": 261,
+            "line_end": 290
           },
           {
             "name": "verify_no_plaintext_secrets_before_index_write",
             "kind": "function",
-            "line_start": 1114,
-            "line_end": 1130
+            "line_start": 293,
+            "line_end": 299
           },
           {
             "name": "main",
             "kind": "function",
-            "line_start": 1133,
-            "line_end": 1188
+            "line_start": 302,
+            "line_end": 345
           }
         ],
         "pi_registrations": [],
@@ -1993,98 +2536,98 @@
           }
         ]
       },
-      "C3": {
+      "C7": {
         "kind": "script",
-        "code": "C3",
+        "code": "C7",
         "path": "scripts/netark_guard_daemon.py",
         "dir_code": "S",
-        "line_range": "L1-392",
-        "total_lines": 392,
+        "line_range": "L1-391",
+        "total_lines": 391,
         "language": "python",
         "symbols": [
           {
             "name": "GuardModelSlot",
             "kind": "class",
-            "line_start": 33,
-            "line_end": 38
+            "line_start": 34,
+            "line_end": 39
           },
           {
             "name": "Tier1ClassifierSlot",
             "kind": "class",
-            "line_start": 41,
-            "line_end": 102
+            "line_start": 42,
+            "line_end": 103
           },
           {
             "name": "Tier2SemanticSlot",
             "kind": "class",
-            "line_start": 105,
-            "line_end": 129
+            "line_start": 106,
+            "line_end": 130
           },
           {
             "name": "generate_offline_license_token",
             "kind": "function",
-            "line_start": 132,
-            "line_end": 137
+            "line_start": 133,
+            "line_end": 138
           },
           {
             "name": "verify_enterprise_license",
             "kind": "function",
-            "line_start": 140,
-            "line_end": 154
+            "line_start": 141,
+            "line_end": 155
           },
           {
             "name": "append_signed_audit_log",
             "kind": "function",
-            "line_start": 157,
-            "line_end": 175
+            "line_start": 158,
+            "line_end": 176
           },
           {
             "name": "NetArkGuardEngine",
             "kind": "class",
-            "line_start": 178,
-            "line_end": 212
+            "line_start": 179,
+            "line_end": 213
           },
           {
             "name": "_check_governance_pre_write",
             "kind": "function",
-            "line_start": 218,
-            "line_end": 247
+            "line_start": 219,
+            "line_end": 257
           },
           {
             "name": "_parse_stdin_json",
             "kind": "function",
-            "line_start": 250,
-            "line_end": 255
+            "line_start": 260,
+            "line_end": 265
           },
           {
             "name": "_resolve_cwd_and_tool",
             "kind": "function",
-            "line_start": 258,
-            "line_end": 270
+            "line_start": 268,
+            "line_end": 279
           },
           {
             "name": "_run_hook_mode",
             "kind": "function",
-            "line_start": 273,
-            "line_end": 295
+            "line_start": 282,
+            "line_end": 306
           },
           {
             "name": "_run_post_hook_mode",
             "kind": "function",
-            "line_start": 298,
-            "line_end": 315
+            "line_start": 309,
+            "line_end": 324
           },
           {
             "name": "_run_session_start_mode",
             "kind": "function",
-            "line_start": 318,
-            "line_end": 344
+            "line_start": 327,
+            "line_end": 351
           },
           {
             "name": "_run_stop_mode",
             "kind": "function",
-            "line_start": 347,
-            "line_end": 355
+            "line_start": 354,
+            "line_end": 361
           }
         ],
         "pi_registrations": [],
@@ -2097,13 +2640,13 @@
           }
         ]
       },
-      "C4": {
+      "C8": {
         "kind": "script",
-        "code": "C4",
+        "code": "C8",
         "path": "scripts/netark_init.py",
         "dir_code": "S",
-        "line_range": "L1-317",
-        "total_lines": 317,
+        "line_range": "L1-319",
+        "total_lines": 319,
         "language": "python",
         "symbols": [
           {
@@ -2128,37 +2671,37 @@
             "name": "install_agy_adapter",
             "kind": "function",
             "line_start": 90,
-            "line_end": 133
+            "line_end": 129
           },
           {
             "name": "install_claude_adapter",
             "kind": "function",
-            "line_start": 136,
-            "line_end": 176
+            "line_start": 132,
+            "line_end": 174
           },
           {
             "name": "install_pi_adapter",
             "kind": "function",
-            "line_start": 179,
-            "line_end": 208
+            "line_start": 177,
+            "line_end": 206
           },
           {
             "name": "_sync_python_core_if_external",
             "kind": "function",
-            "line_start": 211,
-            "line_end": 237
+            "line_start": 209,
+            "line_end": 239
           },
           {
             "name": "bootstrap_bilingual_memory",
             "kind": "function",
-            "line_start": 240,
-            "line_end": 255
+            "line_start": 242,
+            "line_end": 257
           },
           {
             "name": "initialize_workspace",
             "kind": "function",
-            "line_start": 258,
-            "line_end": 286
+            "line_start": 260,
+            "line_end": 288
           }
         ],
         "pi_registrations": [],
@@ -2171,191 +2714,168 @@
           }
         ]
       },
-      "C5": {
+      "C9": {
         "kind": "script",
-        "code": "C5",
+        "code": "C9",
         "path": "scripts/sync_doc_metadata.py",
         "dir_code": "S",
-        "line_range": "L1-582",
-        "total_lines": 582,
+        "line_range": "L1-304",
+        "total_lines": 304,
         "language": "python",
         "symbols": [
           {
             "name": "split_frontmatter_raw",
             "kind": "function",
-            "line_start": 52,
-            "line_end": 59
+            "line_start": 33,
+            "line_end": 40
           },
           {
             "name": "surgical_set_scalar",
             "kind": "function",
-            "line_start": 62,
-            "line_end": 88
+            "line_start": 43,
+            "line_end": 58
+          },
+          {
+            "name": "surgical_try_set_scalar",
+            "kind": "function",
+            "line_start": 61,
+            "line_end": 66
           },
           {
             "name": "surgical_remove_from_yaml_list",
             "kind": "function",
-            "line_start": 91,
-            "line_end": 151
+            "line_start": 69,
+            "line_end": 111
           },
           {
             "name": "render_role_models_ssot_block",
             "kind": "function",
-            "line_start": 154,
-            "line_end": 182
+            "line_start": 114,
+            "line_end": 132
           },
           {
             "name": "compute_actual_epistemic_counts",
             "kind": "function",
-            "line_start": 185,
-            "line_end": 190
+            "line_start": 135,
+            "line_end": 137
           },
           {
             "name": "load_all_node_paths",
             "kind": "function",
-            "line_start": 193,
-            "line_end": 216
+            "line_start": 140,
+            "line_end": 162
           },
           {
             "name": "sync_governed_markdown",
             "kind": "function",
-            "line_start": 219,
-            "line_end": 371
-          },
-          {
-            "name": "allocate_next_node_id",
-            "kind": "function",
-            "line_start": 378,
-            "line_end": 401
-          },
-          {
-            "name": "init_governed_markdown",
-            "kind": "function",
-            "line_start": 404,
-            "line_end": 521
+            "line_start": 165,
+            "line_end": 263
           },
           {
             "name": "main",
             "kind": "function",
-            "line_start": 524,
-            "line_end": 578
+            "line_start": 266,
+            "line_end": 300
           }
         ],
         "pi_registrations": [],
         "governing_specs": []
       },
-      "C6": {
+      "C10": {
         "kind": "script",
-        "code": "C6",
+        "code": "C10",
         "path": ".netark/extensions/epistemic-gate.ts",
         "dir_code": "X",
-        "line_range": "L1-678",
-        "total_lines": 678,
+        "line_range": "L1-328",
+        "total_lines": 328,
         "language": "typescript",
         "symbols": [
           {
             "name": "CATALOG_STAGE2_THRESHOLD",
             "kind": "const",
-            "line_start": 19,
-            "line_end": 19
-          },
-          {
-            "name": "CODE_SOFT_LINE_LIMIT",
-            "kind": "const",
-            "line_start": 20,
-            "line_end": 20
-          },
-          {
-            "name": "CODE_HARD_LINE_LIMIT",
-            "kind": "const",
-            "line_start": 21,
-            "line_end": 21
-          },
-          {
-            "name": "readHandoverBodySnapshot",
-            "kind": "function",
             "line_start": 23,
             "line_end": 23
           },
           {
-            "name": "buildProgressiveContextSummary",
-            "kind": "function",
-            "line_start": 41,
-            "line_end": 41
+            "name": "CODE_SOFT_LINE_LIMIT",
+            "kind": "const",
+            "line_start": 24,
+            "line_end": 24
           },
           {
-            "name": "findAffectedMemoryNodes",
+            "name": "CODE_HARD_LINE_LIMIT",
+            "kind": "const",
+            "line_start": 25,
+            "line_end": 25
+          },
+          {
+            "name": "readHandoverBodySnapshot",
             "kind": "function",
-            "line_start": 150,
-            "line_end": 150
+            "line_start": 27,
+            "line_end": 27
+          },
+          {
+            "name": "buildProgressiveContextSummary",
+            "kind": "function",
+            "line_start": 44,
+            "line_end": 44
           },
           {
             "name": "getSessionPinnedContextSummary",
             "kind": "function",
-            "line_start": 195,
-            "line_end": 195
+            "line_start": 144,
+            "line_end": 144
           },
           {
             "name": "clearSessionPinnedContextSummaries",
             "kind": "function",
-            "line_start": 206,
-            "line_end": 206
+            "line_start": 151,
+            "line_end": 151
           },
           {
             "name": "NetArkEpistemicBridge",
             "kind": "interface",
-            "line_start": 210,
-            "line_end": 210
-          },
-          {
-            "name": "queryLibraryNodes",
-            "kind": "function",
-            "line_start": 227,
-            "line_end": 227
+            "line_start": 155,
+            "line_end": 155
           },
           {
             "name": "netarkEpistemicBridge",
             "kind": "const",
-            "line_start": 365,
-            "line_end": 365
+            "line_start": 163,
+            "line_end": 163
           },
           {
             "name": "fridayEpistemicBridge",
             "kind": "const",
-            "line_start": 375,
-            "line_end": 375
+            "line_start": 173,
+            "line_end": 173
           }
         ],
         "pi_registrations": [
           {
-            "kind": "tool",
-            "name": "query_library",
-            "line": 384
-          },
-          {
             "kind": "hook",
             "name": "session_shutdown",
-            "line": 406
+            "line": 184
           },
           {
             "kind": "hook",
             "name": "session_start",
-            "line": 490
+            "line": 193
           },
           {
             "kind": "hook",
             "name": "before_agent_start",
-            "line": 495
+            "line": 198
           },
           {
             "kind": "hook",
             "name": "tool_call",
-            "line": 509
+            "line": 205
           },
           {
             "kind": "hook",
             "name": "tool_result",
-            "line": 551
+            "line": 240
           }
         ],
         "governing_specs": [
@@ -2373,66 +2893,35 @@
           }
         ]
       },
-      "C7": {
+      "C11": {
         "kind": "script",
-        "code": "C7",
+        "code": "C11",
         "path": ".netark/extensions/workspace-guard.ts",
         "dir_code": "X",
-        "line_range": "L1-863",
-        "total_lines": 863,
+        "line_range": "L1-350",
+        "total_lines": 350,
         "language": "typescript",
-        "symbols": [
-          {
-            "name": "formatRemediation",
-            "kind": "function",
-            "line_start": 128,
-            "line_end": 128
-          },
-          {
-            "name": "parseShellCommandQuoteAware",
-            "kind": "function",
-            "line_start": 140,
-            "line_end": 140
-          },
-          {
-            "name": "isReadOnlyBashCommand",
-            "kind": "function",
-            "line_start": 266,
-            "line_end": 266
-          },
-          {
-            "name": "checkPortabilityViolation",
-            "kind": "function",
-            "line_start": 354,
-            "line_end": 354
-          },
-          {
-            "name": "extractPathsFromBash",
-            "kind": "function",
-            "line_start": 404,
-            "line_end": 404
-          }
-        ],
+        "symbols": [],
         "pi_registrations": [
           {
             "kind": "hook",
             "name": "session_start",
-            "line": 597
+            "line": 134
           },
           {
             "kind": "hook",
             "name": "user_bash",
-            "line": 603
+            "line": 154
           },
           {
             "kind": "hook",
             "name": "tool_call",
-            "line": 627
+            "line": 169
           },
           {
             "kind": "command",
             "name": "/guard",
-            "line": 802
+            "line": 301
           }
         ],
         "governing_specs": [
@@ -2444,9 +2933,9 @@
           }
         ]
       },
-      "C8": {
+      "C12": {
         "kind": "script",
-        "code": "C8",
+        "code": "C12",
         "path": ".netark/extensions/model-router.ts",
         "dir_code": "X",
         "line_range": "L1-3283",
@@ -2588,9 +3077,9 @@
         ],
         "governing_specs": []
       },
-      "C9": {
+      "C13": {
         "kind": "script",
-        "code": "C9",
+        "code": "C13",
         "path": ".netark/extensions/session-handover.ts",
         "dir_code": "X",
         "line_range": "L1-112",
@@ -2647,9 +3136,9 @@
         ],
         "governing_specs": []
       },
-      "C10": {
+      "C14": {
         "kind": "script",
-        "code": "C10",
+        "code": "C14",
         "path": ".netark/extensions/web-research.ts",
         "dir_code": "X",
         "line_range": "L1-591",
@@ -2732,9 +3221,160 @@
         ],
         "governing_specs": []
       },
-      "C11": {
+      "C15": {
         "kind": "script",
-        "code": "C11",
+        "code": "C15",
+        "path": ".netark/extensions/epistemic-library-tools.ts",
+        "dir_code": "X",
+        "line_range": "L1-298",
+        "total_lines": 298,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "findAffectedMemoryNodes",
+            "kind": "function",
+            "line_start": 19,
+            "line_end": 19
+          },
+          {
+            "name": "queryLibraryNodes",
+            "kind": "function",
+            "line_start": 62,
+            "line_end": 62
+          },
+          {
+            "name": "queryCodeIntelligenceMap",
+            "kind": "function",
+            "line_start": 177,
+            "line_end": 177
+          },
+          {
+            "name": "runSessionShutdownConsolidation",
+            "kind": "function",
+            "line_start": 212,
+            "line_end": 212
+          },
+          {
+            "name": "registerEpistemicLibraryTools",
+            "kind": "function",
+            "line_start": 261,
+            "line_end": 261
+          }
+        ],
+        "pi_registrations": [
+          {
+            "kind": "tool",
+            "name": "query_library",
+            "line": 265
+          },
+          {
+            "kind": "tool",
+            "name": "code_intelligence_map",
+            "line": 283
+          }
+        ],
+        "governing_specs": []
+      },
+      "C16": {
+        "kind": "script",
+        "code": "C16",
+        "path": ".netark/extensions/guard-shell-parser.ts",
+        "dir_code": "X",
+        "line_range": "L1-265",
+        "total_lines": 265,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "FILE_TOOLS",
+            "kind": "const",
+            "line_start": 14,
+            "line_end": 14
+          },
+          {
+            "name": "SECRET_FILE_PATTERNS",
+            "kind": "const",
+            "line_start": 16,
+            "line_end": 16
+          },
+          {
+            "name": "PREWRITE_SECRET_PATTERNS",
+            "kind": "const",
+            "line_start": 27,
+            "line_end": 27
+          },
+          {
+            "name": "DESTRUCTIVE_BASH_PATTERNS",
+            "kind": "const",
+            "line_start": 42,
+            "line_end": 42
+          },
+          {
+            "name": "SAFE_SYSTEM_PREFIXES",
+            "kind": "const",
+            "line_start": 56,
+            "line_end": 56
+          },
+          {
+            "name": "READ_ONLY_COMMANDS",
+            "kind": "const",
+            "line_start": 58,
+            "line_end": 58
+          },
+          {
+            "name": "formatRemediation",
+            "kind": "function",
+            "line_start": 70,
+            "line_end": 70
+          },
+          {
+            "name": "parseShellCommandQuoteAware",
+            "kind": "function",
+            "line_start": 74,
+            "line_end": 74
+          },
+          {
+            "name": "isReadOnlyBashCommand",
+            "kind": "function",
+            "line_start": 151,
+            "line_end": 151
+          },
+          {
+            "name": "checkPortabilityViolation",
+            "kind": "function",
+            "line_start": 188,
+            "line_end": 188
+          },
+          {
+            "name": "resolveRealTarget",
+            "kind": "function",
+            "line_start": 204,
+            "line_end": 204
+          },
+          {
+            "name": "isWithinDir",
+            "kind": "function",
+            "line_start": 220,
+            "line_end": 220
+          },
+          {
+            "name": "extractPathsFromBash",
+            "kind": "function",
+            "line_start": 227,
+            "line_end": 227
+          },
+          {
+            "name": "summarizeGuardAuditLog",
+            "kind": "function",
+            "line_start": 241,
+            "line_end": 241
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C17": {
+        "kind": "script",
+        "code": "C17",
         "path": ".netark/extensions/subagent/agents.ts",
         "dir_code": "XS",
         "line_range": "L1-157",
@@ -2775,9 +3415,9 @@
         "pi_registrations": [],
         "governing_specs": []
       },
-      "C12": {
+      "C18": {
         "kind": "script",
-        "code": "C12",
+        "code": "C18",
         "path": ".netark/extensions/subagent/index.ts",
         "dir_code": "XS",
         "line_range": "L1-1185",
@@ -2793,9 +3433,9 @@
         ],
         "governing_specs": []
       },
-      "C13": {
+      "C19": {
         "kind": "script",
-        "code": "C13",
+        "code": "C19",
         "path": "scripts/test_netark_enterprise_guard.py",
         "dir_code": "S",
         "line_range": "L1-314",
@@ -2830,44 +3470,50 @@
         "pi_registrations": [],
         "governing_specs": []
       },
-      "C14": {
+      "C20": {
         "kind": "script",
-        "code": "C14",
+        "code": "C20",
         "path": "scripts/test_netark_harness.py",
         "dir_code": "S",
-        "line_range": "L1-169",
-        "total_lines": 169,
+        "line_range": "L1-261",
+        "total_lines": 261,
         "language": "python",
         "symbols": [
           {
             "name": "test_01_clean_5_core_nodes_and_oracle",
             "kind": "function",
-            "line_start": 34,
-            "line_end": 58
+            "line_start": 38,
+            "line_end": 64
           },
           {
             "name": "test_02_block_gitignored_affected_paths",
             "kind": "function",
-            "line_start": 61,
-            "line_end": 94
+            "line_start": 67,
+            "line_end": 100
           },
           {
             "name": "test_03_codebook_topology_map_and_reverse_lookup",
             "kind": "function",
-            "line_start": 97,
-            "line_end": 127
+            "line_start": 103,
+            "line_end": 151
           },
           {
             "name": "test_04_role_models_and_subagent_alignment",
             "kind": "function",
-            "line_start": 130,
-            "line_end": 149
+            "line_start": 154,
+            "line_end": 173
           },
           {
             "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
             "kind": "function",
-            "line_start": 152,
-            "line_end": 160
+            "line_start": 176,
+            "line_end": 192
+          },
+          {
+            "name": "test_06_code_hygiene_p1_p2_and_modularity_gates",
+            "kind": "function",
+            "line_start": 195,
+            "line_end": 251
           }
         ],
         "pi_registrations": [],
@@ -2969,8 +3615,8 @@
         ],
         "governed_scripts": [
           "C1",
-          "C3",
-          "C7"
+          "C7",
+          "C11"
         ],
         "affected_paths": [
           "schemas/netark_guard_core.py",
@@ -2991,8 +3637,8 @@
         ],
         "governed_scripts": [
           "C1",
-          "C3",
-          "C7"
+          "C7",
+          "C11"
         ],
         "affected_paths": [
           "schemas/netark_guard_core.py",
@@ -3013,8 +3659,8 @@
         ],
         "governed_scripts": [
           "C1",
-          "C3",
-          "C7"
+          "C7",
+          "C11"
         ],
         "affected_paths": [
           "schemas/netark_guard_core.py",
@@ -3035,9 +3681,9 @@
           "100.ARCH-RULES.v1"
         ],
         "governed_scripts": [
-          "C2",
-          "C4",
-          "C6"
+          "C6",
+          "C8",
+          "C10"
         ],
         "affected_paths": [
           "scripts/auto_update_map.py",
@@ -3058,9 +3704,9 @@
           "100.ARCH-RULES.v1"
         ],
         "governed_scripts": [
-          "C2",
-          "C4",
-          "C6"
+          "C6",
+          "C8",
+          "C10"
         ],
         "affected_paths": [
           "scripts/auto_update_map.py",
@@ -3081,9 +3727,9 @@
           "100.ARCH-RULES.v1"
         ],
         "governed_scripts": [
-          "C2",
-          "C4",
-          "C6"
+          "C6",
+          "C8",
+          "C10"
         ],
         "affected_paths": [
           "scripts/auto_update_map.py",
@@ -3145,7 +3791,7 @@
           "000.SOUL.v1"
         ],
         "governed_scripts": [
-          "C6"
+          "C10"
         ],
         "affected_paths": [
           ".netark/extensions/epistemic-gate.ts"
@@ -3163,7 +3809,7 @@
           "000.SOUL.v1"
         ],
         "governed_scripts": [
-          "C6"
+          "C10"
         ],
         "affected_paths": [
           ".netark/extensions/epistemic-gate.ts"
@@ -3181,7 +3827,7 @@
           "000.SOUL.v1"
         ],
         "governed_scripts": [
-          "C6"
+          "C10"
         ],
         "affected_paths": [
           ".netark/extensions/epistemic-gate.ts"

@@ -99,10 +99,7 @@ def install_agy_adapter(root: Path, brain_dir: str = ".netark") -> Path:
     existing["netark-enterprise-guard"] = {
         "enabled": True,
         "SessionStart": [
-            {
-                "matcher": "",
-                "hooks": [{"type": "command", "command": "python3 ../scripts/netark_guard_daemon.py --session-start-mode agy --cwd ..", "timeout": 5}],
-            }
+            {"type": "command", "command": "python3 ../scripts/netark_guard_daemon.py --session-start-mode agy --cwd ..", "timeout": 5}
         ],
         "PreToolUse": [
             {
@@ -117,15 +114,14 @@ def install_agy_adapter(root: Path, brain_dir: str = ".netark") -> Path:
             }
         ],
         "Stop": [
-            {
-                "matcher": "",
-                "hooks": [{"type": "command", "command": "python3 ../scripts/netark_guard_daemon.py --stop-mode agy --cwd ..", "timeout": 10}],
-            }
+            {"type": "command", "command": "python3 ../scripts/netark_guard_daemon.py --stop-mode agy --cwd ..", "timeout": 10}
         ],
     }
     hooks_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     root_agents = root / "AGENTS.md"
-    tmpl_agy_agents = NETARK_SOURCE_ROOT / "templates" / "hosts" / "agy" / "AGENTS.md"
+    tmpl_agy_agents = NETARK_SOURCE_ROOT / "templates" / "hosts" / "agy" / "AGENTS.md.tpl"
+    if not tmpl_agy_agents.exists():
+        tmpl_agy_agents = NETARK_SOURCE_ROOT / "templates" / "hosts" / "agy" / "AGENTS.md"
     if not root_agents.exists() and tmpl_agy_agents.exists():
         shutil.copy2(tmpl_agy_agents, root_agents)
     _sync_workflow_commands(root, root / ".agents" / "workflows", brain_dir=brain_dir)
@@ -169,7 +165,9 @@ def install_claude_adapter(root: Path, brain_dir: str = ".netark") -> Path:
     ]
     settings_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     claude_md = root / "CLAUDE.md"
-    tmpl_claude = NETARK_SOURCE_ROOT / "templates" / "hosts" / "claude" / "CLAUDE.md"
+    tmpl_claude = NETARK_SOURCE_ROOT / "templates" / "hosts" / "claude" / "CLAUDE.md.tpl"
+    if not tmpl_claude.exists():
+        tmpl_claude = NETARK_SOURCE_ROOT / "templates" / "hosts" / "claude" / "CLAUDE.md"
     if not claude_md.exists() and tmpl_claude.exists():
         shutil.copy2(tmpl_claude, claude_md)
     _sync_workflow_commands(root, root / ".claude" / "commands", brain_dir=brain_dir)
@@ -179,22 +177,22 @@ def install_claude_adapter(root: Path, brain_dir: str = ".netark") -> Path:
 def install_pi_adapter(root: Path, brain_dir: str = ".netark") -> Path:
     bdir = root / brain_dir
     bdir.mkdir(parents=True, exist_ok=True)
+    tmpl_pi_dir = NETARK_SOURCE_ROOT / "templates" / "hosts" / "pi"
     src_brain = NETARK_SOURCE_ROOT / ".netark"
     for item in ("settings.json", "role-models.json", "auth.example.json", "AGENTS.md", "models.json", "custom-models.json"):
-        s = src_brain / item
+        tpl_s = tmpl_pi_dir / f"{item}.tpl"
+        s = tpl_s if tpl_s.exists() else (src_brain / item)
         d = bdir / item
         if s.exists() and not d.exists():
             shutil.copy2(s, d)
     for subdir in ("agents", "prompts", "skills", "extensions"):
-        sdir = src_brain / subdir
-        ddir = bdir / subdir
-        if sdir.exists():
-            for sf in sdir.rglob("*"):
-                if sf.is_file():
-                    df = ddir / sf.relative_to(sdir)
-                    if not df.exists():
-                        df.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(sf, df)
+        sdir, ddir = src_brain / subdir, bdir / subdir
+        if not sdir.exists():
+            continue
+        for sf in sdir.rglob("*"):
+            if sf.is_file() and not (df := ddir / sf.relative_to(sdir)).exists():
+                df.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(sf, df)
     pi_settings = bdir / "settings.json"
     if not pi_settings.exists():
         default_pi = {
@@ -214,6 +212,10 @@ def _sync_python_core_if_external(root: Path) -> None:
     for rel_file in (
         "schemas/artifact_header.schema.json",
         "schemas/context_node.schema.json",
+        "schemas/code_hygiene_ast.py",
+        "schemas/codebook_compiler.py",
+        "schemas/topology_graph.py",
+        "schemas/doc_initializer.py",
         "schemas/schema_validator.py",
         "schemas/netark_guard_core.py",
         "scripts/netark_guard_daemon.py",

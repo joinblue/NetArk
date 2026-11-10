@@ -15,6 +15,12 @@ description: 通用根因除錯標準作業程序 (Root-Cause Debugging SOP) —
 - 使用 `grep`、`find` 與 `read` 沿著呼叫堆疊或資料流定位實際發生偏差之檔案與行號。
 - 提出明確可證偽的根因假設 (`[HYPOTHESIS]`)，並透過最小探針或唯讀檢索驗證其真偽，轉化為 `[FACT]`。
 
+### 🔄 三步逆推檢核表 (3-Step Reverse Debugging Checklist `[HYG-DEBUG]`)
+嚴禁在報錯位置就地疊加深層 `if` 或 `try/except: pass` 糊牆，動筆修改前必須依序完成並輸出以下三步逆推鏈 `[Return Point -> Call Chain -> Entry Input]`：
+1. **Step 1 — 鎖定異常回傳終點 (`Return Point`)**：精確指出拋出異常或回傳非預期值之檔案、函式與行號，定義何謂「非預期狀態」。
+2. **Step 2 — 呼叫鏈逆向回溯 (`Call Chain`)**：沿呼叫堆疊向上逆推參數傳遞路徑，定位狀態首次偏離契約之中間節點，拒絕在中間層包覆 `try/except` 掩蓋壞資料。
+3. **Step 3 — 入口邊界防衛斷言 (`Entry Input & Fail-Fast`)**：找到最初接收外部輸入或未驗證參數之模組入口，於入口處補齊 Early-Return / Fail-Fast 邊界驗證，從源頭阻斷髒資料流入。
+
 ## 3. 最小邊界修復與防作弊鐵律 (Minimal Fix & Anti-Gaming)
 - **只修病根，不改裁判**：針對根因進行最小範圍之精準修改 (`edit`)，**嚴禁透過放寬測試斷言、刪除測試案例或修改 `schemas/` 來掩蓋錯誤**。
 - **路徑可攜性**：所有新增或修改之程式碼與設定一律使用專案相對路徑，嚴禁寫入本機絕對路徑。

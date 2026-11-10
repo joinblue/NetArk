@@ -3,7 +3,8 @@
 You are operating inside a **NetArk (`N.E.T.A.R.K.`)** governed workspace.
 
 ## 1. Turn-1 `@D/@C/@G` Codebook Map & Progressive Memory Disclosure
-- On `SessionStart`, `.agents/hooks.json` automatically injects the frozen `@D/@C/@G` Codebook Map (`memory/index/CONTEXT_INDEX.json`) and `memory/episodic/HANDOVER.md`.
+- On `SessionStart`, `.agents/hooks.json` automatically injects the frozen `@D/@C/@G` Codebook Map (`memory/codex/CONTEXT_MAP.md`) and `memory/episodic/HANDOVER.md`.
+- Inspect `memory/codex/CONTEXT_MAP.md` for fast human/agent directory routing (Do NOT directly read `memory/index/CONTEXT_INDEX.json` giant JSON compiled database).
 - Core memory nodes reside in `memory/codex/{000_SOUL,100_ARCH_RULES,200_DECISIONS}.md`, `memory/LEDGER.md` (`<= 80` lines), and `memory/episodic/HANDOVER.md` (`<= 65` lines).
 - Temporary scripts and scratch notes belong in `scratch/`.
 

@@ -14,7 +14,7 @@ reviewer:
   model: "deepseek-ai/deepseek-v4.1-flash"
   verdict: "APPROVED"
 epistemic_profile:
-  fact_count: 5
+  fact_count: 6
   inferred_count: 1
   hypothesis_count: 0
   unverified_count: 0
@@ -61,3 +61,15 @@ topology:
 - [FACT] `SEC-CRED` blocks all direct or subshell/AST access to `.env*` (except `.env.example`), `auth.json`, `*vault*.json`, and SSH/cloud private keys.
 - [FACT] Persistent plaintext redaction vaults (`.session_vault.json`) and two-way secret restoration are abolished; `SEC-PREWRITE-SECRET` blocks writing hardcoded credentials across 12 secret formats and instructs using `os.environ.get('KEY_NAME')`.
 - [INFERRED] Enforcing boundary blocking (`SEC-CRED`) plus pre-write secret linting (`SEC-PREWRITE-SECRET`) eliminates vault leakage, `edit_file` mismatches, and secret restoration attacks.
+
+## §3 Code Hygiene & Structural Anti-Bloat Rules (`HYG-01` ~ `HYG-05`)
+
+- [FACT] All workspace code mutations are governed by Turn-1 `@G` contract injection and `schemas/code_hygiene_ast.py` Pre-Write AST checks enforcing `HYG-01 ~ HYG-05`:
+
+| Code | Rule | Specification |
+| :--- | :--- | :--- |
+| **`HYG-01`** | Max Control-Flow Nesting | Function control-flow nesting depth must be `<= 4` layers (`elif` chains and method chains excluded); use Early-Return guard clauses. |
+| **`HYG-02`** | No Silent Exceptions | Bare `except: pass` / `except: ...` is blocked at Pre-Write unless explicitly annotated with `# noqa: silent-except`. |
+| **`HYG-03`** | Backward Entry Trace | Never patch bugs locally with nested `if/try`; trace `[Return Point -> Call Chain -> Entry Input]` and add Fail-Fast entry validation. |
+| **`HYG-04`** | Single-Pass Dead-Code Radar | Single-pass AST scan extracts symbols, max nesting depth, and `unused_imports` to eliminate dead variables and orphan functions. |
+| **`HYG-05`** | Tiered Modularity Gate | Target module size `<= 400` lines; `401~550` lines emits a soft warning; `> 550` lines with net line growth (`new > old`) triggers a hard block. |

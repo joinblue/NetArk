@@ -5,7 +5,7 @@ access_tier: "restricted"
 priority: "critical"
 status: "verified"
 created_at: "2026-11-08"
-updated_at: "2026-11-08"
+updated_at: "2026-11-10"
 author:
   role: "architect"
   model: "nvidia/nemotron-3-ultra-550b-a55b"
@@ -14,7 +14,7 @@ reviewer:
   model: "deepseek-ai/deepseek-v4.1-flash"
   verdict: "APPROVED"
 epistemic_profile:
-  fact_count: 5
+  fact_count: 6
   inferred_count: 1
   hypothesis_count: 0
   unverified_count: 0
@@ -63,3 +63,15 @@ topology:
 - [FACT] `SEC-CRED` 最高機密黑名單涵蓋 `.env*`（排除 `.env.example`）、`auth.json`、`*vault*.json`、SSH 私鑰與雲端憑證檔，透過 Stage A/B/C 三階段 Shell + Python AST 解析器 100% 阻斷直接與間接讀取。
 - [FACT] 全面廢除落盤明文對照表（`.session_vault.json`）與雙向替換機制，改由 `SEC-PREWRITE-SECRET` 寫檔前防呆攔截（精準檢測 12 種金鑰格式），強制程式碼改用 `os.environ.get('KEY_NAME')` 並由人類使用者設定 `.env`。
 - [INFERRED] 以「邊界阻斷（`SEC-CRED`）+ 寫檔前防呆（`SEC-PREWRITE-SECRET`）+ 單向輸出脫敏」取代雙向還原戲法，可同時根除對照檔洩漏、`edit_file` 脫靶、高熵誤傷與誘導還原攻擊。
+
+## §3 代碼衛生與結構防腐規範 (`HYG-01` ~ `HYG-05`)
+
+- [FACT] 所有工作區新增或修改之程式碼受 Turn-1 `@G` 治理契約與 `schemas/code_hygiene_ast.py` Pre-Write AST 門禁雙重約束，強制執行 `HYG-01 ~ HYG-05` 結構衛生標準：
+
+| 代號 | 名稱 | 規則摘要 |
+| :--- | :--- | :--- |
+| **`HYG-01`** | 控制流深度上限 | 函式控制流最大嵌套深度嚴格 `<= 4 層`（平行 `elif` 與方法鏈不累加），優先使用 Early-Return (衛語句)。 |
+| **`HYG-02`** | 禁絕靜默吞異常 | 嚴禁無處理之 `except: pass` / `except: ...`，合法非阻塞豁免必須明確標註 `# noqa: silent-except`。 |
+| **`HYG-03`** | 入口反向溯源防禦 | 遇非預期回傳或 Bug，禁止就地疊加 `if/try` 補丁，必須逆推 `[Return Point -> Call Chain -> Entry Input]` 並於入口加設 Fail-Fast 驗證。 |
+| **`HYG-04`** | 單次 AST 廢代碼雷達 | 以 Single-Pass AST 掃描同步提取符號、嵌套深度與孤立 `unused_imports`，持續清創死變數與死函式。 |
+| **`HYG-05`** | 模組化分級行數門禁 | 核心模組目標 `<= 400 行`；`401~550 行` 為軟警告緩衝區；`> 550 行` 且淨增行數 `> 0` 觸發 Pre-Write 硬性阻斷。 |

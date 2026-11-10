@@ -9,6 +9,7 @@
 .netark/sessions/
 .netark/bin/
 .netark/audit/
+.netark/trust.json
 .netark/models-store.json
 .netark/.*vault*.json
 .*vault*.json
