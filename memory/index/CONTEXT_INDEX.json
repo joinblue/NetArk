@@ -2,7 +2,7 @@
   "schema_version": "2.3.0",
   "project": "NetArk",
   "harness": "NetArk",
-  "generated_at": "2026-11-11T09:17:01Z",
+  "generated_at": "2026-11-11T13:29:18Z",
   "total_nodes": 5,
   "healed_links": [],
   "pending_topology_alignments": [],
@@ -584,7 +584,7 @@
     "schemas/codebook_compiler.py": {
       "file_path": "schemas/codebook_compiler.py",
       "language": "python",
-      "total_lines": 322,
+      "total_lines": 323,
       "symbols": [
         {
           "name": "_select_codebook_scripts",
@@ -608,19 +608,19 @@
           "name": "compile_codebook_map",
           "kind": "function",
           "line_start": 80,
-          "line_end": 237
+          "line_end": 238
         },
         {
           "name": "render_context_map",
           "kind": "function",
-          "line_start": 243,
-          "line_end": 308
+          "line_start": 244,
+          "line_end": 309
         },
         {
           "name": "render_private_context_map",
           "kind": "function",
-          "line_start": 314,
-          "line_end": 319
+          "line_start": 315,
+          "line_end": 320
         }
       ],
       "pi_registrations": [],
@@ -1123,7 +1123,7 @@
     "scripts/netark_init.py": {
       "file_path": "scripts/netark_init.py",
       "language": "python",
-      "total_lines": 320,
+      "total_lines": 325,
       "symbols": [
         {
           "name": "ensure_enterprise_policy",
@@ -1159,25 +1159,25 @@
           "name": "install_pi_adapter",
           "kind": "function",
           "line_start": 177,
-          "line_end": 206
+          "line_end": 207
         },
         {
           "name": "_sync_python_core_if_external",
           "kind": "function",
-          "line_start": 209,
-          "line_end": 240
+          "line_start": 210,
+          "line_end": 241
         },
         {
           "name": "bootstrap_bilingual_memory",
           "kind": "function",
-          "line_start": 243,
-          "line_end": 258
+          "line_start": 244,
+          "line_end": 261
         },
         {
           "name": "initialize_workspace",
           "kind": "function",
-          "line_start": 261,
-          "line_end": 289
+          "line_start": 264,
+          "line_end": 293
         }
       ],
       "pi_registrations": [],
@@ -1313,7 +1313,7 @@
     "scripts/test_netark_harness.py": {
       "file_path": "scripts/test_netark_harness.py",
       "language": "python",
-      "total_lines": 263,
+      "total_lines": 274,
       "symbols": [
         {
           "name": "test_01_clean_5_core_nodes_and_oracle",
@@ -1331,25 +1331,25 @@
           "name": "test_03_codebook_topology_map_and_reverse_lookup",
           "kind": "function",
           "line_start": 103,
-          "line_end": 151
+          "line_end": 153
         },
         {
           "name": "test_04_role_models_and_subagent_alignment",
           "kind": "function",
-          "line_start": 154,
-          "line_end": 173
+          "line_start": 156,
+          "line_end": 175
         },
         {
           "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
           "kind": "function",
-          "line_start": 176,
-          "line_end": 194
+          "line_start": 178,
+          "line_end": 205
         },
         {
           "name": "test_06_code_hygiene_p1_p2_and_modularity_gates",
           "kind": "function",
-          "line_start": 197,
-          "line_end": 253
+          "line_start": 208,
+          "line_end": 264
         }
       ],
       "pi_registrations": [],
@@ -1367,7 +1367,7 @@
     ".netark/extensions/epistemic-gate.ts": {
       "file_path": ".netark/extensions/epistemic-gate.ts",
       "language": "typescript",
-      "total_lines": 328,
+      "total_lines": 351,
       "symbols": [
         {
           "name": "CATALOG_STAGE2_THRESHOLD",
@@ -1454,7 +1454,7 @@
         {
           "kind": "hook",
           "name": "tool_result",
-          "line": 240
+          "line": 263
         }
       ],
       "command_conflicts": [],
@@ -1481,7 +1481,7 @@
     ".netark/extensions/epistemic-library-tools.ts": {
       "file_path": ".netark/extensions/epistemic-library-tools.ts",
       "language": "typescript",
-      "total_lines": 302,
+      "total_lines": 318,
       "symbols": [
         {
           "name": "findAffectedMemoryNodes",
@@ -1510,20 +1510,20 @@
         {
           "name": "registerEpistemicLibraryTools",
           "kind": "function",
-          "line_start": 262,
-          "line_end": 262
+          "line_start": 270,
+          "line_end": 270
         }
       ],
       "pi_registrations": [
         {
           "kind": "tool",
           "name": "query_library",
-          "line": 266
+          "line": 274
         },
         {
           "kind": "tool",
           "name": "code_intelligence_map",
-          "line": 284
+          "line": 296
         }
       ],
       "command_conflicts": [],
@@ -1926,7 +1926,7 @@
     ".netark/extensions/workspace-guard.ts": {
       "file_path": ".netark/extensions/workspace-guard.ts",
       "language": "typescript",
-      "total_lines": 350,
+      "total_lines": 354,
       "symbols": [],
       "pi_registrations": [
         {
@@ -1947,7 +1947,7 @@
         {
           "kind": "command",
           "name": "/guard",
-          "line": 301
+          "line": 305
         }
       ],
       "command_conflicts": [],
@@ -2040,8 +2040,8 @@
     "total_nodes": 5,
     "total_scripts": 21,
     "raw_char_estimate": 32168,
-    "compact_char_count": 2453,
-    "compression_ratio_pct": 92.4,
+    "compact_char_count": 2910,
+    "compression_ratio_pct": 91.0,
     "dirs": {
       "M": "memory/",
       "C": "memory/codex/",
@@ -2074,7 +2074,7 @@
       "C19": "scripts/test_netark_enterprise_guard.py",
       "C20": "scripts/test_netark_harness.py"
     },
-    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-322) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-320)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-302) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-263)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
+    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-323) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-325)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-351) | C11=X:workspace-guard.ts(L1-354)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-318) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-274)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n  [DELEGATE] Mandatory IF-THEN Routing: (1) Multi-file search or messy/large doc digestion (>=2 files or >300 lines, e.g. in scratch/) -> MUST call dispatch_specialist(specialist='scout', filePaths=[...]) instead of manual sliced read; (2) Code implementation/refactoring (>50 lines or multi-file) -> MUST delegate to dispatch_specialist(specialist='code') or subagent(agent='worker'); (3) NEVER use bash(cat << EOF) or /tmp to bypass write/edit AST gates.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
     "reverse_lookup": {
       "C0": {
         "kind": "script",
@@ -2308,8 +2308,8 @@
         "code": "C3",
         "path": "schemas/codebook_compiler.py",
         "dir_code": "H",
-        "line_range": "L1-322",
-        "total_lines": 322,
+        "line_range": "L1-323",
+        "total_lines": 323,
         "language": "python",
         "symbols": [
           {
@@ -2334,19 +2334,19 @@
             "name": "compile_codebook_map",
             "kind": "function",
             "line_start": 80,
-            "line_end": 237
+            "line_end": 238
           },
           {
             "name": "render_context_map",
             "kind": "function",
-            "line_start": 243,
-            "line_end": 308
+            "line_start": 244,
+            "line_end": 309
           },
           {
             "name": "render_private_context_map",
             "kind": "function",
-            "line_start": 314,
-            "line_end": 319
+            "line_start": 315,
+            "line_end": 320
           }
         ],
         "pi_registrations": [],
@@ -2645,8 +2645,8 @@
         "code": "C8",
         "path": "scripts/netark_init.py",
         "dir_code": "S",
-        "line_range": "L1-320",
-        "total_lines": 320,
+        "line_range": "L1-325",
+        "total_lines": 325,
         "language": "python",
         "symbols": [
           {
@@ -2683,25 +2683,25 @@
             "name": "install_pi_adapter",
             "kind": "function",
             "line_start": 177,
-            "line_end": 206
+            "line_end": 207
           },
           {
             "name": "_sync_python_core_if_external",
             "kind": "function",
-            "line_start": 209,
-            "line_end": 240
+            "line_start": 210,
+            "line_end": 241
           },
           {
             "name": "bootstrap_bilingual_memory",
             "kind": "function",
-            "line_start": 243,
-            "line_end": 258
+            "line_start": 244,
+            "line_end": 261
           },
           {
             "name": "initialize_workspace",
             "kind": "function",
-            "line_start": 261,
-            "line_end": 289
+            "line_start": 264,
+            "line_end": 293
           }
         ],
         "pi_registrations": [],
@@ -2786,8 +2786,8 @@
         "code": "C10",
         "path": ".netark/extensions/epistemic-gate.ts",
         "dir_code": "X",
-        "line_range": "L1-328",
-        "total_lines": 328,
+        "line_range": "L1-351",
+        "total_lines": 351,
         "language": "typescript",
         "symbols": [
           {
@@ -2875,7 +2875,7 @@
           {
             "kind": "hook",
             "name": "tool_result",
-            "line": 240
+            "line": 263
           }
         ],
         "governing_specs": [
@@ -2898,8 +2898,8 @@
         "code": "C11",
         "path": ".netark/extensions/workspace-guard.ts",
         "dir_code": "X",
-        "line_range": "L1-350",
-        "total_lines": 350,
+        "line_range": "L1-354",
+        "total_lines": 354,
         "language": "typescript",
         "symbols": [],
         "pi_registrations": [
@@ -2921,7 +2921,7 @@
           {
             "kind": "command",
             "name": "/guard",
-            "line": 301
+            "line": 305
           }
         ],
         "governing_specs": [
@@ -3226,8 +3226,8 @@
         "code": "C15",
         "path": ".netark/extensions/epistemic-library-tools.ts",
         "dir_code": "X",
-        "line_range": "L1-302",
-        "total_lines": 302,
+        "line_range": "L1-318",
+        "total_lines": 318,
         "language": "typescript",
         "symbols": [
           {
@@ -3257,20 +3257,20 @@
           {
             "name": "registerEpistemicLibraryTools",
             "kind": "function",
-            "line_start": 262,
-            "line_end": 262
+            "line_start": 270,
+            "line_end": 270
           }
         ],
         "pi_registrations": [
           {
             "kind": "tool",
             "name": "query_library",
-            "line": 266
+            "line": 274
           },
           {
             "kind": "tool",
             "name": "code_intelligence_map",
-            "line": 284
+            "line": 296
           }
         ],
         "governing_specs": []
@@ -3475,8 +3475,8 @@
         "code": "C20",
         "path": "scripts/test_netark_harness.py",
         "dir_code": "S",
-        "line_range": "L1-263",
-        "total_lines": 263,
+        "line_range": "L1-274",
+        "total_lines": 274,
         "language": "python",
         "symbols": [
           {
@@ -3495,25 +3495,25 @@
             "name": "test_03_codebook_topology_map_and_reverse_lookup",
             "kind": "function",
             "line_start": 103,
-            "line_end": 151
+            "line_end": 153
           },
           {
             "name": "test_04_role_models_and_subagent_alignment",
             "kind": "function",
-            "line_start": 154,
-            "line_end": 173
+            "line_start": 156,
+            "line_end": 175
           },
           {
             "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
             "kind": "function",
-            "line_start": 176,
-            "line_end": 194
+            "line_start": 178,
+            "line_end": 205
           },
           {
             "name": "test_06_code_hygiene_p1_p2_and_modularity_gates",
             "kind": "function",
-            "line_start": 197,
-            "line_end": 253
+            "line_start": 208,
+            "line_end": 264
           }
         ],
         "pi_registrations": [],

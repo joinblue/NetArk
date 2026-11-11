@@ -24,9 +24,10 @@
    - **優先使用 `@D/@C/@G` 代號地圖與 `query_library`**：系統於 Turn 1 開局自動凍結注入 `@D`（目錄字典）、`@C`（腳本代號 `C0..Cn`）與 `@G`（拓撲突觸邊）及 `HANDOVER.md` 快照。查閱規格或腳本時，**可直接呼叫 `query_library(query="C1")` 或 `query_library(query="100")` 反查展開完整路徑與 AST 函數行號**，避免第一輪盲目執行 `ls`/`find`。
    - 唯一活躍台帳 `memory/LEDGER.md` 嚴格保持 $\le 80$ 行；微對話交接快照 `memory/episodic/HANDOVER.md` 保持 $\le 65$ 行。
    - 關鍵架構陳述於 Markdown 列表行首標註 `- [FACT]`、`- [INFERRED]`、`- [HYPOTHESIS]` 或 `- [UNVERIFIED]`；公文軌節點標記為 `verified` 時，`author.model` 與 `reviewer.model` 須為不同模型家族並通過 `python3 schemas/schema_validator.py --run-oracle`。
-3. **智慧專家派工 (`dispatch_specialist`) 與獨立沙盒子代理 (`subagent`)**：
-   - 呼叫 `dispatch_specialist` 時傳入相關 `filePaths`；專家內建唯讀探查工具（`read_file`, `list_dir`, `grep_search`），而 `specialist="code"` 內建安全寫檔與語法檢查工具（`edit_file`, `write_file`, `run_syntax_check`）。
-   - 大型跨檔實作與端到端測試可委派 `subagent(agent="worker"|"scout"|"auditor")` 或 `/team` 協作鏈。
+3. **強制專家派工觸發鐵律 (`Mandatory Specialist Delegation IF-THEN Rules`)**：
+   - **【IF 多檔檢索 / 雜亂大檔提純 $\rightarrow$ MUST 派 `scout`】**：凡涉及 $\ge 2$ 個檔案檢索比對、或整理 `scratch/` 內雜亂/衝突/大型舊文件（單檔 $> 300$ 行），主腦**必須主動呼叫** `dispatch_specialist(specialist="scout", filePaths=[...], task="...")` 或 `subagent(agent="scout")` 側路提純，**嚴禁主腦自行連續 `read` 分段硬讀污染主 Context**（無須等使用者點名才呼叫）。
+   - **【IF 模組實作 / 跨檔重構 $\rightarrow$ MUST 派 `code` / `worker`】**：凡涉及撰寫 $> 50$ 行程式碼、新建模組或跨檔修改，主腦**必須優先呼叫** `dispatch_specialist(specialist="code", filePaths=[...], task="...")`（內建 `edit_file`, `write_file`, `run_syntax_check`）或 `subagent(agent="worker")` 執行，主腦專注於架構規劃、契約審查與驗收。
+   - **【禁繞過寫檔門禁與禁寫專案外 `/tmp`】**：撰寫或測試程式碼必須使用 `write`/`edit` 工具（測試與草稿一律放專案內 `scratch/`），**嚴禁使用 `bash` (`cat > ... << 'EOF'`) 或寫入 `/tmp` 繞過 Pre-Write AST 護欄**。
 
 ## 3. 專案目錄與內建專屬指令
 

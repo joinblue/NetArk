@@ -125,9 +125,11 @@ def test_03_codebook_topology_map_and_reverse_lookup() -> None:
         "[AST]",
         "[HYG-AST]",
         "[HYG-DEBUG]",
+        "[DELEGATE]",
     ):
         assert required_section in compact, f"Missing {required_section} in compact_text:\n{compact}"
 
+    (PROJECT_ROOT / "memory" / "wiki").mkdir(parents=True, exist_ok=True)
     tmp_wiki = PROJECT_ROOT / "memory" / "wiki" / "310_TEST_AUTO_INIT_MEMO.md"
     try:
         tmp_wiki.write_text("# 測試自動補標頭備忘錄\n\n- [FACT] 驗證開架區免手寫標頭自動立案。\n", encoding="utf-8")
@@ -179,14 +181,23 @@ def test_05_extensions_turn1_codebook_and_guard_hooks() -> None:
     wg_ts = (PROJECT_ROOT / ".netark" / "extensions" / "workspace-guard.ts").read_text(encoding="utf-8")
     elt_ts = (PROJECT_ROOT / ".netark" / "extensions" / "epistemic-library-tools.ts").read_text(encoding="utf-8")
     gsp_ts = (PROJECT_ROOT / ".netark" / "extensions" / "guard-shell-parser.ts").read_text(encoding="utf-8")
-    assert "codebook_map" in eg_ts and "compact_text" in eg_ts
+    assert "codebook_map" in eg_ts and "compact_text" in eg_ts and "check_python_ast_hygiene" in eg_ts
     assert "reverse_lookup" in eg_ts
-    assert "SEC-PREWRITE-SECRET" in wg_ts
+    assert "SEC-PREWRITE-SECRET" in wg_ts and "editsText" in wg_ts
     assert "recordGuardAuditEvent" in wg_ts
     assert "soc2_audit.jsonl" in wg_ts
     assert "歷史與本輪攔截統計" in wg_ts
-    assert "query_library" in elt_ts and "code_intelligence_map" in elt_ts
+    assert "query_library" in elt_ts and "code_intelligence_map" in elt_ts and "resolveToolExecArgs" in elt_ts
     assert "parseShellCommandQuoteAware" in gsp_ts and "isReadOnlyBashCommand" in gsp_ts
+    node_check = (
+        "import { registerEpistemicLibraryTools } from './.netark/extensions/epistemic-library-tools.ts';"
+        "const tools={}; registerEpistemicLibraryTools({registerTool:(t)=>{tools[t.name]=t;}});"
+        "const r1=await tools.query_library.execute('call-1',{query:'100'},undefined,undefined,{cwd:process.cwd()});"
+        "if(!r1?.content?.[0]?.text?.includes('100.ARCH-RULES.v1')) throw new Error('query_library 5-arg failed');"
+        "const r2=await tools.code_intelligence_map.execute('call-2',{limit:2},undefined,undefined,{cwd:process.cwd()});"
+        "if(!r2?.content?.[0]?.text) throw new Error('code_intelligence_map 5-arg failed');"
+    )
+    subprocess.run(["node", "--experimental-strip-types", "--input-type=module", "-e", node_check], cwd=str(PROJECT_ROOT), check=True, capture_output=True)
     for ts_file in sorted((PROJECT_ROOT / ".netark" / "extensions").glob("*.ts")):
         ts_src = ts_file.read_text(encoding="utf-8")
         assert ".Friday" not in ts_src and "PotoTypeV0" not in ts_src

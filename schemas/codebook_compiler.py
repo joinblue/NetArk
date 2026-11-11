@@ -209,6 +209,7 @@ def compile_codebook_map(
         f"  [AST] {' | '.join(ast_edges) if ast_edges else '(none)'}",
         "  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).",
         "  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.",
+        "  [DELEGATE] Mandatory IF-THEN Routing: (1) Multi-file search or messy/large doc digestion (>=2 files or >300 lines, e.g. in scratch/) -> MUST call dispatch_specialist(specialist='scout', filePaths=[...]) instead of manual sliced read; (2) Code implementation/refactoring (>50 lines or multi-file) -> MUST delegate to dispatch_specialist(specialist='code') or subagent(agent='worker'); (3) NEVER use bash(cat << EOF) or /tmp to bypass write/edit AST gates.",
     ]
     compact_lines = [
         f"## 🧭 [{project_root.name} Turn-1 Frozen Codebook Map] (Nodes: {total_nodes} | Scripts: {len(selected_scripts)} | Tier: {tier})",

@@ -8,9 +8,11 @@ You are operating inside a **NetArk (`N.E.T.A.R.K.`)** governed workspace.
 - Core memory nodes reside in `memory/codex/{000_SOUL,100_ARCH_RULES,200_DECISIONS}.md`, `memory/LEDGER.md` (`<= 80` lines), and `memory/episodic/HANDOVER.md` (`<= 65` lines).
 - Temporary scripts and scratch notes belong in `scratch/`.
 
-## 2. Epistemic Honesty & Cross-Subagent Review (`invoke_subagent`)
+## 2. Epistemic Honesty & Mandatory Subagent Delegation (`invoke_subagent` IF-THEN Rules)
 - Prefix key claims in governed Markdown lists with `- [FACT]`, `- [INFERRED]`, `- [HYPOTHESIS]`, or `- [UNVERIFIED]`.
-- For heterogeneous review on official specs, use AGY's native `invoke_subagent` tool (`research` or `self`) to verify claims against ground-truth files, then run `python3 schemas/schema_validator.py --run-oracle`.
+- **[IF Multi-File Search / Messy Doc Digestion ($\ge 2$ files or $> 300$ lines, e.g. in `scratch/`) $\rightarrow$ MUST Delegate]**: Proactively call `invoke_subagent(TypeName="research", ...)` (or `nexus-sidecar` MCP tools if available) to digest off-context instead of reading giant files into the main context.
+- **[IF Multi-File Code Implementation / Refactoring or Spec Verification $\rightarrow$ MUST Delegate]**: Delegate isolated implementation or cross-subagent verification via `invoke_subagent(TypeName="self"|"research", ...)`, then run `python3 schemas/schema_validator.py --run-oracle`.
+- **[No Gate Bypass]**: Always use native `write_file`/`edit_file` tools for code and tests (place temporary tests in `scratch/`); NEVER use `bash` (`cat > ... << 'EOF'`) or `/tmp` to bypass Pre-Write AST hygiene gates (`HYG-01` nesting $\le 4$, `HYG-02` no silent `except: pass`).
 
 ## 3. Security Guardrails (`SEC-CRED` & `SEC-PREWRITE-SECRET`)
 - Never read or write `.env*`, `auth.json`, or `*vault*.json` (`SEC-CRED`).

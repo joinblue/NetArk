@@ -87,7 +87,7 @@ def _sync_skills(dest_skills_dir: Path) -> None:
             shutil.copy2(skill_md, dst)
 
 
-def install_agy_adapter(root: Path, brain_dir: str = ".netark") -> Path:
+def install_agy_adapter(root: Path, brain_dir: str = ".netark", update: bool = False) -> Path:
     hooks_path = root / ".agents" / "hooks.json"
     hooks_path.parent.mkdir(parents=True, exist_ok=True)
     existing: Dict[str, Any] = {}
@@ -122,14 +122,14 @@ def install_agy_adapter(root: Path, brain_dir: str = ".netark") -> Path:
     tmpl_agy_agents = NETARK_SOURCE_ROOT / "templates" / "hosts" / "agy" / "AGENTS.md.tpl"
     if not tmpl_agy_agents.exists():
         tmpl_agy_agents = NETARK_SOURCE_ROOT / "templates" / "hosts" / "agy" / "AGENTS.md"
-    if not root_agents.exists() and tmpl_agy_agents.exists():
+    if (update or not root_agents.exists()) and tmpl_agy_agents.exists():
         shutil.copy2(tmpl_agy_agents, root_agents)
     _sync_workflow_commands(root, root / ".agents" / "workflows", brain_dir=brain_dir)
     _sync_skills(root / ".agents" / "skills")
     return hooks_path
 
 
-def install_claude_adapter(root: Path, brain_dir: str = ".netark") -> Path:
+def install_claude_adapter(root: Path, brain_dir: str = ".netark", update: bool = False) -> Path:
     settings_path = root / ".claude" / "settings.json"
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     existing: Dict[str, Any] = {}
@@ -168,13 +168,13 @@ def install_claude_adapter(root: Path, brain_dir: str = ".netark") -> Path:
     tmpl_claude = NETARK_SOURCE_ROOT / "templates" / "hosts" / "claude" / "CLAUDE.md.tpl"
     if not tmpl_claude.exists():
         tmpl_claude = NETARK_SOURCE_ROOT / "templates" / "hosts" / "claude" / "CLAUDE.md"
-    if not claude_md.exists() and tmpl_claude.exists():
+    if (update or not claude_md.exists()) and tmpl_claude.exists():
         shutil.copy2(tmpl_claude, claude_md)
     _sync_workflow_commands(root, root / ".claude" / "commands", brain_dir=brain_dir)
     return settings_path
 
 
-def install_pi_adapter(root: Path, brain_dir: str = ".netark") -> Path:
+def install_pi_adapter(root: Path, brain_dir: str = ".netark", update: bool = False) -> Path:
     bdir = root / brain_dir
     bdir.mkdir(parents=True, exist_ok=True)
     tmpl_pi_dir = NETARK_SOURCE_ROOT / "templates" / "hosts" / "pi"
@@ -183,14 +183,15 @@ def install_pi_adapter(root: Path, brain_dir: str = ".netark") -> Path:
         tpl_s = tmpl_pi_dir / f"{item}.tpl"
         s = tpl_s if tpl_s.exists() else (src_brain / item)
         d = bdir / item
-        if s.exists() and not d.exists():
+        if s.exists() and (not d.exists() or (update and item in {"AGENTS.md", "models.json", "auth.example.json"})):
             shutil.copy2(s, d)
     for subdir in ("agents", "prompts", "skills", "extensions"):
         sdir, ddir = src_brain / subdir, bdir / subdir
         if not sdir.exists():
             continue
         for sf in sdir.rglob("*"):
-            if sf.is_file() and not (df := ddir / sf.relative_to(sdir)).exists():
+            if sf.is_file() and (update or not (df := ddir / sf.relative_to(sdir)).exists()):
+                df = ddir / sf.relative_to(sdir)
                 df.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(sf, df)
     pi_settings = bdir / "settings.json"
@@ -206,7 +207,7 @@ def install_pi_adapter(root: Path, brain_dir: str = ".netark") -> Path:
     return pi_settings
 
 
-def _sync_python_core_if_external(root: Path) -> None:
+def _sync_python_core_if_external(root: Path, update: bool = False) -> None:
     if root.resolve() == NETARK_SOURCE_ROOT.resolve():
         return
     for rel_file in (
@@ -235,7 +236,7 @@ def _sync_python_core_if_external(root: Path) -> None:
     ):
         src = NETARK_SOURCE_ROOT / rel_file
         dst = root / rel_file
-        if src.exists() and not dst.exists():
+        if src.exists() and (not dst.exists() or (update and rel_file != ".gitignore")):
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
 
@@ -243,6 +244,8 @@ def _sync_python_core_if_external(root: Path) -> None:
 def bootstrap_bilingual_memory(root: Path, lang: str) -> List[str]:
     today = datetime.date.today().isoformat()
     created: List[str] = []
+    for std_dir in ("memory/wiki", "memory/specs", "memory/audits", "scratch"):
+        (root / std_dir).mkdir(parents=True, exist_ok=True)
     tmpl_dir = NETARK_SOURCE_ROOT / "templates" / "memory" / lang
     for tmpl_name, dest_rel in CORE_MEMORY_MAP:
         dst = root / dest_rel
@@ -258,20 +261,20 @@ def bootstrap_bilingual_memory(root: Path, lang: str) -> List[str]:
     return created
 
 
-def initialize_workspace(cwd: str = ".", target: str = "pi", lang: str = "zh-TW", brain_dir: str = ".netark") -> Dict[str, Any]:
+def initialize_workspace(cwd: str = ".", target: str = "pi", lang: str = "zh-TW", brain_dir: str = ".netark", update: bool = False) -> Dict[str, Any]:
     root = Path(cwd).resolve()
-    _sync_python_core_if_external(root)
+    _sync_python_core_if_external(root, update=update)
     policy_path = ensure_enterprise_policy(root, brain_dir=brain_dir)
     configured_hosts: List[str] = []
     adapter_files: List[str] = []
     targets = ["pi", "agy", "claude"] if target == "all" else [target]
     for t in targets:
         if t == "pi":
-            p = install_pi_adapter(root, brain_dir=brain_dir)
+            p = install_pi_adapter(root, brain_dir=brain_dir, update=update)
         elif t == "agy":
-            p = install_agy_adapter(root, brain_dir=brain_dir)
+            p = install_agy_adapter(root, brain_dir=brain_dir, update=update)
         elif t == "claude":
-            p = install_claude_adapter(root, brain_dir=brain_dir)
+            p = install_claude_adapter(root, brain_dir=brain_dir, update=update)
         else:
             continue
         configured_hosts.append(t)
@@ -283,6 +286,7 @@ def initialize_workspace(cwd: str = ".", target: str = "pi", lang: str = "zh-TW"
         "brain_dir": brain_dir,
         "targets": configured_hosts,
         "lang": lang,
+        "updated": update,
         "enterprise_policy": str(policy_path.relative_to(root)),
         "adapter_files": adapter_files,
         "bootstrapped_memory_nodes": bootstrapped_nodes,
@@ -295,6 +299,7 @@ if __name__ == "__main__":
     parser.add_argument("--lang", choices=["zh-TW", "en"], default="zh-TW", help="Language for fresh memory templates")
     parser.add_argument("--cwd", default=".", help="Target workspace root directory")
     parser.add_argument("--brain-dir", default=".netark", help="Portable brain directory name (default: .netark)")
+    parser.add_argument("--update", action="store_true", help="Update engine scripts, schemas, extensions & host rules in-place while preserving memory & auth")
     parser.add_argument("--self-test", action="store_true", help="Run built-in multi-host & bilingual installer verification")
     args = parser.parse_args()
 
@@ -317,4 +322,4 @@ if __name__ == "__main__":
         print(json.dumps({"status": "ok", "self_test": "passed", "targets_verified": ["pi", "agy", "claude"], "langs_verified": ["zh-TW", "en"]}))
         sys.exit(0)
 
-    print(json.dumps(initialize_workspace(cwd=args.cwd, target=args.target, lang=args.lang, brain_dir=args.brain_dir), indent=2, ensure_ascii=False))
+    print(json.dumps(initialize_workspace(cwd=args.cwd, target=args.target, lang=args.lang, brain_dir=args.brain_dir, update=args.update), indent=2, ensure_ascii=False))

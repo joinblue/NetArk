@@ -178,11 +178,15 @@ export default function (pi: ExtensionAPI) {
 			if (toolName === "write" || toolName === "edit") {
 				const target = resolveRealTarget(rawPath, ctx.cwd);
 				const relToCwd = path.relative(ctx.cwd, target).replace(/\\/g, "/");
+				const editsText = Array.isArray(input.edits)
+					? input.edits.map((e: any) => (typeof e?.newText === "string" ? e.newText : "")).join("\n")
+					: "";
 				const allWrittenText = [
 					typeof input.content === "string" ? input.content : "",
 					typeof input.newText === "string" ? input.newText : "",
 					typeof input.new_str === "string" ? input.new_str : "",
 					typeof input.replacement === "string" ? input.replacement : "",
+					editsText,
 				].join("\n");
 
 				if (process.env.NETARK_ALLOW_SECRET_FIXTURE !== "1") {

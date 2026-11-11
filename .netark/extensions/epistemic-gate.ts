@@ -216,13 +216,24 @@ export default function (pi: ExtensionAPI) {
 		const isCodeFile = (relToCwd.endsWith(".ts") || relToCwd.endsWith(".py")) && !baseName.startsWith("test_");
 		if (!isCodeFile) return undefined;
 
-		const oldLines = fs.existsSync(absPath) ? fs.readFileSync(absPath, "utf-8").split(/\r?\n/).length : 0;
-		let newLines = oldLines;
+		const oldText = fs.existsSync(absPath) ? fs.readFileSync(absPath, "utf-8") : "";
+		const oldLines = oldText ? oldText.split(/\r?\n/).length : 0;
+		let effText = oldText;
 		if (event.toolName === "write" && typeof input.content === "string") {
-			newLines = input.content.split(/\r?\n/).length;
-		} else if (event.toolName === "edit" && typeof input.oldText === "string" && typeof input.newText === "string") {
-			newLines = oldLines + (input.newText.split(/\r?\n/).length - input.oldText.split(/\r?\n/).length);
+			effText = input.content;
+		} else if (event.toolName === "edit") {
+			const edits = Array.isArray(input.edits)
+				? (input.edits as Array<{ oldText?: string; newText?: string }>)
+				: typeof input.oldText === "string" && typeof input.newText === "string"
+					? [{ oldText: input.oldText, newText: input.newText }]
+					: [];
+			for (const ed of edits) {
+				if (ed?.oldText && typeof ed?.newText === "string" && effText.includes(ed.oldText)) {
+					effText = effText.replace(ed.oldText, ed.newText);
+				}
+			}
 		}
+		const newLines = effText ? effText.split(/\r?\n/).length : 0;
 
 		if (newLines > CODE_HARD_LINE_LIMIT && newLines > oldLines) {
 			return {
@@ -232,6 +243,18 @@ export default function (pi: ExtensionAPI) {
 					`目標代碼檔 \`${relToCwd}\` 修改後將達 ${newLines} 行（超過硬性阻斷紅線 ${CODE_HARD_LINE_LIMIT} 行，且本次淨增 +${newLines - oldLines} 行 > 0）！\n` +
 					`👉 [處方籤 Remediation]: 嚴禁繼續往 > 550 行之巨型腳本堆疊新功能（已廢除 delta > 15 漏洞）！只允許刪減瘦身，或將新增邏輯拆分為獨立子模組 / \`.netark/extensions/<feature>.ts\` 插件。`,
 			};
+		}
+		const hygScript = path.join(ctx.cwd, "schemas", "code_hygiene_ast.py");
+		if (relToCwd.endsWith(".py") && fs.existsSync(hygScript)) {
+			try {
+				const out = execFileSync(
+					"python3",
+					["-c", "import json,sys; from schemas.code_hygiene_ast import check_python_ast_hygiene; print(json.dumps(check_python_ast_hygiene(sys.stdin.read(), sys.argv[1])))", relToCwd],
+					{ cwd: ctx.cwd, input: effText, encoding: "utf-8", timeout: 5_000 },
+				).trim();
+				const res = out && out !== "null" ? JSON.parse(out) : null;
+				if (res && res.allowed === false) return { block: true, reason: `🛡️ [NetArk AST Code Hygiene Gate | ${res.code}]\n${res.reason}` };
+			} catch {}
 		}
 		return undefined;
 	});

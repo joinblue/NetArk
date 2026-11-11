@@ -259,6 +259,14 @@ export function runSessionShutdownConsolidation(cwd: string, pinnedCount: number
 	} catch {}
 }
 
+function resolveToolExecArgs(a0: any, a1?: any, a2?: any, _a3?: any, a4?: any): { isPiRuntime: boolean; cwd: string; params: any } {
+	if (typeof a0 === "string") {
+		const ctxObj = a4 ?? a2;
+		return { isPiRuntime: true, cwd: String(ctxObj?.cwd || process.cwd()), params: a1 && typeof a1 === "object" ? a1 : {} };
+	}
+	return { isPiRuntime: false, cwd: String(a1?.cwd || process.cwd()), params: a0 && typeof a0 === "object" ? a0 : {} };
+}
+
 export function registerEpistemicLibraryTools(
 	pi: ExtensionAPI,
 	queryFn: (cwd: string, params: any) => any[] = queryLibraryNodes,
@@ -278,7 +286,11 @@ export function registerEpistemicLibraryTools(
 				limit: { type: "number", description: "Max results to return" },
 			},
 		},
-		execute: async (args: any, ctx: any) => queryFn(ctx.cwd, args ?? {}),
+		execute: async (a0: any, a1?: any, a2?: any, a3?: any, a4?: any) => {
+			const { isPiRuntime, cwd, params } = resolveToolExecArgs(a0, a1, a2, a3, a4);
+			const res = queryFn(cwd, params);
+			return isPiRuntime ? { content: [{ type: "text", text: JSON.stringify(res, null, 2) }], details: { count: res.length } } : res;
+		},
 	});
 
 	pi.registerTool({
@@ -294,7 +306,11 @@ export function registerEpistemicLibraryTools(
 				limit: { type: "number", description: "Max module entries to return" },
 			},
 		},
-		execute: async (args: any, ctx: any) => queryCodeIntelligenceMap(ctx.cwd, args ?? {}),
+		execute: async (a0: any, a1?: any, a2?: any, a3?: any, a4?: any) => {
+			const { isPiRuntime, cwd, params } = resolveToolExecArgs(a0, a1, a2, a3, a4);
+			const res = queryCodeIntelligenceMap(cwd, params);
+			return isPiRuntime ? { content: [{ type: "text", text: JSON.stringify(res, null, 2) }], details: { count: res.length } } : res;
+		},
 	});
 }
 

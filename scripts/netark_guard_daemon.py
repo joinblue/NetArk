@@ -287,7 +287,7 @@ def _run_hook_mode(host: str, default_cwd: str) -> int:
             print(json.dumps({"decision": "allow"}, ensure_ascii=False))
         return 0
     verdict = NetArkGuardEngine(cwd=cwd).inspect_tool_call(tool_name, args_dict, host=host)
-    if verdict["allowed"] and host in {"agy", "claude"} and (gov_block := _check_governance_pre_write(tool_name, args_dict, cwd)):
+    if verdict["allowed"] and host in {"pi", "agy", "claude"} and (gov_block := _check_governance_pre_write(tool_name, args_dict, cwd)):
         verdict = gov_block
     if not verdict["allowed"]:
         msg = f"🛡️ [NetArk Enterprise Guard | {verdict['code']}] {verdict.get('reason', 'Blocked by policy.')}"
