@@ -2,7 +2,7 @@
   "schema_version": "2.3.0",
   "project": "NetArk",
   "harness": "NetArk",
-  "generated_at": "2026-11-10T15:06:04Z",
+  "generated_at": "2026-11-11T08:14:18Z",
   "total_nodes": 5,
   "healed_links": [],
   "pending_topology_alignments": [],
@@ -1313,7 +1313,7 @@
     "scripts/test_netark_harness.py": {
       "file_path": "scripts/test_netark_harness.py",
       "language": "python",
-      "total_lines": 261,
+      "total_lines": 263,
       "symbols": [
         {
           "name": "test_01_clean_5_core_nodes_and_oracle",
@@ -1343,13 +1343,13 @@
           "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
           "kind": "function",
           "line_start": 176,
-          "line_end": 192
+          "line_end": 194
         },
         {
           "name": "test_06_code_hygiene_p1_p2_and_modularity_gates",
           "kind": "function",
-          "line_start": 195,
-          "line_end": 251
+          "line_start": 197,
+          "line_end": 253
         }
       ],
       "pi_registrations": [],
@@ -1481,49 +1481,49 @@
     ".netark/extensions/epistemic-library-tools.ts": {
       "file_path": ".netark/extensions/epistemic-library-tools.ts",
       "language": "typescript",
-      "total_lines": 298,
+      "total_lines": 302,
       "symbols": [
         {
           "name": "findAffectedMemoryNodes",
           "kind": "function",
-          "line_start": 19,
-          "line_end": 19
+          "line_start": 20,
+          "line_end": 20
         },
         {
           "name": "queryLibraryNodes",
           "kind": "function",
-          "line_start": 62,
-          "line_end": 62
+          "line_start": 63,
+          "line_end": 63
         },
         {
           "name": "queryCodeIntelligenceMap",
           "kind": "function",
-          "line_start": 177,
-          "line_end": 177
+          "line_start": 178,
+          "line_end": 178
         },
         {
           "name": "runSessionShutdownConsolidation",
           "kind": "function",
-          "line_start": 212,
-          "line_end": 212
+          "line_start": 213,
+          "line_end": 213
         },
         {
           "name": "registerEpistemicLibraryTools",
           "kind": "function",
-          "line_start": 261,
-          "line_end": 261
+          "line_start": 262,
+          "line_end": 262
         }
       ],
       "pi_registrations": [
         {
           "kind": "tool",
           "name": "query_library",
-          "line": 265
+          "line": 266
         },
         {
           "kind": "tool",
           "name": "code_intelligence_map",
-          "line": 283
+          "line": 284
         }
       ],
       "command_conflicts": [],
@@ -1538,91 +1538,91 @@
     ".netark/extensions/guard-shell-parser.ts": {
       "file_path": ".netark/extensions/guard-shell-parser.ts",
       "language": "typescript",
-      "total_lines": 265,
+      "total_lines": 269,
       "symbols": [
         {
           "name": "FILE_TOOLS",
           "kind": "const",
-          "line_start": 14,
-          "line_end": 14
+          "line_start": 15,
+          "line_end": 15
         },
         {
           "name": "SECRET_FILE_PATTERNS",
           "kind": "const",
-          "line_start": 16,
-          "line_end": 16
+          "line_start": 17,
+          "line_end": 17
         },
         {
           "name": "PREWRITE_SECRET_PATTERNS",
           "kind": "const",
-          "line_start": 27,
-          "line_end": 27
+          "line_start": 28,
+          "line_end": 28
         },
         {
           "name": "DESTRUCTIVE_BASH_PATTERNS",
           "kind": "const",
-          "line_start": 42,
-          "line_end": 42
+          "line_start": 43,
+          "line_end": 43
         },
         {
           "name": "SAFE_SYSTEM_PREFIXES",
           "kind": "const",
-          "line_start": 56,
-          "line_end": 56
+          "line_start": 57,
+          "line_end": 57
         },
         {
           "name": "READ_ONLY_COMMANDS",
           "kind": "const",
-          "line_start": 58,
-          "line_end": 58
+          "line_start": 59,
+          "line_end": 59
         },
         {
           "name": "formatRemediation",
           "kind": "function",
-          "line_start": 70,
-          "line_end": 70
+          "line_start": 71,
+          "line_end": 71
         },
         {
           "name": "parseShellCommandQuoteAware",
           "kind": "function",
-          "line_start": 74,
-          "line_end": 74
+          "line_start": 75,
+          "line_end": 75
         },
         {
           "name": "isReadOnlyBashCommand",
           "kind": "function",
-          "line_start": 151,
-          "line_end": 151
+          "line_start": 152,
+          "line_end": 152
         },
         {
           "name": "checkPortabilityViolation",
           "kind": "function",
-          "line_start": 188,
-          "line_end": 188
+          "line_start": 189,
+          "line_end": 189
         },
         {
           "name": "resolveRealTarget",
           "kind": "function",
-          "line_start": 204,
-          "line_end": 204
+          "line_start": 205,
+          "line_end": 205
         },
         {
           "name": "isWithinDir",
           "kind": "function",
-          "line_start": 220,
-          "line_end": 220
+          "line_start": 221,
+          "line_end": 221
         },
         {
           "name": "extractPathsFromBash",
           "kind": "function",
-          "line_start": 227,
-          "line_end": 227
+          "line_start": 228,
+          "line_end": 228
         },
         {
           "name": "summarizeGuardAuditLog",
           "kind": "function",
-          "line_start": 241,
-          "line_end": 241
+          "line_start": 242,
+          "line_end": 242
         }
       ],
       "pi_registrations": [],
@@ -2074,7 +2074,7 @@
       "C19": "scripts/test_netark_enterprise_guard.py",
       "C20": "scripts/test_netark_harness.py"
     },
-    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-322) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-319)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-298) | C16=X:guard-shell-parser.ts(L1-265) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-261)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
+    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-322) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-319)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-302) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-263)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
     "reverse_lookup": {
       "C0": {
         "kind": "script",
@@ -3226,51 +3226,51 @@
         "code": "C15",
         "path": ".netark/extensions/epistemic-library-tools.ts",
         "dir_code": "X",
-        "line_range": "L1-298",
-        "total_lines": 298,
+        "line_range": "L1-302",
+        "total_lines": 302,
         "language": "typescript",
         "symbols": [
           {
             "name": "findAffectedMemoryNodes",
             "kind": "function",
-            "line_start": 19,
-            "line_end": 19
+            "line_start": 20,
+            "line_end": 20
           },
           {
             "name": "queryLibraryNodes",
             "kind": "function",
-            "line_start": 62,
-            "line_end": 62
+            "line_start": 63,
+            "line_end": 63
           },
           {
             "name": "queryCodeIntelligenceMap",
             "kind": "function",
-            "line_start": 177,
-            "line_end": 177
+            "line_start": 178,
+            "line_end": 178
           },
           {
             "name": "runSessionShutdownConsolidation",
             "kind": "function",
-            "line_start": 212,
-            "line_end": 212
+            "line_start": 213,
+            "line_end": 213
           },
           {
             "name": "registerEpistemicLibraryTools",
             "kind": "function",
-            "line_start": 261,
-            "line_end": 261
+            "line_start": 262,
+            "line_end": 262
           }
         ],
         "pi_registrations": [
           {
             "kind": "tool",
             "name": "query_library",
-            "line": 265
+            "line": 266
           },
           {
             "kind": "tool",
             "name": "code_intelligence_map",
-            "line": 283
+            "line": 284
           }
         ],
         "governing_specs": []
@@ -3280,93 +3280,93 @@
         "code": "C16",
         "path": ".netark/extensions/guard-shell-parser.ts",
         "dir_code": "X",
-        "line_range": "L1-265",
-        "total_lines": 265,
+        "line_range": "L1-269",
+        "total_lines": 269,
         "language": "typescript",
         "symbols": [
           {
             "name": "FILE_TOOLS",
             "kind": "const",
-            "line_start": 14,
-            "line_end": 14
+            "line_start": 15,
+            "line_end": 15
           },
           {
             "name": "SECRET_FILE_PATTERNS",
             "kind": "const",
-            "line_start": 16,
-            "line_end": 16
+            "line_start": 17,
+            "line_end": 17
           },
           {
             "name": "PREWRITE_SECRET_PATTERNS",
             "kind": "const",
-            "line_start": 27,
-            "line_end": 27
+            "line_start": 28,
+            "line_end": 28
           },
           {
             "name": "DESTRUCTIVE_BASH_PATTERNS",
             "kind": "const",
-            "line_start": 42,
-            "line_end": 42
+            "line_start": 43,
+            "line_end": 43
           },
           {
             "name": "SAFE_SYSTEM_PREFIXES",
             "kind": "const",
-            "line_start": 56,
-            "line_end": 56
+            "line_start": 57,
+            "line_end": 57
           },
           {
             "name": "READ_ONLY_COMMANDS",
             "kind": "const",
-            "line_start": 58,
-            "line_end": 58
+            "line_start": 59,
+            "line_end": 59
           },
           {
             "name": "formatRemediation",
             "kind": "function",
-            "line_start": 70,
-            "line_end": 70
+            "line_start": 71,
+            "line_end": 71
           },
           {
             "name": "parseShellCommandQuoteAware",
             "kind": "function",
-            "line_start": 74,
-            "line_end": 74
+            "line_start": 75,
+            "line_end": 75
           },
           {
             "name": "isReadOnlyBashCommand",
             "kind": "function",
-            "line_start": 151,
-            "line_end": 151
+            "line_start": 152,
+            "line_end": 152
           },
           {
             "name": "checkPortabilityViolation",
             "kind": "function",
-            "line_start": 188,
-            "line_end": 188
+            "line_start": 189,
+            "line_end": 189
           },
           {
             "name": "resolveRealTarget",
             "kind": "function",
-            "line_start": 204,
-            "line_end": 204
+            "line_start": 205,
+            "line_end": 205
           },
           {
             "name": "isWithinDir",
             "kind": "function",
-            "line_start": 220,
-            "line_end": 220
+            "line_start": 221,
+            "line_end": 221
           },
           {
             "name": "extractPathsFromBash",
             "kind": "function",
-            "line_start": 227,
-            "line_end": 227
+            "line_start": 228,
+            "line_end": 228
           },
           {
             "name": "summarizeGuardAuditLog",
             "kind": "function",
-            "line_start": 241,
-            "line_end": 241
+            "line_start": 242,
+            "line_end": 242
           }
         ],
         "pi_registrations": [],
@@ -3475,8 +3475,8 @@
         "code": "C20",
         "path": "scripts/test_netark_harness.py",
         "dir_code": "S",
-        "line_range": "L1-261",
-        "total_lines": 261,
+        "line_range": "L1-263",
+        "total_lines": 263,
         "language": "python",
         "symbols": [
           {
@@ -3507,13 +3507,13 @@
             "name": "test_05_extensions_turn1_codebook_and_guard_hooks",
             "kind": "function",
             "line_start": 176,
-            "line_end": 192
+            "line_end": 194
           },
           {
             "name": "test_06_code_hygiene_p1_p2_and_modularity_gates",
             "kind": "function",
-            "line_start": 195,
-            "line_end": 251
+            "line_start": 197,
+            "line_end": 253
           }
         ],
         "pi_registrations": [],

@@ -4,7 +4,8 @@
  * Pure helper module for `workspace-guard.ts`:
  * Quote-aware shell parser (`parseShellCommandQuoteAware`), read-only command classifier
  * (`isReadOnlyBashCommand`), path boundary helpers, and security constant tables.
- * NOTE: No default export — loaded by `workspace-guard.ts` to avoid duplicate extension hooks.
+ * NOTE: Exports a no-op default factory function so Pi's top-level `.netark/extensions/*.ts`
+ * auto-loader succeeds while `workspace-guard.ts` registers the hooks once.
  */
 
 import * as fs from "node:fs";
@@ -263,3 +264,6 @@ export function summarizeGuardAuditLog(auditFile: string): { statsText: string; 
 	} catch {}
 	return { statsText, recentEventsText };
 }
+
+export default function (_pi: any): void {}
+

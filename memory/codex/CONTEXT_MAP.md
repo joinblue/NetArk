@@ -1,6 +1,6 @@
 # 🗺️ NetArk × NetArk Context Registry & Topology Map (CONTEXT_MAP.md)
 
-> **自動生成時間**: `2026-11-10T15:06:04Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
+> **自動生成時間**: `2026-11-11T08:14:18Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
 > **漸進式揭露原則 (Progressive Disclosure)**: Agent 啟動時於 Turn 1 凍結注入 `@D/@C/@G` 代號壓縮地圖，按短代號 (`C0..Cn` / `000..900`) 或節點鍵值 (`node_key`) 按需調閱對應檔案。
 
 ## 0. Turn-1 凍結代號壓縮地圖 (`@D/@C/@G` Codebook Map)
@@ -18,8 +18,8 @@
   C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-319)
   C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)
   C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)
-  C15=X:epistemic-library-tools.ts(L1-298) | C16=X:guard-shell-parser.ts(L1-265) | C17=XS:agents.ts(L1-157)
-  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-261)
+  C15=X:epistemic-library-tools.ts(L1-302) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)
+  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-263)
 @G (Topology Graph — DAG / Governance Synapses / Code AST Imports):
   [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000
   [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10
@@ -112,8 +112,8 @@
 | 源碼路徑 (`file_path`) | 主要符號與行號 (`symbols`) | Pi 擴充註冊 (`command`/`tool`/`hook`) | 影響圈 (`imported_by`) | 綁定規格 (`governing_specs`) |
 | :--- | :--- | :--- | :--- | :--- |
 | `.netark/extensions/epistemic-gate.ts` | `CATALOG_STAGE2_THRESHOLD`(L23-L23), `CODE_SOFT_LINE_LIMIT`(L24-L24), `CODE_HARD_LINE_LIMIT`(L25-L25), `readHandoverBodySnapshot`(L27-L27), `buildProgressiveContextSummary`(L44-L44), `getSessionPinnedContextSummary`(L144-L144) | `hook:session_shutdown`(L184), `hook:session_start`(L193), `hook:before_agent_start`(L198), `hook:tool_call`(L205), `hook:tool_result`(L240) | — | `200.ADR-001.v1`, `900.HANDOVER.v1` |
-| `.netark/extensions/epistemic-library-tools.ts` | `findAffectedMemoryNodes`(L19-L19), `queryLibraryNodes`(L62-L62), `queryCodeIntelligenceMap`(L177-L177), `runSessionShutdownConsolidation`(L212-L212), `registerEpistemicLibraryTools`(L261-L261) | `tool:query_library`(L265), `tool:code_intelligence_map`(L283) | `.netark/extensions/epistemic-gate.ts` | — |
-| `.netark/extensions/guard-shell-parser.ts` | `FILE_TOOLS`(L14-L14), `SECRET_FILE_PATTERNS`(L16-L16), `PREWRITE_SECRET_PATTERNS`(L27-L27), `DESTRUCTIVE_BASH_PATTERNS`(L42-L42), `SAFE_SYSTEM_PREFIXES`(L56-L56), `READ_ONLY_COMMANDS`(L58-L58) | — | `.netark/extensions/workspace-guard.ts` | — |
+| `.netark/extensions/epistemic-library-tools.ts` | `findAffectedMemoryNodes`(L20-L20), `queryLibraryNodes`(L63-L63), `queryCodeIntelligenceMap`(L178-L178), `runSessionShutdownConsolidation`(L213-L213), `registerEpistemicLibraryTools`(L262-L262) | `tool:query_library`(L266), `tool:code_intelligence_map`(L284) | `.netark/extensions/epistemic-gate.ts` | — |
+| `.netark/extensions/guard-shell-parser.ts` | `FILE_TOOLS`(L15-L15), `SECRET_FILE_PATTERNS`(L17-L17), `PREWRITE_SECRET_PATTERNS`(L28-L28), `DESTRUCTIVE_BASH_PATTERNS`(L43-L43), `SAFE_SYSTEM_PREFIXES`(L57-L57), `READ_ONLY_COMMANDS`(L59-L59) | — | `.netark/extensions/workspace-guard.ts` | — |
 | `.netark/extensions/model-router.ts` | `NetArkEpistemicBridge`(L32-L32), `DEFAULT_ROLE_MODELS`(L79-L79), `RoleName`(L89-L89), `SpecialistRole`(L90-L90), `StrategyMode`(L91-L91), `ROLE_FALLBACK_CHAINS`(L94-L94) | `hook:session_start`(L1104), `hook:session_shutdown`(L1109), `hook:turn_start`(L1181), `hook:before_agent_start`(L1185), `hook:tool_call`(L1305), `tool:dispatch_specialist`(L1429) | — | — |
 | `.netark/extensions/session-handover.ts` | `HANDOVER_SOFT_THRESHOLD`(L15-L15), `HANDOVER_HARD_THRESHOLD`(L16-L16), `HANDOVER_REMIND_STEP_TOKENS`(L17-L17), `buildHandoverMandateMessage`(L19-L19), `sessionHandoverExtension`(L46-L46) | `hook:session_start`(L50), `command:/handover`(L55), `hook:before_agent_start`(L73) | — | — |
 | `.netark/extensions/subagent/agents.ts` | `AgentScope`(L9-L9), `AgentConfig`(L11-L11), `AgentDiscoveryResult`(L21-L21), `discoverAgents`(L128-L128), `formatAgentList`(L149-L149) | — | `.netark/extensions/subagent/index.ts` | — |
@@ -131,7 +131,7 @@
 | `scripts/netark_init.py` | `ensure_enterprise_policy`(L50-L61), `_sync_workflow_commands`(L64-L73), `_sync_skills`(L76-L87), `install_agy_adapter`(L90-L129), `install_claude_adapter`(L132-L174), `install_pi_adapter`(L177-L206) | — | `scripts/test_netark_enterprise_guard.py` | `200.ADR-001.v1` |
 | `scripts/sync_doc_metadata.py` | `split_frontmatter_raw`(L33-L40), `surgical_set_scalar`(L43-L58), `surgical_try_set_scalar`(L61-L66), `surgical_remove_from_yaml_list`(L69-L111), `render_role_models_ssot_block`(L114-L132), `compute_actual_epistemic_counts`(L135-L137) | — | — | — |
 | `scripts/test_netark_enterprise_guard.py` | `test_01_tier0_ast_73_vectors_and_g01_to_g05`(L46-L172), `test_02_daemon_slots_vaultless_dlp_and_soc2`(L175-L216), `test_03_multi_host_init_and_agy_nested_hooks`(L219-L284), `test_04_bilingual_docs_and_line_budgets`(L287-L306) | — | — | — |
-| `scripts/test_netark_harness.py` | `test_01_clean_5_core_nodes_and_oracle`(L38-L64), `test_02_block_gitignored_affected_paths`(L67-L100), `test_03_codebook_topology_map_and_reverse_lookup`(L103-L151), `test_04_role_models_and_subagent_alignment`(L154-L173), `test_05_extensions_turn1_codebook_and_guard_hooks`(L176-L192), `test_06_code_hygiene_p1_p2_and_modularity_gates`(L195-L251) | — | — | — |
+| `scripts/test_netark_harness.py` | `test_01_clean_5_core_nodes_and_oracle`(L38-L64), `test_02_block_gitignored_affected_paths`(L67-L100), `test_03_codebook_topology_map_and_reverse_lookup`(L103-L151), `test_04_role_models_and_subagent_alignment`(L154-L173), `test_05_extensions_turn1_codebook_and_guard_hooks`(L176-L194), `test_06_code_hygiene_p1_p2_and_modularity_gates`(L197-L253) | — | — | — |
 
 ## 4. 專案治理目錄結構摘要
 

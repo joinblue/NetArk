@@ -8,7 +8,8 @@
  * 4. `runSessionShutdownConsolidation`: Deterministic rolling-20-entry `SESSION_DIGEST.md` consolidation on shutdown.
  * 5. `registerEpistemicLibraryTools`: Registers `query_library` and `code_intelligence_map` tools on `ExtensionAPI`.
  *
- * NOTE: No default export — loaded by `epistemic-gate.ts` to avoid duplicate tool registration.
+ * NOTE: Exports a no-op default factory function so Pi's top-level `.netark/extensions/*.ts`
+ * auto-loader succeeds while `epistemic-gate.ts` registers the tools once.
  */
 
 import { execFileSync } from "node:child_process";
@@ -296,3 +297,6 @@ export function registerEpistemicLibraryTools(
 		execute: async (args: any, ctx: any) => queryCodeIntelligenceMap(ctx.cwd, args ?? {}),
 	});
 }
+
+export default function (_pi: any): void {}
+

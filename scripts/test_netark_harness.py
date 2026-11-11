@@ -187,8 +187,10 @@ def test_05_extensions_turn1_codebook_and_guard_hooks() -> None:
     assert "歷史與本輪攔截統計" in wg_ts
     assert "query_library" in elt_ts and "code_intelligence_map" in elt_ts
     assert "parseShellCommandQuoteAware" in gsp_ts and "isReadOnlyBashCommand" in gsp_ts
-    for ts_src in (eg_ts, wg_ts, elt_ts, gsp_ts):
+    for ts_file in sorted((PROJECT_ROOT / ".netark" / "extensions").glob("*.ts")):
+        ts_src = ts_file.read_text(encoding="utf-8")
         assert ".Friday" not in ts_src and "PotoTypeV0" not in ts_src
+        assert "export default function" in ts_src, f"Missing default factory export in {ts_file.name}"
     print("  ✅ Harness 5 passed.")
 
 
