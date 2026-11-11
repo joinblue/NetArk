@@ -1,6 +1,6 @@
 # 🗺️ NetArk × NetArk Context Registry & Topology Map (CONTEXT_MAP.md)
 
-> **自動生成時間**: `2026-11-11T08:14:18Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
+> **自動生成時間**: `2026-11-11T09:17:01Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
 > **漸進式揭露原則 (Progressive Disclosure)**: Agent 啟動時於 Turn 1 凍結注入 `@D/@C/@G` 代號壓縮地圖，按短代號 (`C0..Cn` / `000..900`) 或節點鍵值 (`node_key`) 按需調閱對應檔案。
 
 ## 0. Turn-1 凍結代號壓縮地圖 (`@D/@C/@G` Codebook Map)
@@ -15,7 +15,7 @@
 @C (Scripts):
   C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)
   C3=H:codebook_compiler.py(L1-322) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)
-  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-319)
+  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-320)
   C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)
   C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)
   C15=X:epistemic-library-tools.ts(L1-302) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)
