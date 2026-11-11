@@ -1,6 +1,6 @@
 # 🗺️ NetArk × NetArk Context Registry & Topology Map (CONTEXT_MAP.md)
 
-> **自動生成時間**: `2026-11-11T14:43:54Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
+> **自動生成時間**: `2026-11-11T18:02:14Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
 > **漸進式揭露原則 (Progressive Disclosure)**: Agent 啟動時於 Turn 1 凍結注入 `@D/@C/@G` 代號壓縮地圖，按短代號 (`C0..Cn` / `000..900`) 或節點鍵值 (`node_key`) 按需調閱對應檔案。
 
 ## 0. Turn-1 凍結代號壓縮地圖 (`@D/@C/@G` Codebook Map)

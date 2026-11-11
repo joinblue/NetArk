@@ -1,0 +1,181 @@
+name: NetArk CLA & Deterministic Governance CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+  issue_comment:
+    types:
+      - created
+      - edited
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  statuses: write
+
+jobs:
+  cla-check:
+    name: "⚖️ Contributor License Agreement (CLA) Gate"
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request != null)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify CLA Signature (PR Body Checkbox or Comment)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = context.payload.pull_request
+              ? context.payload.pull_request.number
+              : context.payload.issue.number;
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: issueNumber,
+            });
+
+            const author = pr.user.login;
+            const exemptUsers = new Set([
+              owner.toLowerCase(),
+              "joinblue",
+              "dependabot[bot]",
+              "github-actions[bot]",
+            ]);
+
+            if (exemptUsers.has(author.toLowerCase())) {
+              core.info(`✅ PR author @${author} is repository owner/exempt. CLA check passed.`);
+              return;
+            }
+
+            const claRegex = /I have read the CLA Document.*and I hereby sign the CLA/i;
+            const checkedBoxRegex = /-\s*\[[xX]\]\s*I have read the CLA Document.*and I hereby sign the CLA/i;
+
+            const prBody = pr.body || "";
+            let isSigned = checkedBoxRegex.test(prBody);
+
+            if (!isSigned) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: issueNumber,
+                per_page: 100,
+              });
+              isSigned = comments.some(
+                (c) =>
+                  c.user &&
+                  c.user.login.toLowerCase() === author.toLowerCase() &&
+                  claRegex.test(c.body || "")
+              );
+            }
+
+            const botMarker = "<!-- netark-cla-bot -->";
+            if (isSigned) {
+              core.info(`✅ @${author} has signed the NetArk CLA.`);
+              if (context.eventName === "issue_comment") {
+                await github.rest.repos.createCommitStatus({
+                  owner,
+                  repo,
+                  sha: pr.head.sha,
+                  state: "success",
+                  context: "NetArk CLA Gate",
+                  description: `CLA signed by @${author}`,
+                });
+              }
+              return;
+            }
+
+            const message = [
+              botMarker,
+              `### ⚖️ Contributor License Agreement (CLA) Required`,
+              ``,
+              `Thank you for your Pull Request, @${author}! Before we can merge your contribution into **NetArk**, please sign our [Contributor License Agreement (CLA.md)](https://github.com/${owner}/${repo}/blob/main/CLA.md).`,
+              ``,
+              `**How to sign (choose either method):**`,
+              `1. **Check the box** in your Pull Request description:`,
+              `   \`- [x] I have read the CLA Document (CLA.md) and I hereby sign the CLA.\``,
+              `2. **Or post a comment** on this Pull Request with the exact statement:`,
+              `   > \`I have read the CLA Document (CLA.md) and I hereby sign the CLA.\``,
+            ].join("\n");
+
+            const existingComments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const botComment = existingComments.find(
+              (c) => (c.body || "").includes(botMarker)
+            );
+
+            if (!botComment) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: message,
+              });
+            }
+
+            if (context.eventName === "issue_comment") {
+              await github.rest.repos.createCommitStatus({
+                owner,
+                repo,
+                sha: pr.head.sha,
+                state: "failure",
+                context: "NetArk CLA Gate",
+                description: `Waiting for @${author} to sign CLA.md`,
+              });
+            }
+
+            core.setFailed(
+              `❌ Contributor @${author} has not signed CLA.md yet. Please check the CLA box in the PR description or comment the signature statement.`
+            );
+
+  netark-deterministic-ci:
+    name: "🛡️ NetArk 5-Suite Deterministic Harness & Guard CI"
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "1. Tier 0 AST & G-01..G-05 DLP Self-Test"
+        run: python3 schemas/netark_guard_core.py --self-test
+
+      - name: "2. Multi-Host Guard Daemon & Pre-Write Secret Lint Self-Test"
+        run: python3 scripts/netark_guard_daemon.py --self-test
+
+      - name: "3. @D/@M/@C/@G Codebook Compiler & Schema Oracle"
+        run: |
+          python3 scripts/auto_update_map.py --print-codebook
+          python3 schemas/schema_validator.py --run-oracle
+
+      - name: "4. Standalone Dashboard V1.1 Contract Suite"
+        run: python3 dashboard/tests/test_dashboard_shards.py
+
+      - name: "5. Core Harness & 73+ Enterprise Guard Adversarial Suite"
+        run: |
+          python3 scripts/test_netark_harness.py
+          python3 scripts/test_netark_enterprise_guard.py
+          python3 scripts/netark_init.py --self-test
