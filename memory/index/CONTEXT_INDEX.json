@@ -2,8 +2,8 @@
   "schema_version": "2.3.0",
   "project": "NetArk",
   "harness": "NetArk",
-  "generated_at": "2026-11-11T08:14:18Z",
-  "total_nodes": 5,
+  "generated_at": "2026-11-11T09:16:31Z",
+  "total_nodes": 6,
   "healed_links": [],
   "pending_topology_alignments": [],
   "domain_stats": {
@@ -20,7 +20,7 @@
     "600": 0,
     "700": 0,
     "800": 0,
-    "900": 1,
+    "900": 2,
     "910": 0
   },
   "facet_registry": {
@@ -31,7 +31,8 @@
     "Guard:Tier0AST:DLP:PreWriteLint": 1,
     "NetArk:Architecture:ADR:Codebook": 1,
     "Context:KV-Cache:Compression:MultiHost": 1,
-    "NetArk:Episodic:Handover:SessionState": 1
+    "NetArk:Episodic:Handover:SessionState": 1,
+    "NetArk:Episodic:Digest:SessionLog": 1
   },
   "domain_registry": {
     "000": {
@@ -273,7 +274,7 @@
     },
     "900": {
       "title": "900 Episodic Handover & Historical Archives (情節交接與歷史封存)",
-      "count": 1,
+      "count": 2,
       "items": [
         {
           "node_id": "MEM-2026-0005",
@@ -312,6 +313,41 @@
           "parent_blueprint": null,
           "shard_modules": [],
           "stub_paths": []
+        },
+        {
+          "node_id": "MEM-2026-0006",
+          "artifact_type": "digest",
+          "status": "verified",
+          "access_tier": "standard",
+          "priority": "normal",
+          "domain_code": "900",
+          "subdomain": null,
+          "artifact_track": "wiki",
+          "outbound_links": [],
+          "backlinks": [],
+          "node_key": "900.SESSION_DIGEST.v1",
+          "facet_tags": [
+            "NetArk:Episodic:Digest:SessionLog"
+          ],
+          "keywords": [
+            "SESSION_DIGEST",
+            "wiki"
+          ],
+          "summary_1line": "Episodic Session Digest Log 會話歷程與狀態摘要紀錄",
+          "path": "memory/episodic/SESSION_DIGEST.md",
+          "sha256_16": "0b1ff0069e5d870b",
+          "author_model": "flash",
+          "reviewer_model": null,
+          "depends_on": [
+            "000.SOUL.v1"
+          ],
+          "supersedes": [],
+          "affected_paths": [
+            "memory/episodic/SESSION_DIGEST.md"
+          ],
+          "parent_blueprint": null,
+          "shard_modules": [],
+          "stub_paths": []
         }
       ]
     },
@@ -344,6 +380,11 @@
     },
     {
       "from": "MEM-2026-0005",
+      "to": "MEM-2026-0001",
+      "relation": "depends_on"
+    },
+    {
+      "from": "MEM-2026-0006",
       "to": "MEM-2026-0001",
       "relation": "depends_on"
     }
@@ -1123,7 +1164,7 @@
     "scripts/netark_init.py": {
       "file_path": "scripts/netark_init.py",
       "language": "python",
-      "total_lines": 319,
+      "total_lines": 320,
       "symbols": [
         {
           "name": "ensure_enterprise_policy",
@@ -1165,19 +1206,19 @@
           "name": "_sync_python_core_if_external",
           "kind": "function",
           "line_start": 209,
-          "line_end": 239
+          "line_end": 240
         },
         {
           "name": "bootstrap_bilingual_memory",
           "kind": "function",
-          "line_start": 242,
-          "line_end": 257
+          "line_start": 243,
+          "line_end": 258
         },
         {
           "name": "initialize_workspace",
           "kind": "function",
-          "line_start": 260,
-          "line_end": 288
+          "line_start": 261,
+          "line_end": 289
         }
       ],
       "pi_registrations": [],
@@ -2037,11 +2078,11 @@
   },
   "codebook_map": {
     "tier": "L1-Full",
-    "total_nodes": 5,
+    "total_nodes": 6,
     "total_scripts": 21,
-    "raw_char_estimate": 32168,
-    "compact_char_count": 2453,
-    "compression_ratio_pct": 92.4,
+    "raw_char_estimate": 33026,
+    "compact_char_count": 2527,
+    "compression_ratio_pct": 92.3,
     "dirs": {
       "M": "memory/",
       "C": "memory/codex/",
@@ -2074,7 +2115,7 @@
       "C19": "scripts/test_netark_enterprise_guard.py",
       "C20": "scripts/test_netark_harness.py"
     },
-    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-322) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-319)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-302) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-263)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
+    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 6 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified] | 900.2=E:SESSION_DIGEST.md[900.SESSION_DIGEST.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-322) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-320)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-328) | C11=X:workspace-guard.ts(L1-350)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-302) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-263)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000 | 900.2 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
     "reverse_lookup": {
       "C0": {
         "kind": "script",
@@ -2645,8 +2686,8 @@
         "code": "C8",
         "path": "scripts/netark_init.py",
         "dir_code": "S",
-        "line_range": "L1-319",
-        "total_lines": 319,
+        "line_range": "L1-320",
+        "total_lines": 320,
         "language": "python",
         "symbols": [
           {
@@ -2689,19 +2730,19 @@
             "name": "_sync_python_core_if_external",
             "kind": "function",
             "line_start": 209,
-            "line_end": 239
+            "line_end": 240
           },
           {
             "name": "bootstrap_bilingual_memory",
             "kind": "function",
-            "line_start": 242,
-            "line_end": 257
+            "line_start": 243,
+            "line_end": 258
           },
           {
             "name": "initialize_workspace",
             "kind": "function",
-            "line_start": 260,
-            "line_end": 288
+            "line_start": 261,
+            "line_end": 289
           }
         ],
         "pi_registrations": [],
@@ -3831,6 +3872,54 @@
         ],
         "affected_paths": [
           ".netark/extensions/epistemic-gate.ts"
+        ]
+      },
+      "900.2": {
+        "kind": "node",
+        "code": "900.2",
+        "node_id": "MEM-2026-0006",
+        "node_key": "900.SESSION_DIGEST.v1",
+        "status": "verified",
+        "path": "memory/episodic/SESSION_DIGEST.md",
+        "summary_1line": "Episodic Session Digest Log 會話歷程與狀態摘要紀錄",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [],
+        "affected_paths": [
+          "memory/episodic/SESSION_DIGEST.md"
+        ]
+      },
+      "900.SESSION_DIGEST.v1": {
+        "kind": "node",
+        "code": "900.2",
+        "node_id": "MEM-2026-0006",
+        "node_key": "900.SESSION_DIGEST.v1",
+        "status": "verified",
+        "path": "memory/episodic/SESSION_DIGEST.md",
+        "summary_1line": "Episodic Session Digest Log 會話歷程與狀態摘要紀錄",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [],
+        "affected_paths": [
+          "memory/episodic/SESSION_DIGEST.md"
+        ]
+      },
+      "MEM-2026-0006": {
+        "kind": "node",
+        "code": "900.2",
+        "node_id": "MEM-2026-0006",
+        "node_key": "900.SESSION_DIGEST.v1",
+        "status": "verified",
+        "path": "memory/episodic/SESSION_DIGEST.md",
+        "summary_1line": "Episodic Session Digest Log 會話歷程與狀態摘要紀錄",
+        "depends_on": [
+          "000.SOUL.v1"
+        ],
+        "governed_scripts": [],
+        "affected_paths": [
+          "memory/episodic/SESSION_DIGEST.md"
         ]
       }
     }

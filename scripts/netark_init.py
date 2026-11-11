@@ -210,6 +210,7 @@ def _sync_python_core_if_external(root: Path) -> None:
     if root.resolve() == NETARK_SOURCE_ROOT.resolve():
         return
     for rel_file in (
+        ".gitignore",
         "schemas/artifact_header.schema.json",
         "schemas/context_node.schema.json",
         "schemas/code_hygiene_ast.py",
