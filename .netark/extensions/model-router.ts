@@ -18,6 +18,7 @@
 import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { buildSpecialistSystemPrompt, validateRibcConstructionTask } from "./ribc-spec-gate.ts";
 import { type ImageContent, type Message, type TextContent, type Tool } from "@earendil-works/pi-ai";
 import {
 	detectSupportedImageMimeTypeFromFile,
@@ -566,44 +567,7 @@ function loadCompactIndexSummary(cwd: string): string {
 	}
 }
 
-function buildSpecialistSystemPrompt(role: SpecialistRole): string {
-	const modelSpec = ROLE_MODELS[role];
-	const brevityRule =
-		"輸出規範 (Brevity Cap): 嚴格控制在 <= 300 words 以內，僅使用高密度條列式重點 (High-Density Bullet Points)，禁止客套寒暄、重複抄寫題目或冗長三段式官僚表格。";
-	const prompts: Record<SpecialistRole, string> = {
-		scout: [
-			`你是 NetArk 團隊中的 Scout (高速情報探索員)，搭載 ${modelSpec}。`,
-			"職責：快速檢索摘要、定位關鍵結構與事實，所有客觀結論必須標註 [FACT]，推論標註 [INFERRED]，保持極簡高信噪比。",
-			brevityRule,
-		].join("\n"),
-		architect: [
-			`你是 NetArk 團隊中的 Architect (首席系統架構師)，搭載 ${modelSpec} 旗艦推理模型。`,
-			"職責：依據附加之真實檔案與目錄快照擬定精準系統設計與 ADR 決策，明確區分 [FACT]、[INFERRED] 與 [HYPOTHESIS]，並定義可證偽驗證條件 (falsifiable_criterion)。禁止輸出無效之 shell 指令區塊（如 cat -n）。",
-			brevityRule,
-		].join("\n"),
-		challenger: [
-			`你是 NetArk 團隊中的 Challenger (跨模型紅隊對抗審查官)，搭載 ${modelSpec} 異體推理模型。`,
-			"核心鐵律 (Evidence-Based Review & Proportionality)：必須基於附加之真實檔案內容與工作區快照進行實證審查；若原型設計或重構方案邏輯健全且符合當前階段需求，請直接給出 VERDICT: APPROVED。嚴禁無源碼盲猜，嚴禁對單機原型或本地 scratch/ 暫存區提出企業級過度防禦幻想（如安裝 ClamAV 掃毒、分散式事務鎖、要求凍結核心腳本），最後給出 VERDICT: APPROVED 或 VERDICT: CHALLENGED。",
-			brevityRule,
-		].join("\n"),
-		code: [
-			`你是 NetArk 團隊中的 Worker/Code Specialist (專精程式碼工程師)，搭載 ${modelSpec} 模型。`,
-			"職責：根據規格與審查意見，直接呼叫內建工具 (read_file, edit_file, write_file, run_syntax_check) 於工作區內完成程式碼修改與語法驗證；修改完成後僅回傳精簡 Diff 摘要（修改檔案、變更行數 +X/-Y、關鍵邏輯與驗證結果，嚴格控制在 <= 200 words），嚴禁將整份修改後的長篇原始碼貼回對話（避免主腦雙重課稅），嚴禁硬編碼本機絕對路徑。",
-			brevityRule,
-		].join("\n"),
-		audit: [
-			`你是 NetArk 團隊中的 Auditor (獨立神諭驗收稽核官)，搭載 ${modelSpec} 模型。`,
-			"職責：根據客觀驗證輸出、Schema 規則與測試結果進行嚴格核對，標註 [FACT] 並給出明確驗收結論。",
-			brevityRule,
-		].join("\n"),
-		vision: [
-			`你是 NetArk 團隊中的 Vision Specialist (多模態視覺推理專家)，搭載 ${modelSpec} 模型。`,
-			"職責：精確解析圖片、圖表、UI 結構與視覺資訊，標註 [FACT] 與 [INFERRED]，使用繁體中文回報。",
-			brevityRule,
-		].join("\n"),
-	};
-	return prompts[role];
-}
+
 
 const SPECIALIST_READ_TOOLS: Tool[] = [
 	{
@@ -1060,7 +1024,7 @@ const DispatchSpecialistParams = {
 		},
 		task: {
 			type: "string",
-			description: "Clear, self-contained task instruction or review question for the specialist model.",
+			description: "Clear, self-contained task instruction or review question for the specialist model. (For specialist='code' excluding micro-fixes, MUST include R-I-B-C dimensions: target path/role, <=350 lines invariant, boundary/exception handling, and strong typing contracts).",
 		},
 		context: {
 			type: "string",
@@ -1445,6 +1409,11 @@ export default function (pi: ExtensionAPI) {
 			loadPersistedRoleModels();
 			const role = params.specialist as SpecialistRole;
 
+			const check = validateRibcConstructionTask(params.task, role, params.context);
+			if (!check.allowed) {
+				return { content: [{ type: "text", text: check.prescription || "Blocked by SPEC-RIBC-GATE" }], isError: true };
+			}
+
 			// M2: Build deduplicated candidate chain from ROLE_MODELS[role] + ROLE_FALLBACK_CHAINS[role].
 			// NEVER fallback to ROLE_MODELS.orchestrator (protects paid flagship tokens).
 			const candidateSpecs = Array.from(new Set([ROLE_MODELS[role], ...(ROLE_FALLBACK_CHAINS[role] ?? [])]));
@@ -1615,7 +1584,7 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			const indexSummary = loadCompactIndexSummary(ctx.cwd);
-			const basePrompt = buildSpecialistSystemPrompt(role);
+			const basePrompt = buildSpecialistSystemPrompt(role, ROLE_MODELS[role]);
 			const fullSystemPrompt = indexSummary ? `${basePrompt}\n${indexSummary}` : basePrompt;
 
 			// Attach multimodal image block if `imagePath` is provided or auto-detected for `vision`

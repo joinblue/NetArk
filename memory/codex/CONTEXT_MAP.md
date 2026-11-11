@@ -1,12 +1,12 @@
 # 🗺️ NetArk × NetArk Context Registry & Topology Map (CONTEXT_MAP.md)
 
-> **自動生成時間**: `2026-11-11T18:02:14Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
+> **自動生成時間**: `2026-11-11T22:30:05Z` | **Agentic Harness**: `NetArk` | **記憶節點總數**: `5`
 > **漸進式揭露原則 (Progressive Disclosure)**: Agent 啟動時於 Turn 1 凍結注入 `@D/@C/@G` 代號壓縮地圖，按短代號 (`C0..Cn` / `000..900`) 或節點鍵值 (`node_key`) 按需調閱對應檔案。
 
 ## 0. Turn-1 凍結代號壓縮地圖 (`@D/@C/@G` Codebook Map)
 
 ```text
-## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)
+## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 22 | Tier: L1-Full)
 @D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/
 @R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)
 @M (Nodes):
@@ -17,13 +17,14 @@
   C3=H:codebook_compiler.py(L1-323) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)
   C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-325)
   C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-351) | C11=X:workspace-guard.ts(L1-354)
-  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)
-  C15=X:epistemic-library-tools.ts(L1-318) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)
-  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-274)
+  C12=X:model-router.ts(L1-3252) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)
+  C15=X:epistemic-library-tools.ts(L1-318) | C16=X:guard-shell-parser.ts(L1-269) | C17=X:ribc-spec-gate.ts(L1-136)
+  C18=XS:agents.ts(L1-157) | C19=XS:index.ts(L1-1150) | C20=S:test_netark_enterprise_guard.py(L1-314)
+  C21=S:test_netark_harness.py(L1-309)
 @G (Topology Graph — DAG / Governance Synapses / Code AST Imports):
   [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000
   [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10
-  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7
+  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C12 -> C17 | C19 -> C18,C17 | C20 -> C1,C7,C8 | C21 -> C2,C0,C7
   [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).
   [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.
   [DELEGATE] Mandatory IF-THEN Routing: (1) Multi-file search or messy/large doc digestion (>=2 files or >300 lines, e.g. in scratch/) -> MUST call dispatch_specialist(specialist='scout', filePaths=[...]) instead of manual sliced read; (2) Code implementation/refactoring (>50 lines or multi-file) -> MUST delegate to dispatch_specialist(specialist='code') or subagent(agent='worker'); (3) NEVER use bash(cat << EOF) or /tmp to bypass write/edit AST gates.
@@ -97,6 +98,7 @@
 | `.netark/extensions/epistemic-gate.ts` | `@earendil-works/pi-coding-agent` | `ts_sdk_import` |
 | `.netark/extensions/epistemic-gate.ts` | `.netark/extensions/epistemic-library-tools.ts` | `ts_local_import` |
 | `.netark/extensions/epistemic-library-tools.ts` | `@earendil-works/pi-coding-agent` | `ts_sdk_import` |
+| `.netark/extensions/model-router.ts` | `.netark/extensions/ribc-spec-gate.ts` | `ts_local_import` |
 | `.netark/extensions/model-router.ts` | `@earendil-works/pi-ai` | `ts_sdk_import` |
 | `.netark/extensions/model-router.ts` | `@earendil-works/pi-coding-agent` | `ts_sdk_import` |
 | `.netark/extensions/workspace-guard.ts` | `@earendil-works/pi-coding-agent` | `ts_sdk_import` |
@@ -107,6 +109,7 @@
 | `.netark/extensions/subagent/index.ts` | `@earendil-works/pi-coding-agent` | `ts_sdk_import` |
 | `.netark/extensions/subagent/index.ts` | `@earendil-works/pi-tui` | `ts_sdk_import` |
 | `.netark/extensions/subagent/index.ts` | `.netark/extensions/subagent/agents.ts` | `ts_local_import` |
+| `.netark/extensions/subagent/index.ts` | `.netark/extensions/ribc-spec-gate.ts` | `ts_local_import` |
 
 ### 3.2 源碼符號、Hook 註冊與規格影響圈總表 (Code Intelligence & Impact Map)
 
@@ -115,10 +118,11 @@
 | `.netark/extensions/epistemic-gate.ts` | `CATALOG_STAGE2_THRESHOLD`(L23-L23), `CODE_SOFT_LINE_LIMIT`(L24-L24), `CODE_HARD_LINE_LIMIT`(L25-L25), `readHandoverBodySnapshot`(L27-L27), `buildProgressiveContextSummary`(L44-L44), `getSessionPinnedContextSummary`(L144-L144) | `hook:session_shutdown`(L184), `hook:session_start`(L193), `hook:before_agent_start`(L198), `hook:tool_call`(L205), `hook:tool_result`(L263) | — | `200.ADR-001.v1`, `900.HANDOVER.v1` |
 | `.netark/extensions/epistemic-library-tools.ts` | `findAffectedMemoryNodes`(L20-L20), `queryLibraryNodes`(L63-L63), `queryCodeIntelligenceMap`(L178-L178), `runSessionShutdownConsolidation`(L213-L213), `registerEpistemicLibraryTools`(L270-L270) | `tool:query_library`(L274), `tool:code_intelligence_map`(L296) | `.netark/extensions/epistemic-gate.ts` | — |
 | `.netark/extensions/guard-shell-parser.ts` | `FILE_TOOLS`(L15-L15), `SECRET_FILE_PATTERNS`(L17-L17), `PREWRITE_SECRET_PATTERNS`(L28-L28), `DESTRUCTIVE_BASH_PATTERNS`(L43-L43), `SAFE_SYSTEM_PREFIXES`(L57-L57), `READ_ONLY_COMMANDS`(L59-L59) | — | `.netark/extensions/workspace-guard.ts` | — |
-| `.netark/extensions/model-router.ts` | `NetArkEpistemicBridge`(L32-L32), `DEFAULT_ROLE_MODELS`(L79-L79), `RoleName`(L89-L89), `SpecialistRole`(L90-L90), `StrategyMode`(L91-L91), `ROLE_FALLBACK_CHAINS`(L94-L94) | `hook:session_start`(L1104), `hook:session_shutdown`(L1109), `hook:turn_start`(L1181), `hook:before_agent_start`(L1185), `hook:tool_call`(L1305), `tool:dispatch_specialist`(L1429) | — | — |
+| `.netark/extensions/model-router.ts` | `NetArkEpistemicBridge`(L33-L33), `DEFAULT_ROLE_MODELS`(L80-L80), `RoleName`(L90-L90), `SpecialistRole`(L91-L91), `StrategyMode`(L92-L92), `ROLE_FALLBACK_CHAINS`(L95-L95) | `hook:session_start`(L1068), `hook:session_shutdown`(L1073), `hook:turn_start`(L1145), `hook:before_agent_start`(L1149), `hook:tool_call`(L1269), `tool:dispatch_specialist`(L1393) | — | — |
+| `.netark/extensions/ribc-spec-gate.ts` | `SpecialistRole`(L2-L2), `RIBC_JIT_CONSTITUTION`(L4-L4), `RibcGateResult`(L10-L10), `isMicroFixTask`(L16-L16), `validateRibcConstructionTask`(L22-L22), `buildSpecialistSystemPrompt`(L42-L42) | — | `.netark/extensions/model-router.ts`, `.netark/extensions/subagent/index.ts` | — |
 | `.netark/extensions/session-handover.ts` | `HANDOVER_SOFT_THRESHOLD`(L15-L15), `HANDOVER_HARD_THRESHOLD`(L16-L16), `HANDOVER_REMIND_STEP_TOKENS`(L17-L17), `buildHandoverMandateMessage`(L19-L19), `sessionHandoverExtension`(L46-L46) | `hook:session_start`(L50), `command:/handover`(L55), `hook:before_agent_start`(L73) | — | — |
 | `.netark/extensions/subagent/agents.ts` | `AgentScope`(L9-L9), `AgentConfig`(L11-L11), `AgentDiscoveryResult`(L21-L21), `discoverAgents`(L128-L128), `formatAgentList`(L149-L149) | — | `.netark/extensions/subagent/index.ts` | — |
-| `.netark/extensions/subagent/index.ts` | — | `tool:subagent`(L578) | — | — |
+| `.netark/extensions/subagent/index.ts` | — | `tool:subagent`(L543) | — | — |
 | `.netark/extensions/web-research.ts` | `OutboundCheckResult`(L5-L5), `WebPageSnippet`(L10-L10), `NemotronGuardVerdict`(L17-L17), `IPI_DETERMINISTIC_RE`(L32-L32), `validateOutboundSafety`(L35-L35), `loadNvidiaApiKeys`(L74-L74) | `tool:web_research`(L513) | — | — |
 | `.netark/extensions/workspace-guard.ts` | — | `hook:session_start`(L134), `hook:user_bash`(L154), `hook:tool_call`(L169), `command:/guard`(L305) | — | `100.ARCH-RULES.v1` |
 | `schemas/code_hygiene_ast.py` | `get_brain_rel_dir`(L31-L38), `_max_cf_depth`(L41-L60), `_is_silent_except_body`(L63-L67), `check_python_ast_hygiene`(L70-L100), `discover_workspace_code_files`(L103-L127), `_add_py_edge`(L130-L134) | — | `schemas/codebook_compiler.py`, `scripts/auto_update_map.py`, `scripts/netark_guard_daemon.py`, `scripts/test_netark_harness.py` | — |

@@ -28,6 +28,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.ts";
+import { validateRibcConstructionTask, getSubagentCandidateModels } from "../ribc-spec-gate.ts";
 
 const MAX_PARALLEL_TASKS = 8;
 const MAX_CONCURRENCY = 4;
@@ -265,53 +266,6 @@ interface DispatchDefaults {
 	thinkingLevel?: ThinkingLevel;
 }
 
-const SUBAGENT_ROLE_FALLBACKS: Record<string, string[]> = {
-	scout: [
-		"nvidia/z-ai/glm-5.3-flash",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-		"nvidia/deepseek-ai/deepseek-v4.1-flash",
-		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-	],
-	architect: [
-		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-		"nvidia/deepseek-ai/deepseek-v4.1-flash",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-		"nvidia/z-ai/glm-5.3-flash",
-	],
-	challenger: [
-		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-		"nvidia/deepseek-ai/deepseek-v4.1-flash",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-		"nvidia/z-ai/glm-5.3-flash",
-	],
-	worker: [
-		"nvidia/poolside/laguna-xs-2.1",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-		"nvidia/deepseek-ai/deepseek-v4.1-flash",
-		"nvidia/z-ai/glm-5.3-flash",
-	],
-	code: [
-		"nvidia/poolside/laguna-xs-2.1",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-		"nvidia/deepseek-ai/deepseek-v4.1-flash",
-		"nvidia/z-ai/glm-5.3-flash",
-	],
-	auditor: [
-		"nvidia/z-ai/glm-5.3-flash",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-		"nvidia/deepseek-ai/deepseek-v4.1-flash",
-	],
-	audit: [
-		"nvidia/z-ai/glm-5.3-flash",
-		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
-		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
-		"nvidia/deepseek-ai/deepseek-v4.1-flash",
-	],
-};
-
 function isRetriableSubagentModelError(reason: string): boolean {
 	return /resource[_\s-]?exhausted|worker local total request limit reached|limit reached|\b429\b|\b502\b|\b503\b|\b504\b|\b410\b|\b404\b|rate[_\s-]?limit|timeout|overloaded/i.test(
 		reason,
@@ -347,12 +301,23 @@ async function runSingleAgent(
 	}
 
 	const inheritsDispatchConfig = !agent.model;
-	const primaryModel = agent.model ?? dispatchDefaults.model;
-	const roleFallbacks = SUBAGENT_ROLE_FALLBACKS[agentName] ?? [];
-	const candidateModels: Array<string | undefined> =
-		primaryModel || roleFallbacks.length > 0
-			? Array.from(new Set([primaryModel, ...roleFallbacks].filter((m): m is string => Boolean(m && m.trim()))))
-			: [undefined];
+	const candidateModels = getSubagentCandidateModels(agentName, agent.model, dispatchDefaults.model);
+
+	if (agentName === "worker" || agentName === "code") {
+		const check = validateRibcConstructionTask(task, agentName);
+		if (!check.allowed) {
+			return {
+				agent: agentName,
+				agentSource: agent.source,
+				task,
+				exitCode: 1,
+				messages: [],
+				stderr: check.prescription || "Blocked by SPEC-RIBC-GATE",
+				usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
+				step,
+			};
+		}
+	}
 
 	let tmpPromptDir: string | null = null;
 	let tmpPromptPath: string | null = null;

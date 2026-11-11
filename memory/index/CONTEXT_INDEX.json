@@ -2,7 +2,7 @@
   "schema_version": "2.3.0",
   "project": "NetArk",
   "harness": "NetArk",
-  "generated_at": "2026-11-11T18:02:14Z",
+  "generated_at": "2026-11-11T22:30:05Z",
   "total_nodes": 5,
   "healed_links": [],
   "pending_topology_alignments": [],
@@ -456,6 +456,11 @@
     },
     {
       "from": ".netark/extensions/model-router.ts",
+      "to": ".netark/extensions/ribc-spec-gate.ts",
+      "type": "ts_local_import"
+    },
+    {
+      "from": ".netark/extensions/model-router.ts",
       "to": "@earendil-works/pi-ai",
       "type": "ts_sdk_import"
     },
@@ -502,6 +507,11 @@
     {
       "from": ".netark/extensions/subagent/index.ts",
       "to": ".netark/extensions/subagent/agents.ts",
+      "type": "ts_local_import"
+    },
+    {
+      "from": ".netark/extensions/subagent/index.ts",
+      "to": ".netark/extensions/ribc-spec-gate.ts",
       "type": "ts_local_import"
     }
   ],
@@ -1313,7 +1323,7 @@
     "scripts/test_netark_harness.py": {
       "file_path": "scripts/test_netark_harness.py",
       "language": "python",
-      "total_lines": 274,
+      "total_lines": 309,
       "symbols": [
         {
           "name": "test_01_clean_5_core_nodes_and_oracle",
@@ -1350,6 +1360,12 @@
           "kind": "function",
           "line_start": 208,
           "line_end": 264
+        },
+        {
+          "name": "test_07_ribc_spec_gate",
+          "kind": "function",
+          "line_start": 267,
+          "line_end": 298
         }
       ],
       "pi_registrations": [],
@@ -1636,147 +1652,211 @@
     ".netark/extensions/model-router.ts": {
       "file_path": ".netark/extensions/model-router.ts",
       "language": "typescript",
-      "total_lines": 3283,
+      "total_lines": 3252,
       "symbols": [
         {
           "name": "NetArkEpistemicBridge",
           "kind": "interface",
-          "line_start": 32,
-          "line_end": 32
+          "line_start": 33,
+          "line_end": 33
         },
         {
           "name": "DEFAULT_ROLE_MODELS",
           "kind": "const",
-          "line_start": 79,
-          "line_end": 79
+          "line_start": 80,
+          "line_end": 80
         },
         {
           "name": "RoleName",
-          "kind": "type",
-          "line_start": 89,
-          "line_end": 89
-        },
-        {
-          "name": "SpecialistRole",
           "kind": "type",
           "line_start": 90,
           "line_end": 90
         },
         {
-          "name": "StrategyMode",
+          "name": "SpecialistRole",
           "kind": "type",
           "line_start": 91,
           "line_end": 91
         },
         {
+          "name": "StrategyMode",
+          "kind": "type",
+          "line_start": 92,
+          "line_end": 92
+        },
+        {
           "name": "ROLE_FALLBACK_CHAINS",
           "kind": "const",
-          "line_start": 94,
-          "line_end": 94
+          "line_start": 95,
+          "line_end": 95
         },
         {
           "name": "ROLE_MODELS",
           "kind": "const",
-          "line_start": 140,
-          "line_end": 140
+          "line_start": 141,
+          "line_end": 141
         },
         {
           "name": "syncNvidiaModelsFromStore",
           "kind": "function",
-          "line_start": 220,
-          "line_end": 220
+          "line_start": 221,
+          "line_end": 221
         },
         {
           "name": "pruneDeprecatedModelFromModelsJson",
           "kind": "function",
-          "line_start": 335,
-          "line_end": 335
+          "line_start": 336,
+          "line_end": 336
         },
         {
           "name": "getProviderKeyPool",
           "kind": "function",
-          "line_start": 466,
-          "line_end": 466
+          "line_start": 467,
+          "line_end": 467
         },
         {
           "name": "saveProviderKeyPool",
           "kind": "function",
-          "line_start": 493,
-          "line_end": 493
+          "line_start": 494,
+          "line_end": 494
         },
         {
           "name": "acquireStickyProviderKey",
           "kind": "function",
-          "line_start": 520,
-          "line_end": 520
+          "line_start": 521,
+          "line_end": 521
         },
         {
           "name": "buildSpecialistTools",
           "kind": "function",
-          "line_start": 685,
-          "line_end": 685
+          "line_start": 649,
+          "line_end": 649
         },
         {
           "name": "executeSpecialistToolCall",
           "kind": "function",
-          "line_start": 712,
-          "line_end": 712
+          "line_start": 676,
+          "line_end": 676
         },
         {
           "name": "hasImageAttachment",
           "kind": "function",
-          "line_start": 904,
-          "line_end": 904
+          "line_start": 868,
+          "line_end": 868
         }
       ],
       "pi_registrations": [
         {
           "kind": "hook",
           "name": "session_start",
-          "line": 1104
+          "line": 1068
         },
         {
           "kind": "hook",
           "name": "session_shutdown",
-          "line": 1109
+          "line": 1073
         },
         {
           "kind": "hook",
           "name": "turn_start",
-          "line": 1181
+          "line": 1145
         },
         {
           "kind": "hook",
           "name": "before_agent_start",
-          "line": 1185
+          "line": 1149
         },
         {
           "kind": "hook",
           "name": "tool_call",
-          "line": 1305
+          "line": 1269
         },
         {
           "kind": "tool",
           "name": "dispatch_specialist",
-          "line": 1429
+          "line": 1393
         },
         {
           "kind": "command",
           "name": "/mode",
-          "line": 2653
+          "line": 2622
         },
         {
           "kind": "command",
           "name": "/context",
-          "line": 3262
+          "line": 3231
         }
       ],
       "command_conflicts": [],
       "imports": [
+        ".netark/extensions/ribc-spec-gate.ts",
         "@earendil-works/pi-ai",
         "@earendil-works/pi-coding-agent"
       ],
       "imported_by": [],
+      "governing_specs": []
+    },
+    ".netark/extensions/ribc-spec-gate.ts": {
+      "file_path": ".netark/extensions/ribc-spec-gate.ts",
+      "language": "typescript",
+      "total_lines": 136,
+      "symbols": [
+        {
+          "name": "SpecialistRole",
+          "kind": "type",
+          "line_start": 2,
+          "line_end": 2
+        },
+        {
+          "name": "RIBC_JIT_CONSTITUTION",
+          "kind": "const",
+          "line_start": 4,
+          "line_end": 4
+        },
+        {
+          "name": "RibcGateResult",
+          "kind": "interface",
+          "line_start": 10,
+          "line_end": 10
+        },
+        {
+          "name": "isMicroFixTask",
+          "kind": "function",
+          "line_start": 16,
+          "line_end": 16
+        },
+        {
+          "name": "validateRibcConstructionTask",
+          "kind": "function",
+          "line_start": 22,
+          "line_end": 22
+        },
+        {
+          "name": "buildSpecialistSystemPrompt",
+          "kind": "function",
+          "line_start": 42,
+          "line_end": 42
+        },
+        {
+          "name": "SUBAGENT_ROLE_FALLBACKS",
+          "kind": "const",
+          "line_start": 81,
+          "line_end": 81
+        },
+        {
+          "name": "getSubagentCandidateModels",
+          "kind": "function",
+          "line_start": 128,
+          "line_end": 128
+        }
+      ],
+      "pi_registrations": [],
+      "command_conflicts": [],
+      "imports": [],
+      "imported_by": [
+        ".netark/extensions/model-router.ts",
+        ".netark/extensions/subagent/index.ts"
+      ],
       "governing_specs": []
     },
     ".netark/extensions/session-handover.ts": {
@@ -2014,13 +2094,13 @@
     ".netark/extensions/subagent/index.ts": {
       "file_path": ".netark/extensions/subagent/index.ts",
       "language": "typescript",
-      "total_lines": 1185,
+      "total_lines": 1150,
       "symbols": [],
       "pi_registrations": [
         {
           "kind": "tool",
           "name": "subagent",
-          "line": 578
+          "line": 543
         }
       ],
       "command_conflicts": [],
@@ -2029,7 +2109,8 @@
         "@earendil-works/pi-ai",
         "@earendil-works/pi-coding-agent",
         "@earendil-works/pi-tui",
-        ".netark/extensions/subagent/agents.ts"
+        ".netark/extensions/subagent/agents.ts",
+        ".netark/extensions/ribc-spec-gate.ts"
       ],
       "imported_by": [],
       "governing_specs": []
@@ -2038,10 +2119,10 @@
   "codebook_map": {
     "tier": "L1-Full",
     "total_nodes": 5,
-    "total_scripts": 21,
-    "raw_char_estimate": 32168,
-    "compact_char_count": 2910,
-    "compression_ratio_pct": 91.0,
+    "total_scripts": 22,
+    "raw_char_estimate": 33478,
+    "compact_char_count": 2961,
+    "compression_ratio_pct": 91.2,
     "dirs": {
       "M": "memory/",
       "C": "memory/codex/",
@@ -2069,12 +2150,13 @@
       "C14": ".netark/extensions/web-research.ts",
       "C15": ".netark/extensions/epistemic-library-tools.ts",
       "C16": ".netark/extensions/guard-shell-parser.ts",
-      "C17": ".netark/extensions/subagent/agents.ts",
-      "C18": ".netark/extensions/subagent/index.ts",
-      "C19": "scripts/test_netark_enterprise_guard.py",
-      "C20": "scripts/test_netark_harness.py"
+      "C17": ".netark/extensions/ribc-spec-gate.ts",
+      "C18": ".netark/extensions/subagent/agents.ts",
+      "C19": ".netark/extensions/subagent/index.ts",
+      "C20": "scripts/test_netark_enterprise_guard.py",
+      "C21": "scripts/test_netark_harness.py"
     },
-    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 21 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-323) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-325)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-351) | C11=X:workspace-guard.ts(L1-354)\n  C12=X:model-router.ts(L1-3283) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-318) | C16=X:guard-shell-parser.ts(L1-269) | C17=XS:agents.ts(L1-157)\n  C18=XS:index.ts(L1-1185) | C19=S:test_netark_enterprise_guard.py(L1-314) | C20=S:test_netark_harness.py(L1-274)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C18 -> C17 | C19 -> C1,C7,C8 | C20 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n  [DELEGATE] Mandatory IF-THEN Routing: (1) Multi-file search or messy/large doc digestion (>=2 files or >300 lines, e.g. in scratch/) -> MUST call dispatch_specialist(specialist='scout', filePaths=[...]) instead of manual sliced read; (2) Code implementation/refactoring (>50 lines or multi-file) -> MUST delegate to dispatch_specialist(specialist='code') or subagent(agent='worker'); (3) NEVER use bash(cat << EOF) or /tmp to bypass write/edit AST gates.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
+    "compact_text": "## 🧭 [NetArk Turn-1 Frozen Codebook Map] (Nodes: 5 | Scripts: 22 | Tier: L1-Full)\n@D (Dirs): M=memory/ C=memory/codex/ E=memory/episodic/ H=schemas/ S=scripts/ X=.netark/extensions/ XS=.netark/extensions/subagent/\n@R (Write Route): 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)\n@M (Nodes):\n  000=C:000_SOUL.md[000.SOUL.v1|verified] | 100=C:100_ARCH_RULES.md[100.ARCH-RULES.v1|verified] | 200=C:200_DECISIONS.md[200.ADR-001.v1|verified]\n  300=M:LEDGER.md[300.LEDGER.v1|verified] | 900=E:HANDOVER.md[900.HANDOVER.v1|verified]\n@C (Scripts):\n  C0=H:schema_validator.py(L1-369) | C1=H:netark_guard_core.py(L1-399) | C2=H:code_hygiene_ast.py(L1-256)\n  C3=H:codebook_compiler.py(L1-323) | C4=H:topology_graph.py(L1-234) | C5=H:doc_initializer.py(L1-205)\n  C6=S:auto_update_map.py(L1-349) | C7=S:netark_guard_daemon.py(L1-391) | C8=S:netark_init.py(L1-325)\n  C9=S:sync_doc_metadata.py(L1-304) | C10=X:epistemic-gate.ts(L1-351) | C11=X:workspace-guard.ts(L1-354)\n  C12=X:model-router.ts(L1-3252) | C13=X:session-handover.ts(L1-112) | C14=X:web-research.ts(L1-591)\n  C15=X:epistemic-library-tools.ts(L1-318) | C16=X:guard-shell-parser.ts(L1-269) | C17=X:ribc-spec-gate.ts(L1-136)\n  C18=XS:agents.ts(L1-157) | C19=XS:index.ts(L1-1150) | C20=S:test_netark_enterprise_guard.py(L1-314)\n  C21=S:test_netark_harness.py(L1-309)\n@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):\n  [DAG] 100 < 000 | 200 < 000,100 | 300 < 000 | 900 < 000\n  [SYN] 000 => C0 | 100 => C1,C7,C11 | 200 => C6,C8,C10 | 900 => C10\n  [AST] C0 -> C4 | C2 -> C4 | C3 -> C2 | C5 -> C0 | C6 -> C2,C3,C1,C0 | C7 -> C2,C1 | C9 -> C0,C5 | C10 -> C15 | C11 -> C16 | C12 -> C17 | C19 -> C18,C17 | C20 -> C1,C7,C8 | C21 -> C2,C0,C7\n  [HYG-AST] Python functions max control-flow nesting <= 4 layers (use Early-Return); NEVER write silent 'except: pass' without '# noqa: silent-except'; target file size <= 400 lines (hard cap 550).\n  [HYG-DEBUG] On bug/unexpected return, NEVER patch locally with nested if/try; trace backward [Return Point -> Call Chain -> Entry Input] and add Fail-Fast validation at entry.\n  [DELEGATE] Mandatory IF-THEN Routing: (1) Multi-file search or messy/large doc digestion (>=2 files or >300 lines, e.g. in scratch/) -> MUST call dispatch_specialist(specialist='scout', filePaths=[...]) instead of manual sliced read; (2) Code implementation/refactoring (>50 lines or multi-file) -> MUST delegate to dispatch_specialist(specialist='code') or subagent(agent='worker'); (3) NEVER use bash(cat << EOF) or /tmp to bypass write/edit AST gates.\n💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或呼叫 `query_library(query=\"200\"|\"C1\")` 查閱完整中文摘要與符號。",
     "reverse_lookup": {
       "C0": {
         "kind": "script",
@@ -2938,141 +3020,141 @@
         "code": "C12",
         "path": ".netark/extensions/model-router.ts",
         "dir_code": "X",
-        "line_range": "L1-3283",
-        "total_lines": 3283,
+        "line_range": "L1-3252",
+        "total_lines": 3252,
         "language": "typescript",
         "symbols": [
           {
             "name": "NetArkEpistemicBridge",
             "kind": "interface",
-            "line_start": 32,
-            "line_end": 32
+            "line_start": 33,
+            "line_end": 33
           },
           {
             "name": "DEFAULT_ROLE_MODELS",
             "kind": "const",
-            "line_start": 79,
-            "line_end": 79
+            "line_start": 80,
+            "line_end": 80
           },
           {
             "name": "RoleName",
-            "kind": "type",
-            "line_start": 89,
-            "line_end": 89
-          },
-          {
-            "name": "SpecialistRole",
             "kind": "type",
             "line_start": 90,
             "line_end": 90
           },
           {
-            "name": "StrategyMode",
+            "name": "SpecialistRole",
             "kind": "type",
             "line_start": 91,
             "line_end": 91
           },
           {
+            "name": "StrategyMode",
+            "kind": "type",
+            "line_start": 92,
+            "line_end": 92
+          },
+          {
             "name": "ROLE_FALLBACK_CHAINS",
             "kind": "const",
-            "line_start": 94,
-            "line_end": 94
+            "line_start": 95,
+            "line_end": 95
           },
           {
             "name": "ROLE_MODELS",
             "kind": "const",
-            "line_start": 140,
-            "line_end": 140
+            "line_start": 141,
+            "line_end": 141
           },
           {
             "name": "syncNvidiaModelsFromStore",
             "kind": "function",
-            "line_start": 220,
-            "line_end": 220
+            "line_start": 221,
+            "line_end": 221
           },
           {
             "name": "pruneDeprecatedModelFromModelsJson",
             "kind": "function",
-            "line_start": 335,
-            "line_end": 335
+            "line_start": 336,
+            "line_end": 336
           },
           {
             "name": "getProviderKeyPool",
             "kind": "function",
-            "line_start": 466,
-            "line_end": 466
+            "line_start": 467,
+            "line_end": 467
           },
           {
             "name": "saveProviderKeyPool",
             "kind": "function",
-            "line_start": 493,
-            "line_end": 493
+            "line_start": 494,
+            "line_end": 494
           },
           {
             "name": "acquireStickyProviderKey",
             "kind": "function",
-            "line_start": 520,
-            "line_end": 520
+            "line_start": 521,
+            "line_end": 521
           },
           {
             "name": "buildSpecialistTools",
             "kind": "function",
-            "line_start": 685,
-            "line_end": 685
+            "line_start": 649,
+            "line_end": 649
           },
           {
             "name": "executeSpecialistToolCall",
             "kind": "function",
-            "line_start": 712,
-            "line_end": 712
+            "line_start": 676,
+            "line_end": 676
           },
           {
             "name": "hasImageAttachment",
             "kind": "function",
-            "line_start": 904,
-            "line_end": 904
+            "line_start": 868,
+            "line_end": 868
           }
         ],
         "pi_registrations": [
           {
             "kind": "hook",
             "name": "session_start",
-            "line": 1104
+            "line": 1068
           },
           {
             "kind": "hook",
             "name": "session_shutdown",
-            "line": 1109
+            "line": 1073
           },
           {
             "kind": "hook",
             "name": "turn_start",
-            "line": 1181
+            "line": 1145
           },
           {
             "kind": "hook",
             "name": "before_agent_start",
-            "line": 1185
+            "line": 1149
           },
           {
             "kind": "hook",
             "name": "tool_call",
-            "line": 1305
+            "line": 1269
           },
           {
             "kind": "tool",
             "name": "dispatch_specialist",
-            "line": 1429
+            "line": 1393
           },
           {
             "kind": "command",
             "name": "/mode",
-            "line": 2653
+            "line": 2622
           },
           {
             "kind": "command",
             "name": "/context",
-            "line": 3262
+            "line": 3231
           }
         ],
         "governing_specs": []
@@ -3375,6 +3457,67 @@
       "C17": {
         "kind": "script",
         "code": "C17",
+        "path": ".netark/extensions/ribc-spec-gate.ts",
+        "dir_code": "X",
+        "line_range": "L1-136",
+        "total_lines": 136,
+        "language": "typescript",
+        "symbols": [
+          {
+            "name": "SpecialistRole",
+            "kind": "type",
+            "line_start": 2,
+            "line_end": 2
+          },
+          {
+            "name": "RIBC_JIT_CONSTITUTION",
+            "kind": "const",
+            "line_start": 4,
+            "line_end": 4
+          },
+          {
+            "name": "RibcGateResult",
+            "kind": "interface",
+            "line_start": 10,
+            "line_end": 10
+          },
+          {
+            "name": "isMicroFixTask",
+            "kind": "function",
+            "line_start": 16,
+            "line_end": 16
+          },
+          {
+            "name": "validateRibcConstructionTask",
+            "kind": "function",
+            "line_start": 22,
+            "line_end": 22
+          },
+          {
+            "name": "buildSpecialistSystemPrompt",
+            "kind": "function",
+            "line_start": 42,
+            "line_end": 42
+          },
+          {
+            "name": "SUBAGENT_ROLE_FALLBACKS",
+            "kind": "const",
+            "line_start": 81,
+            "line_end": 81
+          },
+          {
+            "name": "getSubagentCandidateModels",
+            "kind": "function",
+            "line_start": 128,
+            "line_end": 128
+          }
+        ],
+        "pi_registrations": [],
+        "governing_specs": []
+      },
+      "C18": {
+        "kind": "script",
+        "code": "C18",
         "path": ".netark/extensions/subagent/agents.ts",
         "dir_code": "XS",
         "line_range": "L1-157",
@@ -3415,27 +3558,27 @@
         "pi_registrations": [],
         "governing_specs": []
       },
-      "C18": {
+      "C19": {
         "kind": "script",
-        "code": "C18",
+        "code": "C19",
         "path": ".netark/extensions/subagent/index.ts",
         "dir_code": "XS",
-        "line_range": "L1-1185",
-        "total_lines": 1185,
+        "line_range": "L1-1150",
+        "total_lines": 1150,
         "language": "typescript",
         "symbols": [],
         "pi_registrations": [
           {
             "kind": "tool",
             "name": "subagent",
-            "line": 578
+            "line": 543
           }
         ],
         "governing_specs": []
       },
-      "C19": {
+      "C20": {
         "kind": "script",
-        "code": "C19",
+        "code": "C20",
         "path": "scripts/test_netark_enterprise_guard.py",
         "dir_code": "S",
         "line_range": "L1-314",
@@ -3470,13 +3613,13 @@
         "pi_registrations": [],
         "governing_specs": []
       },
-      "C20": {
+      "C21": {
         "kind": "script",
-        "code": "C20",
+        "code": "C21",
         "path": "scripts/test_netark_harness.py",
         "dir_code": "S",
-        "line_range": "L1-274",
-        "total_lines": 274,
+        "line_range": "L1-309",
+        "total_lines": 309,
         "language": "python",
         "symbols": [
           {
@@ -3514,6 +3657,12 @@
             "kind": "function",
             "line_start": 208,
             "line_end": 264
+          },
+          {
+            "name": "test_07_ribc_spec_gate",
+            "kind": "function",
+            "line_start": 267,
+            "line_end": 298
           }
         ],
         "pi_registrations": [],

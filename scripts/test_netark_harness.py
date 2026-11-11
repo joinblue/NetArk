@@ -239,7 +239,7 @@ def test_06_code_hygiene_p1_p2_and_modularity_gates() -> None:
         "scripts/auto_update_map.py": 350, "scripts/netark_guard_daemon.py": 394,
         "schemas/topology_graph.py": 300, "schemas/schema_validator.py": 370,
         "schemas/doc_initializer.py": 280, "scripts/sync_doc_metadata.py": 320,
-        "scripts/test_netark_harness.py": 280, ".netark/extensions/guard-shell-parser.ts": 320,
+        "scripts/test_netark_harness.py": 330, ".netark/extensions/guard-shell-parser.ts": 320,
         ".netark/extensions/workspace-guard.ts": 380, ".netark/extensions/epistemic-library-tools.ts": 320,
         ".netark/extensions/epistemic-gate.ts": 360,
     }
@@ -264,6 +264,40 @@ def test_06_code_hygiene_p1_p2_and_modularity_gates() -> None:
     print("  ✅ Harness 6 passed (P1, P2, GATE-01 <= 400 lines, GATE-02 400/550 tiered gate verified).")
 
 
+def test_07_ribc_spec_gate() -> None:
+    print("🧪 [Harness 7] Verifying SPEC-RIBC-GATE Logic...")
+    import tempfile, subprocess
+    test_js = """
+import { validateRibcConstructionTask, buildSpecialistSystemPrompt } from "./.netark/extensions/ribc-spec-gate.ts";
+let failCount = 0;
+const assertEqual = (expected, actual, msg) => {
+    if (expected !== actual) { console.error(`FAIL: ${msg}. Expected ${expected}, got ${actual}`); failCount++; }
+};
+const res1 = validateRibcConstructionTask("檢查目錄", "scout");
+assertEqual(true, res1.allowed, "Test 1");
+const res2 = validateRibcConstructionTask("修正 foo.py 行號 L12 的 typo", "code");
+assertEqual(true, res2.allowed, "Test 2");
+const res3 = validateRibcConstructionTask("新建模組 wallet.py 並避免 typo", "code");
+assertEqual(false, res3.allowed, "Test 3");
+const res4 = validateRibcConstructionTask("實作這個功能，字數已經夠長了，但我完全沒有加上防呆，也沒有任何資料格式相關的字眼，純粹來亂的", "code");
+assertEqual(false, res4.allowed, "Test 4");
+assertEqual(true, res4.prescription.includes("SPEC-RIBC-GATE"), "Test 4 msg");
+const res5 = validateRibcConstructionTask("請依據規格實作模組。這段敘述字數非常夠，且包含必要的邊界防護與異常處理，同時有完整的型別契約與數值精度要求。字數必須大於45字元才行，我們再多打幾個字湊滿。", "worker");
+assertEqual(true, res5.allowed, "Test 5");
+const codePrompt = buildSpecialistSystemPrompt("code", "test-model");
+assertEqual(true, codePrompt.includes("R-I-B-C"), "Test 6 code");
+const scoutPrompt = buildSpecialistSystemPrompt("scout", "test-model");
+assertEqual(false, scoutPrompt.includes("R-I-B-C"), "Test 6 scout");
+if (failCount > 0) process.exit(1);
+"""
+    with tempfile.NamedTemporaryFile("w", suffix=".mjs", dir=str(PROJECT_ROOT)) as tmp:
+        tmp.write(test_js)
+        tmp.flush()
+        proc = subprocess.run(["node", "--experimental-strip-types", tmp.name], cwd=str(PROJECT_ROOT), capture_output=True, text=True)
+        assert proc.returncode == 0, f"JS test failed: {proc.stderr}"
+    print("  ✅ Harness 7 passed (SPEC-RIBC-GATE logic and zero-bloat prefix verified).")
+
+
 if __name__ == "__main__":
     test_01_clean_5_core_nodes_and_oracle()
     test_02_block_gitignored_affected_paths()
@@ -271,4 +305,5 @@ if __name__ == "__main__":
     test_04_role_models_and_subagent_alignment()
     test_05_extensions_turn1_codebook_and_guard_hooks()
     test_06_code_hygiene_p1_p2_and_modularity_gates()
-    print("\n🎉 [ALL 6 HARNESS TESTS PASSED] NetArk Core Harness, Codebook Topology, Hygiene P1/P2 & Modularity Gates Verified!")
+    test_07_ribc_spec_gate()
+    print("\n🎉 [ALL 7 HARNESS TESTS PASSED] NetArk Core Harness Verified!")
