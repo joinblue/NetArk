@@ -155,10 +155,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Setup Node.js 20
+      - name: Install Python Dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: "1. Tier 0 AST & G-01..G-05 DLP Self-Test"
         run: python3 schemas/netark_guard_core.py --self-test
