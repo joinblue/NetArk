@@ -149,4 +149,13 @@ Tracks every change from `draft` ➔ `reviewing` ➔ `stub_ready` ➔ `verified`
 
 ---
 
+## Community & Support
+
+- **Questions, Ideas & Showcases**: [GitHub Discussions](https://github.com/joinblue/NetArk/discussions)
+- **Bug Reports**: [GitHub Issues](https://github.com/joinblue/NetArk/issues)
+- **Security Vulnerabilities**: [SECURITY.md](SECURITY.md) (Private Vulnerability Reporting)
+- **Architecture Consulting & Custom Integration**: `joinblue42+netark@gmail.com`
+
+---
+
 Licensed under the [Apache License 2.0](LICENSE).

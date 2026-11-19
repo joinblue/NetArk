@@ -149,4 +149,13 @@ flowchart LR
 
 ---
 
+## 社群與支援 (Community & Support)
+
+- **技術交流、功能討論與案例分享**：[GitHub Discussions](https://github.com/joinblue/NetArk/discussions)
+- **問題回報 (Bug Reports)**：[GitHub Issues](https://github.com/joinblue/NetArk/issues)
+- **安全漏洞回報**：請依 [SECURITY.md](SECURITY.md) 走 GitHub 私密漏洞回報管道
+- **多宿主架構交流與企業導入洽詢**：`joinblue42+netark@gmail.com`
+
+---
+
 依 [Apache License 2.0](LICENSE) 開源釋出。

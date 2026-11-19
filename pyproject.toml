@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
-  { name = "joinblue", email = "joinblue42@gmail.com" }
+  { name = "joinblue", email = "joinblue42+netark@gmail.com" }
 ]
 keywords = [
   "mcp",

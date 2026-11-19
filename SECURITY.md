@@ -5,7 +5,7 @@
 If you discover a security vulnerability, guardrail bypass, or secret-detection false negative in **NetArk (`netark-mcp`)**, please report it responsibly:
 
 1. **Do NOT open a public GitHub issue** for active exploits or credential-exposure bugs.
-2. Use GitHub's **Private Vulnerability Reporting** ("Security" tab ➔ "Report a vulnerability") on the repository, or contact the maintainer listed in `pyproject.toml` (`joinblue42@gmail.com`).
+2. Use GitHub's **Private Vulnerability Reporting** ("Security" tab ➔ "Report a vulnerability") on the repository, or contact the maintainer listed in `pyproject.toml` (`joinblue42+netark@gmail.com`).
 3. Include a minimal reproducible payload (e.g., `PreToolUse` stdin JSON or AST snippet) and your Python / OS version.
 
 ## Deterministic Guard Boundaries & Honest Scope
