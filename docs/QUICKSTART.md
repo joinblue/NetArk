@@ -10,11 +10,11 @@ NetArk is packaged as a zero-dependency Python CLI & stdio MCP server (`requires
 Installing via `uv tool install` places an isolated, native-speed shim on your `PATH`, ideal for frequent `PreToolUse` hook invocations (`~62ms`):
 
 ```bash
-# Directly from GitHub (works immediately)
-uv tool install git+https://github.com/joinblue/NetArk
+# From PyPI (recommended)
+uv tool install netark-mcp
 
-# Or from PyPI (once v3.2.0 is published)
-# uv tool install netark-mcp
+# Or directly from GitHub
+# uv tool install git+https://github.com/joinblue/NetArk
 ```
 
 ### Option B: Ephemeral Execution via `uvx` (MCP-Only)
@@ -25,7 +25,7 @@ If you only want to run the 3-tool MCP server without permanent installation:
   "mcpServers": {
     "netark": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/joinblue/NetArk", "netark-mcp", "serve", "--cwd", "."]
+      "args": ["netark-mcp", "serve", "--cwd", "."]
     }
   }
 }

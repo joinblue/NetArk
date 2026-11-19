@@ -31,13 +31,13 @@ NetArk gives AI coding agents (Claude Code, Google Antigravity, Pi Agent, and cu
 
 ## 30-Second Quickstart (`uv` / `uvx`)
 
-Install `netark-mcp` directly from GitHub for full **Hooks + MCP**, or run `uvx` for **MCP-only** *(once `v3.2.0` is published on PyPI, `uv tool install netark-mcp` also works directly)*:
+Install `netark-mcp` once globally for full **Hooks + MCP**, or run `uvx` directly for **MCP-only**:
 
 ```bash
-# 1. Install globally from GitHub (recommended for native-speed PreToolUse hooks)
-uv tool install git+https://github.com/joinblue/NetArk
-# Or once published on PyPI:
-# uv tool install netark-mcp
+# 1. Install globally from PyPI (recommended for native-speed PreToolUse hooks)
+uv tool install netark-mcp
+# Or install directly from GitHub main:
+# uv tool install git+https://github.com/joinblue/NetArk
 
 # 2. Initialize your project (creates 0 .py files inside your repo)
 cd /path/to/your-project
@@ -71,7 +71,7 @@ netark-mcp init --lang en --cwd .
     "mcpServers": {
       "netark": {
         "command": "uvx",
-        "args": ["--from", "git+https://github.com/joinblue/NetArk", "netark-mcp", "serve", "--cwd", "."]
+        "args": ["netark-mcp", "serve", "--cwd", "."]
       }
     }
   }

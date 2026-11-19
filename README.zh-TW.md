@@ -31,13 +31,13 @@ NetArk 為 AI 寫碼助手（Claude Code、Google Antigravity、Pi Agent 與自�
 
 ## 30 秒快速上手（`uv` / `uvx`）
 
-使用 `uv` 直接從 GitHub 安裝即可同時啟用 **原生速度 Hooks + MCP**（待 `v3.2.0` 正式發佈至 PyPI 後亦可直接使用 `uv tool install netark-mcp`）；若只需單純掛載 MCP 亦可直接以 `uvx` 啟動：
+使用 `uv` 全域安裝即可同時啟用 **原生速度 Hooks + MCP**；若只需單純掛載 MCP 亦可直接以 `uvx` 啟動：
 
 ```bash
-# 1. 從 GitHub 安裝 CLI（推薦：提供原生速度的 PreToolUse Hook 與 stdio MCP）
-uv tool install git+https://github.com/joinblue/NetArk
-# 待 PyPI 上架後亦可改用：
-# uv tool install netark-mcp
+# 1. 從 PyPI 安裝 CLI（推薦：提供原生速度的 PreToolUse Hook 與 stdio MCP）
+uv tool install netark-mcp
+# 或從 GitHub 最新主線安裝：
+# uv tool install git+https://github.com/joinblue/NetArk
 
 # 2. 初始化目標專案（預設 --target memory，不在專案留下任何 .py 檔）
 cd /path/to/your-project
@@ -71,7 +71,7 @@ netark-mcp init --lang zh-TW --cwd .
     "mcpServers": {
       "netark": {
         "command": "uvx",
-        "args": ["--from", "git+https://github.com/joinblue/NetArk", "netark-mcp", "serve", "--cwd", "."]
+        "args": ["netark-mcp", "serve", "--cwd", "."]
       }
     }
   }
