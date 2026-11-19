@@ -67,7 +67,7 @@ jobs:
               for idx, target in enumerate(("memory", "claude", "agy")):
                   ws = tmp_root / f"ws_{idx}_{target}"
                   ws.mkdir()
-                  res = subprocess.run([cli, "init", "--target", target, "--lang", "en", "--cwd", str(ws)], text=True, capture_output=True, check=True)
+                  res = subprocess.run([cli, "init", "--target", target, "--lang", "en", "--cwd", str(ws)], text=True, encoding="utf-8", capture_output=True, check=True)
                   data = json.loads(res.stdout)
                   assert data["status"] == "ok", data
                   assert list(ws.rglob("*.py")) == [], f"Unexpected .py files in {target} workspace!"
@@ -91,7 +91,7 @@ jobs:
                   {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "netark_guard", "arguments": {"action": "setup"}}},
               ]
               rpc_in = "\n".join(json.dumps(r) for r in rpc_reqs) + "\n"
-              srv = subprocess.run([cli, "serve", "--cwd", str(ws_mem)], input=rpc_in, text=True, capture_output=True, check=True)
+              srv = subprocess.run([cli, "serve", "--cwd", str(ws_mem)], input=rpc_in, text=True, encoding="utf-8", capture_output=True, check=True)
               resps = {r["id"]: r["result"] for r in (json.loads(ln) for ln in srv.stdout.splitlines() if ln.strip()) if "id" in r}
               assert "instructions" in resps[1] and resps[1]["serverInfo"]["name"] == "netark-mcp"
               tools = resps[3]["tools"]
@@ -104,13 +104,13 @@ jobs:
               # Verify PreToolUse deterministic hooks across dialects
               env_payload = json.dumps({"tool_name": "read_file", "tool_input": {"path": ".env"}})
               for dialect, expect_rc in (("agy", 0), ("claude", 2), ("pi", 2)):
-                  hk = subprocess.run([cli, "hook", "--hook-mode", dialect, "--cwd", str(ws_mem)], input=env_payload, text=True, capture_output=True)
+                  hk = subprocess.run([cli, "hook", "--hook-mode", dialect, "--cwd", str(ws_mem)], input=env_payload, text=True, encoding="utf-8", capture_output=True)
                   assert hk.returncode == expect_rc, f"{dialect} rc={hk.returncode}: {hk.stdout} {hk.stderr}"
                   combined = hk.stdout + hk.stderr
                   assert "SEC-CRED" in combined and "[RuleDoc]" in combined
 
               sec_payload = json.dumps({"tool_name": "write_file", "tool_input": {"path": "src/app.py", "content": f'KEY = "{fake_secret}"\ntry:\n    pass\nexcept:\n    pass\n'}})
-              hk2 = subprocess.run([cli, "hook", "--hook-mode", "claude", "--cwd", str(ws_mem)], input=sec_payload, text=True, capture_output=True)
+              hk2 = subprocess.run([cli, "hook", "--hook-mode", "claude", "--cwd", str(ws_mem)], input=sec_payload, text=True, encoding="utf-8", capture_output=True)
               assert hk2.returncode == 2 and "SEC-PREWRITE-SECRET" in (hk2.stdout + hk2.stderr)
 
           print("All cross-platform CLI, MCP stdio, and PreToolUse hook checks passed.")

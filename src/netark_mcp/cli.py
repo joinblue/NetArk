@@ -19,6 +19,9 @@ def _bootstrap_core_root() -> Path:
 
 def main(argv: Optional[List[str]] = None) -> int:
     """Bootstrap embedded core modules and dispatch to scripts.netark_mcp_server.main."""
+    for _stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(_stream, "reconfigure"):
+            _stream.reconfigure(encoding="utf-8", errors="replace")
     _bootstrap_core_root()
     from scripts.netark_mcp_server import main as server_main
 

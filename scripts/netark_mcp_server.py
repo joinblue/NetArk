@@ -253,6 +253,9 @@ def _run_uninstall_subcommand(argv: List[str]) -> int:
 
 def main(argv: Optional[List[str]] = None) -> int:
     """Unified entrypoint for serve, hook, init, and uninstall subcommands."""
+    for _stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(_stream, "reconfigure"):
+            _stream.reconfigure(encoding="utf-8", errors="replace")
     raw = list(sys.argv[1:] if argv is None else argv)
     if not raw or raw[0] in {"-h", "--help"}:
         print("Usage: netark-mcp {serve|hook|init|uninstall} [options]", file=sys.stderr)
