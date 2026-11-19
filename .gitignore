@@ -1,0 +1,30 @@
+# Python bytecode & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.whl
+*.tar.gz
+
+# Virtual environments & tool caches
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Sensitive local configuration & vaults (never commit)
+.env
+.env.*
+auth.json
+*vault*.json
+*.pem
+*.key
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+*.swp

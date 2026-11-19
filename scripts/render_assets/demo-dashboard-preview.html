@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetArk Engineering Dashboard Preview</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    .canvas { height: 700px; }
+    .dash-shell {
+      height: 524px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .dash-topbar {
+      padding: 12px 18px;
+      background: #14161D;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .kpi-strip {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .dash-body {
+      display: grid;
+      grid-template-columns: 296px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 14px 16px;
+      background: #0E1015;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .side-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .tree-item {
+      padding: 8px 10px;
+      border-radius: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+    .tree-item.active {
+      background: var(--brand-soft);
+      border-color: var(--brand-border);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .main-pane {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--surface-1);
+    }
+    .filter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .tab {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+    .tab.active {
+      color: var(--pass);
+      background: var(--pass-soft);
+      border-color: var(--pass-border);
+      font-weight: 600;
+    }
+    .topo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      flex: 1;
+    }
+    .node-card {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .node-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .node-key {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .node-path {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .sym-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sym-chip {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background: #0D0F14;
+      border: 1px solid var(--border);
+      color: var(--brand);
+    }
+    .node-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="header">
+      <div>
+        <div class="eyebrow">CAUSAL TOPOLOGY &amp; GOVERNANCE STATE</div>
+        <div class="title">Spec-to-Code Dependency Graph &amp; Lifecycle Registry</div>
+        <div class="subtitle">Tracks Constitution &rarr; Master Blueprint &rarr; Shard Spec &rarr; Python AST Symbols with zero-cycle verification</div>
+      </div>
+      <div class="pill-row">
+        <span class="badge badge-pass">Oracle: 42/42 PASSED</span>
+        <span class="badge badge-brand">0 Cycles</span>
+      </div>
+    </div>
+
+    <div class="card dash-shell">
+      <div class="dash-topbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <span class="mono" style="font-size:13px;font-weight:700;">netark_guard(action="oracle")</span>
+          <span class="badge">Track: ARCH-GOVERNANCE</span>
+        </div>
+        <div class="kpi-strip">
+          <span class="badge">Modules: 22 (&le;400L)</span>
+          <span class="badge">Shards: 12 verified</span>
+          <span class="badge badge-pass">Guard: Tier-0 Active</span>
+        </div>
+      </div>
+
+      <div class="dash-body">
+        <!-- Left Sidebar: Domain Registry -->
+        <div class="sidebar">
+          <div class="side-label">Domain Registry</div>
+          <div class="tree-item active"><span>All Verified Domains</span><span class="mono">12</span></div>
+          <div class="tree-item"><span>000 Core Constitution</span><span class="mono">1</span></div>
+          <div class="tree-item"><span>100 Arch &amp; DLP Guard</span><span class="mono">3</span></div>
+          <div class="tree-item"><span>200 Master Blueprints</span><span class="mono">4</span></div>
+          <div class="tree-item"><span>400 Codebook Protocols</span><span class="mono">2</span></div>
+          <div class="tree-item"><span>500 Harness &amp; Hooks</span><span class="mono">5</span></div>
+          <div class="tree-item"><span>700 Audits &amp; Runtime</span><span class="mono">4</span></div>
+          <div class="tree-item"><span>900 Handover Snapshots</span><span class="mono">3</span></div>
+          <div class="side-label" style="margin-top:8px;">Core Modules (Stdlib)</div>
+          <div class="tree-item"><span class="mono" style="font-size:12px;">netark_guard_core.py</span><span class="mono">397L</span></div>
+          <div class="tree-item"><span class="mono" style="font-size:12px;">hook_lifecycle.py</span><span class="mono">330L</span></div>
+        </div>
+
+        <!-- Right Main Workspace -->
+        <div class="main-pane">
+          <div class="filter-row">
+            <div class="tabs">
+              <span class="tab active">verified (12)</span>
+              <span class="tab">stub_ready (0)</span>
+              <span class="tab">reviewing (5)</span>
+              <span class="tab">draft (4)</span>
+              <span class="tab">archived (7)</span>
+            </div>
+            <span class="mono" style="font-size:12px;color:var(--text-muted);">DAG: 0 broken links</span>
+          </div>
+
+          <div class="topo-grid">
+            <div class="subcard node-card">
+              <div>
+                <div class="node-head">
+                  <div class="node-key">000.SOUL.v1</div>
+                  <span class="badge badge-pass">verified</span>
+                </div>
+                <div class="node-path">memory/codex/000_SOUL.md</div>
+              </div>
+              <div class="sym-list">
+                <span class="sym-chip">schema_validator.py</span>
+                <span class="sym-chip">AS-01..AS-06</span>
+              </div>
+              <div class="node-foot">
+                <span>depends_on: []</span>
+                <span>MEM-2026-0001</span>
+              </div>
+            </div>
+
+            <div class="subcard node-card" style="border-color:var(--brand-border);">
+              <div>
+                <div class="node-head">
+                  <div class="node-key">100.SHARD-AST-DLP-GUARD.v1</div>
+                  <span class="badge badge-pass">verified</span>
+                </div>
+                <div class="node-path">memory/specs/100_01_SHARD_AST_DLP_GUARD.md</div>
+              </div>
+              <div class="sym-list">
+                <span class="sym-chip">evaluate_command_and_path</span>
+                <span class="sym-chip">check_python_ast_hygiene</span>
+              </div>
+              <div class="node-foot">
+                <span>shard_of: 200.NETARK-V3</span>
+                <span>L1-397 / L1-328</span>
+              </div>
+            </div>
+
+            <div class="subcard node-card">
+              <div>
+                <div class="node-head">
+                  <div class="node-key">500.SHARD-HOOK-LIFECYCLE.v1</div>
+                  <span class="badge badge-pass">verified</span>
+                </div>
+                <div class="node-path">memory/specs/500_01_SHARD_HOOK_LIFECYCLE.md</div>
+              </div>
+              <div class="sym-list">
+                <span class="sym-chip">reconstruct_post_edit</span>
+                <span class="sym-chip">_run_session_start_mode</span>
+              </div>
+              <div class="node-foot">
+                <span>dialects: agy | claude | pi</span>
+                <span>~61.9ms avg</span>
+              </div>
+            </div>
+
+            <div class="subcard node-card">
+              <div>
+                <div class="node-head">
+                  <div class="node-key">400.SHARD-MEMORY-CODEBOOK.v1</div>
+                  <span class="badge badge-pass">verified</span>
+                </div>
+                <div class="node-path">memory/specs/400_01_SHARD_MEMORY_CODEBOOK.md</div>
+              </div>
+              <div class="sym-list">
+                <span class="sym-chip">render_context_map</span>
+                <span class="sym-chip">query_codebook_entry</span>
+              </div>
+              <div class="node-foot">
+                <span>compression: 95.7%</span>
+                <span>CONTEXT_MAP.md</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

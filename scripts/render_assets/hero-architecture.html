@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetArk Architecture</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    .canvas { height: 676px; }
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 264px 88px 392px 88px 264px;
+      align-items: stretch;
+      height: 500px;
+    }
+    .col-card {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .col-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .col-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+    .host-item {
+      padding: 11px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .host-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .host-name .mono {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .host-path {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .center-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      justify-content: space-between;
+    }
+    .engine-panel {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .engine-panel.primary {
+      border-color: var(--brand-border);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.05) 0%, var(--surface-1) 42%);
+    }
+    .mod-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .mod-box {
+      padding: 9px 10px;
+    }
+    .mod-file {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand);
+      margin-bottom: 3px;
+    }
+    .mod-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+    .tool-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tool-item {
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .tool-name {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--pass);
+    }
+    .tool-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .connector-col {
+      position: relative;
+      height: 500px;
+    }
+    .flow-pill {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .flow-pill.brand {
+      color: var(--brand);
+      border-color: var(--brand-border);
+    }
+    .flow-pill.pass {
+      color: var(--pass);
+      border-color: var(--pass-border);
+    }
+    .connector-svg {
+      position: absolute;
+      inset: 0;
+      width: 88px;
+      height: 500px;
+      pointer-events: none;
+    }
+    .lifecycle-strip {
+      display: flex;
+      gap: 3px;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 9px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .stage {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .stage.active {
+      color: var(--pass);
+      font-weight: 700;
+    }
+    .footer-note {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="header">
+      <div>
+        <div class="eyebrow">ARCHITECTURE BLUEPRINT • NETARK-MCP V3.2.0</div>
+        <div class="title">Hook-First Deterministic Harness &amp; 3-Tool Lean MCP</div>
+        <div class="subtitle">Zero runtime files dropped into target repositories — Python 3.10+ stdlib only</div>
+      </div>
+      <div class="pill-row">
+        <span class="badge badge-brand">0 External Deps</span>
+        <span class="badge badge-pass">3 Tools • 916 Chars</span>
+        <span class="badge">~62ms PreToolUse</span>
+      </div>
+    </div>
+
+    <div class="arch-grid">
+      <!-- Left Column: Host Adapters -->
+      <div class="card col-card">
+        <div class="col-head">
+          <div class="col-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3"/><path d="M13 15h4"/></svg>
+            Host &amp; Adapter Layer
+          </div>
+          <span class="badge">0 .py</span>
+        </div>
+        <div class="item-list">
+          <div class="subcard host-item">
+            <div class="host-name">Claude Code <span class="mono" style="color:var(--brand)">--target claude</span></div>
+            <div class="host-path">.claude/settings.json + .mcp.json</div>
+          </div>
+          <div class="subcard host-item">
+            <div class="host-name">Antigravity (AGY) <span class="mono" style="color:var(--brand)">--target agy</span></div>
+            <div class="host-path">.agents/hooks.json + plugins/</div>
+          </div>
+          <div class="subcard host-item">
+            <div class="host-name">Pi Agent <span class="mono" style="color:var(--text-muted)">dialect=pi</span></div>
+            <div class="host-path">.ts extension CLI bridge</div>
+          </div>
+          <div class="subcard host-item">
+            <div class="host-name">Custom MCP Host <span class="mono" style="color:var(--text-muted)">uvx</span></div>
+            <div class="host-path">netark_guard(action="setup")</div>
+          </div>
+        </div>
+        <div class="footer-note">
+          <span>netark-mcp init</span>
+          <span style="color:var(--pass)">non-destructive</span>
+        </div>
+      </div>
+
+      <!-- Connector 1 -->
+      <div class="connector-col">
+        <svg class="connector-svg" viewBox="0 0 88 500">
+          <defs>
+            <marker id="arrowB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#38BDF8"/></marker>
+            <marker id="arrowG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#10B981"/></marker>
+          </defs>
+          <path d="M 4 135 L 82 135" stroke="#38BDF8" stroke-width="1.6" marker-end="url(#arrowB)"/>
+          <path d="M 4 375 L 82 375" stroke="#10B981" stroke-width="1.6" marker-end="url(#arrowG)"/>
+        </svg>
+        <div class="flow-pill brand" style="top:102px;">PreToolUse</div>
+        <div class="flow-pill pass" style="top:342px;">stdio RPC</div>
+      </div>
+
+      <!-- Center Column: Core Deterministic Engine -->
+      <div class="center-stack">
+        <div class="card engine-panel primary">
+          <div class="col-head" style="padding-bottom:8px;">
+            <div class="col-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Lifecycle Hook Daemon <span class="mono" style="color:var(--brand);font-weight:500;">netark-mcp hook</span>
+            </div>
+            <span class="badge badge-brand">Tier-0 Stdlib</span>
+          </div>
+          <div class="mod-grid">
+            <div class="subcard mod-box">
+              <div class="mod-file">netark_guard_core</div>
+              <div class="mod-desc">12 DLP patterns, entropy &amp; shell AST</div>
+            </div>
+            <div class="subcard mod-box">
+              <div class="mod-file">code_hygiene_ast</div>
+              <div class="mod-desc">Nesting &le;4, zero silent except</div>
+            </div>
+            <div class="subcard mod-box">
+              <div class="mod-file">ribc_gate</div>
+              <div class="mod-desc">Subagent [R/I/B/C] &amp; read lease</div>
+            </div>
+            <div class="subcard mod-box">
+              <div class="mod-file">placement_guard</div>
+              <div class="mod-desc">STUB-FIRST-GATE &amp; SSRF check</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card engine-panel">
+          <div class="col-head" style="padding-bottom:8px;">
+            <div class="col-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4"/></svg>
+              Lean 3-Tool MCP <span class="mono" style="color:var(--pass);font-weight:500;">netark-mcp serve</span>
+            </div>
+            <span class="badge badge-pass">&lt; 220 Tokens</span>
+          </div>
+          <div class="tool-row">
+            <div class="subcard tool-item">
+              <span class="tool-name">netark_query</span>
+              <span class="tool-meta">O(1) codebook &amp; 1-hop AST neighbors</span>
+            </div>
+            <div class="subcard tool-item">
+              <span class="tool-name">netark_record</span>
+              <span class="tool-meta">Preflight dry-run + atomic write</span>
+            </div>
+            <div class="subcard tool-item">
+              <span class="tool-name">netark_guard</span>
+              <span class="tool-meta">Oracle DAG verify / status / hook contract</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector 2 -->
+      <div class="connector-col">
+        <svg class="connector-svg" viewBox="0 0 88 500">
+          <path d="M 4 135 L 82 135" stroke="#38BDF8" stroke-width="1.6" marker-end="url(#arrowB)"/>
+          <path d="M 4 375 L 82 375" stroke="#10B981" stroke-width="1.6" marker-end="url(#arrowG)"/>
+        </svg>
+        <div class="flow-pill brand" style="top:102px;">Inject</div>
+        <div class="flow-pill pass" style="top:342px;">Validate</div>
+      </div>
+
+      <!-- Right Column: Portable Memory & Verification -->
+      <div class="card col-card">
+        <div class="col-head">
+          <div class="col-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Portable Git Memory
+          </div>
+          <span class="badge badge-pass">0 DB</span>
+        </div>
+        <div class="lifecycle-strip">
+          <span class="stage">draft</span><span class="stage">&rarr;</span>
+          <span class="stage">reviewing</span><span class="stage">&rarr;</span>
+          <span class="stage">stub_ready</span><span class="stage">&rarr;</span>
+          <span class="stage active">verified</span>
+        </div>
+        <div class="item-list">
+          <div class="subcard host-item">
+            <div class="host-name">memory/codex/ <span class="mono" style="color:var(--warn)">official</span></div>
+            <div class="host-path">000_SOUL, 100_ARCH_RULES, 200_ADR</div>
+          </div>
+          <div class="subcard host-item">
+            <div class="host-name">memory/specs/ <span class="mono" style="color:var(--brand)">DAG</span></div>
+            <div class="host-path">Master blueprints &amp; shard specs</div>
+          </div>
+          <div class="subcard host-item">
+            <div class="host-name">memory/episodic/ <span class="mono" style="color:var(--text-muted)">&le;65L</span></div>
+            <div class="host-path">HANDOVER.md &amp; multi-track state</div>
+          </div>
+          <div class="subcard host-item">
+            <div class="host-name">CONTEXT_MAP.md <span class="mono" style="color:var(--pass)">5.2 KB</span></div>
+            <div class="host-path">Frozen Turn-1 @D/@M/@C/@G index</div>
+          </div>
+        </div>
+        <div class="footer-note">
+          <span>Oracle DAG</span>
+          <span style="color:var(--pass)">0 cycles</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

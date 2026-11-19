@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NetArk Pre-Write Guard Demo</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    .canvas { height: 688px; }
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: 512px;
+    }
+    .term-win {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      background: #14161D;
+      border-bottom: 1px solid var(--border);
+    }
+    .traffic {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .t-red { background: #FF5F56; }
+    .t-amber { background: #FFBD2E; }
+    .t-green { background: #27C93F; }
+    .term-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-left: 10px;
+    }
+    .term-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      background: var(--surface-1);
+    }
+    .cmd-line {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      padding: 9px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .cmd-prompt { color: var(--brand); font-weight: 700; }
+    .code-box {
+      padding: 12px 14px;
+      background: #0D0F14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #E4E4E7;
+    }
+    .ln { color: #52525B; display: inline-block; width: 22px; user-select: none; }
+    .kw { color: #C084FC; }
+    .str { color: #86EFAC; }
+    .bad-line {
+      background: rgba(244, 63, 94, 0.14);
+      display: block;
+      margin: 0 -14px;
+      padding: 0 14px;
+      border-left: 2px solid var(--deny);
+    }
+    .good-line {
+      background: rgba(16, 185, 129, 0.12);
+      display: block;
+      margin: 0 -14px;
+      padding: 0 14px;
+      border-left: 2px solid var(--pass);
+    }
+    .verdict-box {
+      padding: 14px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .verdict-deny {
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid var(--deny-border);
+    }
+    .verdict-pass {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid var(--pass-border);
+    }
+    .v-head {
+      font-weight: 700;
+      font-size: 12.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rule-tag {
+      color: var(--warn);
+      font-weight: 600;
+    }
+    .fix-box {
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      color: #D4D4D8;
+    }
+    /* Animation frame visibility helpers (used during GIF capture) */
+    body.frame-1 .step-block, body.frame-1 .step-remediate, body.frame-1 .step-pass { opacity: 0.14; }
+    body.frame-2 .step-remediate, body.frame-2 .step-pass { opacity: 0.14; }
+    body.frame-3 .step-pass { opacity: 0.14; }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="header">
+      <div>
+        <div class="eyebrow">DETERMINISTIC PRE-TOOL INTERCEPTION • PRETOOLUSE</div>
+        <div class="title">Pre-Write Guardrails with Actionable Self-Healing Prescriptions</div>
+        <div class="subtitle">Blocks secret leaks &amp; AST anti-patterns before disk write, returning exact fixes in ~62ms</div>
+      </div>
+      <div class="pill-row">
+        <span class="badge badge-deny">Exit 2 • DENY</span>
+        <span class="badge badge-pass">Exit 0 • Self-Healed</span>
+      </div>
+    </div>
+
+    <div class="split-grid">
+      <!-- Left Terminal: Blocked Call -->
+      <div class="card term-win">
+        <div class="term-bar">
+          <div class="traffic">
+            <span class="t-dot t-red"></span><span class="t-dot t-amber"></span><span class="t-dot t-green"></span>
+            <span class="term-title">netark-mcp hook --hook-mode claude</span>
+          </div>
+          <span class="badge badge-deny">BLOCKED • 61.9ms</span>
+        </div>
+        <div class="term-body">
+          <div class="cmd-line">
+            <span class="cmd-prompt">$</span> write_file(path=<span class="str">"projects/api/src/client.py"</span>)
+          </div>
+          <div class="code-box">
+            <span class="ln">1</span><span class="kw">def</span> call_upstream(items):<br>
+            <span class="bad-line"><span class="ln">2</span>    API_KEY = <span class="str">"sk-proj-***REDACTED***"</span></span>
+            <span class="ln">3</span>    <span class="kw">if</span> items:<br>
+            <span class="ln">4</span>        <span class="kw">for</span> x <span class="kw">in</span> items:<br>
+            <span class="ln">5</span>            <span class="kw">if</span> x.ok:<br>
+            <span class="ln">6</span>                <span class="kw">try</span>:<br>
+            <span class="ln">7</span>                    <span class="kw">if</span> x.send(): <span class="kw">return</span> <span class="kw">True</span><br>
+            <span class="bad-line"><span class="ln">8</span>                <span class="kw">except</span>: <span class="kw">pass</span></span>
+          </div>
+          <div class="verdict-box verdict-deny step-block">
+            <div class="v-head" style="color:var(--deny);">
+              <span>[DENY] Tier-0 Guard Intercepted Write</span>
+              <span>exit=2</span>
+            </div>
+            <div style="color:#FDA4AF;">&bull; <b>SEC-PREWRITE-SECRET</b>: Hardcoded OpenAI API key</div>
+            <div style="color:#FDA4AF;">&bull; <b>CODE-ARROW-NESTING</b>: Control-flow depth 5 &gt; max 4</div>
+            <div style="color:#FDA4AF;">&bull; <b>CODE-SILENT-EXCEPT</b>: Bare except: pass swallows faults</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Terminal: Actionable Remediation & Pass -->
+      <div class="card term-win">
+        <div class="term-bar">
+          <div class="traffic">
+            <span class="t-dot t-red"></span><span class="t-dot t-amber"></span><span class="t-dot t-green"></span>
+            <span class="term-title">agent-self-heal-retry • round 2</span>
+          </div>
+          <span class="badge badge-pass">ALLOW • 58.4ms</span>
+        </div>
+        <div class="term-body">
+          <div class="fix-box step-remediate">
+            <div style="color:var(--brand);font-weight:700;margin-bottom:4px;">Actionable Hook Remediation Returned to Agent:</div>
+            <div><span class="rule-tag">[RuleDoc]</span> memory/codex/100_ARCH_RULES.md</div>
+            <div><span class="rule-tag">[SuggestedAlternative]</span> Use <span style="color:#FAFAFA">os.environ.get("OPENAI_API_KEY")</span>, flatten loops via early returns (&le;4), and handle explicit exceptions.</div>
+          </div>
+          <div class="code-box step-pass">
+            <span class="ln">1</span><span class="kw">import</span> os<br>
+            <span class="ln">2</span><span class="kw">def</span> call_upstream(items):<br>
+            <span class="good-line"><span class="ln">3</span>    api_key = os.environ.get(<span class="str">"OPENAI_API_KEY"</span>)</span>
+            <span class="ln">4</span>    <span class="kw">if not</span> items <span class="kw">or not</span> api_key: <span class="kw">return False</span><br>
+            <span class="good-line"><span class="ln">5</span>    <span class="kw">for</span> x <span class="kw">in</span> items:</span>
+            <span class="ln">6</span>        <span class="kw">if not</span> x.ok: <span class="kw">continue</span><br>
+            <span class="good-line"><span class="ln">7</span>        <span class="kw">try</span>: <span class="kw">return</span> x.send(api_key)</span>
+            <span class="ln">8</span>        <span class="kw">except</span> ValueError <span class="kw">as</span> exc: <span class="kw">raise</span> RuntimeError(exc)
+          </div>
+          <div class="verdict-box verdict-pass step-pass">
+            <div class="v-head" style="color:var(--pass);">
+              <span>[ALLOW] Passed Secret DLP, AST Hygiene &amp; Placement</span>
+              <span>exit=0</span>
+            </div>
+            <div style="color:#A7F3D0;">PostToolUse: Spec &lt;-&gt; Code AST symbols aligned; 0 runtime .py dropped.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
