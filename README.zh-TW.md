@@ -144,7 +144,7 @@ flowchart LR
 - **[快速入門與多宿主設定指南](docs/QUICKSTART.md)** — `uv` / `uvx` 安裝、`--target` 模式切換、非破壞性合併保證與卸載指令。
 - **[通用 Hook CLI 契約](docs/HOOK_CONTRACT.md)** — 5 大生命週期事件、JSON stdin 欄位與 `agy` / `claude` / `pi` 三方言規範。
 - **[安全護欄與阻斷碼處置手冊](docs/SECURITY_GUARDRAILS.md)** — 核心憲法不可關層 vs `enterprise-policy.json` 客製欄位與完整錯誤碼對照。
-- **[貢獻指南](CONTRIBUTING.md)** & **[安全政策](SECURITY.md)** — 零外部依賴開發準則（Apache-2.0 自動授權，無 CLA 門檻）。
+- **[貢獻指南](CONTRIBUTING.md)**、**[CLA](CLA.md)** 與 **[安全政策](SECURITY.md)** — 單人維護邊界、貢獻者授權協議與零外部依賴開發準則。
 - *尋找早期 TypeScript 版 Pi Coding Agent 原型？* 請參考 [NetArk-preview](https://github.com/joinblue/NetArk-preview)。
 
 ---

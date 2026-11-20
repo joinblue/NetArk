@@ -144,7 +144,7 @@ Tracks every change from `draft` ➔ `reviewing` ➔ `stub_ready` ➔ `verified`
 - **[Quickstart & Multi-Host Setup](docs/QUICKSTART.md)** — `uv` / `uvx` setup, `--target` modes, non-destructive merging, and uninstall.
 - **[Universal Hook CLI Contract](docs/HOOK_CONTRACT.md)** — 5 lifecycle hooks, JSON stdin contract, and `agy` / `claude` / `pi` dialects.
 - **[Security Guardrails & Remediation Reference](docs/SECURITY_GUARDRAILS.md)** — Immutable core rules, `enterprise-policy.json` schema, and guard code guide.
-- **[Contributing](CONTRIBUTING.md)** & **[Security Policy](SECURITY.md)** — Zero-dependency development guidelines (Apache-2.0, no CLA friction).
+- **[Contributing](CONTRIBUTING.md)**, **[CLA](CLA.md)** & **[Security Policy](SECURITY.md)** — Solo-maintained contribution boundaries, CLA, and zero-dependency guidelines.
 - *Looking for the early TypeScript Pi Coding Agent prototype?* See [NetArk-preview](https://github.com/joinblue/NetArk-preview).
 
 ---

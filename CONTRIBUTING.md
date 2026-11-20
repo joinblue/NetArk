@@ -1,32 +1,28 @@
 # Contributing to NetArk (`netark-mcp`)
 
-Thank you for your interest in contributing to **NetArk**!
+Thank you for your interest in **NetArk**!
 
-## License & No CLA Friction
-NetArk is licensed under the **Apache License 2.0**. Pursuant to Section 5 of Apache-2.0, any pull request you submit is automatically licensed under the same terms — **no external CLA signing or bot comment is required**.
+## Solo-Maintained Scope & Boundaries
 
-## Core Engineering Principles
+NetArk is maintained by a single developer (`joinblue`) with limited review bandwidth:
 
-1. **Zero Runtime Dependencies**:
-   All runtime code under `src/netark_mcp/`, `schemas/`, and `scripts/` must use **Python 3.10+ standard library only** (`dependencies = []` in `pyproject.toml`). Optional dev tools (`pytest`, `pyyaml`, `jsonschema`) belong only in `[project.optional-dependencies].dev`.
-2. **AST Hygiene & Modularity**:
-   - Maximum control-flow nesting depth (`if`/`for`/`while`/`try`/`with`) per function: **<= 4 levels** (prefer early returns).
-   - Never write bare or silent `except: pass` blocks.
-   - Keep modules cohesive and under **400 effective code lines**.
-3. **Cross-Platform Determinism**:
-   Ensure file path operations, CLI arguments, and JSON-RPC stdio handlers work cleanly across **Linux, macOS, and Windows**.
+- **Accepted PRs Only**: Only **bug fixes** and **features previously discussed and approved in a GitHub Issue** are accepted. Unsolicited feature PRs or large refactors will be closed without review.
+- **Tests & CI Required**: Every PR must include regression tests covering the change and pass all CI checks (`ci.yml`).
+- **CLA Required**: All external contributors must sign the [Contributor License Agreement (`CLA.md`)](CLA.md) (check the box in the PR template or comment on the PR when prompted by the CLA bot).
 
-## Local Development & Verification
+## Core Engineering Rules
+
+1. **Zero Runtime Dependencies**: Code under `src/netark_mcp/`, `schemas/`, and `scripts/` must use **Python 3.10+ standard library only** (`dependencies = []` in `pyproject.toml`).
+2. **AST Hygiene**: Keep functions under **<= 4 control-flow nesting levels**, avoid silent `except: pass`, and keep modules concise (`<= 400` effective code lines).
+3. **Cross-Platform**: Ensure path handling, CLI flags, and stdio JSON-RPC work on **Linux, macOS, and Windows**.
+
+## Local Verification
 
 ```bash
-# Run deterministic core self-tests via uv
-uv run python schemas/netark_guard_core.py --self-test
-uv run python scripts/netark_guard_daemon.py --self-test
-uv run python scripts/netark_init.py --self-test
+uv run --no-project python schemas/netark_guard_core.py --self-test
+uv run --no-project python scripts/netark_guard_daemon.py --self-test
+uv run --no-project python scripts/netark_init.py --self-test
 
-# Build wheel & sdist and verify isolated CLI execution
 uv build --wheel --sdist
 uv run --no-project --with dist/*.whl netark-mcp --help
 ```
-
-Please keep PRs focused, update relevant documentation in `docs/` when behavior changes, and verify that all self-tests pass before opening a PR.
