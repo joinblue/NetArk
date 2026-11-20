@@ -192,7 +192,7 @@ REMEDIATION_REGISTRY: Dict[str, Tuple[str, str]] = {
     "SEC-XPIA-WEB": ("memory/specs/100_01_SHARD_AST_DLP_GUARD.md", "Sanitize untrusted web parameters and strip prompt-override or shell-pipe injection text."),
     "SEC-DLP-EGRESS": ("memory/codex/100_ARCH_RULES.md", "Strip plaintext tokens/keys from outbound commands or replace them with redacted placeholders."),
     "SEC-EXFIL-01": ("memory/codex/100_ARCH_RULES.md", "Remove secret environment variable expansions and command substitutions from outbound network commands."),
-    "MODULARITY-GATE": ("memory/codex/100_ARCH_RULES.md", "Split oversized modules into smaller orthogonal modules (<=400 target, <=550 effective / <=750 physical cap)."),
+    "MODULARITY-GATE": ("memory/codex/100_ARCH_RULES.md", "First explain your module-splitting plan vs reason for keeping a single file to the human, and only proceed after human confirmation (Allow or adding the path to modularity_exempt_paths)."),
     "SCHEMA-403-PREFILL": ("memory/specs/500_01_SHARD_HOOK_LIFECYCLE.md", "Prepend the full YAML frontmatter skeleton, write notes to memory/wiki/, or run sync_doc_metadata.py --init."),
     "SPEC-FILENAME-FORMAT": ("memory/specs/500_01_SHARD_HOOK_LIFECYCLE.md", "Rename the node to <domain>_<2-digit-seq>_<UPPER_SLUG>.md using the suggested next sequence."),
     "MCP-PROB-01-REDIRECT": ("memory/specs/500_03_SHARD_CLOSED_MCP_PACKAGE.md", "Use MCP netark_record(intent=..., title=..., body=..., mode='preflight'|'write') instead of direct writes."),

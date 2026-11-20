@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-import argparse, json, os, shutil, sys
+import argparse, json, os, re, shutil, sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -17,6 +17,7 @@ from schemas.mcp_tools_core import (  # noqa: E402
     MCP_TOOLS_SCHEMA, compile_and_write_indices, get_embedded_asset_text, handle_mcp_tool_call, run_closed_mcp_init,
 )
 from schemas.topology_graph import check_code_to_spec_drift, query_codebook_entry  # noqa: E402
+from schemas.yaml_lite import _parse_simple_yaml  # noqa: E402, F401
 from scripts.netark_guard_daemon import (  # noqa: E402
     _parse_stdin_json, _resolve_cwd_and_tool, _run_hook_mode, _run_post_hook_mode, _run_stop_mode,
 )

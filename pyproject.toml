@@ -69,6 +69,7 @@ exclude = ["**/__pycache__", "**/*.pyc", "**/*.pyo"]
 "schemas/schema_validator.py" = "netark_mcp/_core/schemas/schema_validator.py"
 "schemas/topology_graph.py" = "netark_mcp/_core/schemas/topology_graph.py"
 "schemas/workspace_placement_guard.py" = "netark_mcp/_core/schemas/workspace_placement_guard.py"
+"schemas/yaml_lite.py" = "netark_mcp/_core/schemas/yaml_lite.py"
 "scripts/auto_update_map.py" = "netark_mcp/_core/scripts/auto_update_map.py"
 "scripts/netark_guard_daemon.py" = "netark_mcp/_core/scripts/netark_guard_daemon.py"
 "scripts/netark_init.py" = "netark_mcp/_core/scripts/netark_init.py"

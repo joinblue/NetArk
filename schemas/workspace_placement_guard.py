@@ -277,7 +277,7 @@ def parse_frontmatter_text(raw_text: str) -> Tuple[Optional[Dict[str, Any]], str
         import yaml  # type: ignore
         data = yaml.safe_load(raw_fm)
     except ImportError:
-        from schemas.topology_graph import _parse_simple_yaml
+        from schemas.yaml_lite import _parse_simple_yaml
         try: data = _parse_simple_yaml(raw_fm)
         except (ValueError, TypeError): return None, body
     except Exception: return None, body

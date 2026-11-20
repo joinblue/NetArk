@@ -9,7 +9,7 @@ and _run_pre_invocation_mode for AGY, Claude, and Pi agents.
 
 from __future__ import annotations
 
-import difflib, hashlib, json, os, re, sys, tempfile
+import difflib, fnmatch, hashlib, json, os, re, sys, tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -153,6 +153,24 @@ def _check_handover_overwrite(rel: str, target: Path, eff_src: str, root: Path) 
     return {"allowed": False, "code": "SEC-HANDOVER-OVERWRITE", "ask_confirmation": True, "reason": f"Active handover '{rel}' is not completed/archived; overwriting §1 objective requires confirmation."}
 
 
+def _is_modularity_exempt(rel: str, exempt_paths: Any) -> bool:
+    """Return True if rel matches any exact, directory prefix, or glob entry in modularity_exempt_paths."""
+    if not isinstance(exempt_paths, list): return False
+    rel_norm = rel.replace("\\", "/").lstrip("./")
+    for raw_pat in exempt_paths:
+        pat = str(raw_pat or "").strip().replace("\\", "/").lstrip("./")
+        if not pat: continue
+        if rel_norm == pat or rel_norm.startswith(pat.rstrip("/") + "/") or fnmatch.fnmatch(rel_norm, pat): return True
+    return False
+
+
+def _parse_modularity_limit(policy: Dict[str, Any], key: str, default: int) -> int:
+    raw = policy.get(key)
+    if raw is None: return default
+    try: return int(raw)
+    except (TypeError, ValueError): return default
+
+
 def _check_governance_pre_write(tool_name: str, args: Dict[str, Any], cwd: str) -> Optional[Dict[str, Any]]:
     """Enforce secret lint, doc governance, modularity budget, AST hygiene, and frontmatter."""
     if (tool_name or "").lower() not in WRITE_TOOL_NAMES: return None
@@ -177,13 +195,18 @@ def _check_governance_pre_write(tool_name: str, args: Dict[str, Any], cwd: str) 
             except Exception: old_text = ""  # noqa: silent-except
         ext = Path(rel).suffix
         eff_old, eff_new = count_effective_code_lines(old_text, ext), count_effective_code_lines(eff_src, ext)
-        if (eff_new > 550 and eff_new > eff_old) or (new_lines > 750 and new_lines > old_lines):
-            return {"allowed": False, "code": "MODULARITY-GATE", "reason": f"Anti-God-Script Gate: '{rel}' would reach {eff_new} effective / {new_lines} physical lines (> 550 effective or > 750 physical limit, delta +{eff_new - eff_old}). Split into an orthogonal module."}
+        policy = load_enterprise_policy(cwd)
+        soft_limit = _parse_modularity_limit(policy, "modularity_soft_limit", 400)
+        hard_limit = _parse_modularity_limit(policy, "modularity_hard_limit", 550)
+        is_exempt = _is_modularity_exempt(rel, policy.get("modularity_exempt_paths"))
+        if not is_exempt and ((eff_new > hard_limit and eff_new > eff_old) or (new_lines > 750 and new_lines > old_lines)):
+            return {"allowed": False, "ask_confirmation": True, "code": "MODULARITY-GATE", "reason": f"Anti-God-Script Gate: '{rel}' would reach {eff_new} effective / {new_lines} physical lines (> {hard_limit} effective or > 750 physical limit, delta +{eff_new - eff_old}). Explain your module-splitting plan vs reason for keeping a single file to the human and proceed only after confirmation."}
         if rel.endswith(".py") and (ast_viol := check_python_ast_hygiene(eff_src, rel)): return ast_viol
-        if rel.endswith(".py") and (stub_err := check_stub_first_gate(rel, old_text, eff_src, target.exists(), cwd, load_enterprise_policy(cwd))):
+        if rel.endswith(".py") and (stub_err := check_stub_first_gate(rel, old_text, eff_src, target.exists(), cwd, policy)):
             return stub_err
-        if 400 < eff_new <= 550:
-            w_msg = f"⚠️ [Modularity Buffer] 檔案有效邏輯已達 {eff_new} 行 (實體 {new_lines} 行，> 400 行標準預算)，完成本次修復後請規劃拆分子模組。"
+        if not is_exempt and soft_limit < eff_new <= hard_limit:
+            w_msg = f"⚠️ [Modularity Buffer] '{rel}' reached {eff_new} effective / {new_lines} physical lines (> {soft_limit} budget, <= {hard_limit} hard cap). Evaluate module cohesion (do NOT cram logic into upstream callers or compress onto single lines) and present a split vs keep-single-file recommendation to the human."
+            queue_agy_post_alert(cwd, w_msg)
             mod_warn = {"allowed": True, "code": "MODULARITY-BUFFER-WARN", "warning": w_msg, "systemMessage": w_msg, "reason": w_msg}
     if os.environ.get("NETARK_MCP_HOOK_MODE") == "1" and rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md"):
         return {"allowed": False, "code": "MCP-PROB-01-REDIRECT", "reason": f"Direct native write to governed memory '{rel}' is blocked in closed MCP mode. Use MCP tool netark_record(intent=..., title=..., body=..., mode='preflight'|'write')."}

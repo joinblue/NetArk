@@ -25,125 +25,6 @@ except ImportError:
 WIKI_TYPES = {"wiki", "note", "sop", "glossary", "digest"}
 
 
-def _parse_yaml_scalar(raw: str) -> Any:
-    val = raw.strip()
-    if not val or val in ("null", "Null", "NULL", "~"):
-        return None
-    if val in ("true", "True", "TRUE"):
-        return True
-    if val in ("false", "False", "FALSE"):
-        return False
-    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
-        inner = val[1:-1]
-        if val.startswith('"'):
-            return inner.replace('\\"', '"').replace("\\\\", "\\").replace("\\n", "\n")
-        return inner.replace("''", "'")
-    if (val.startswith("[") and val.endswith("]")) or (val.startswith("{") and val.endswith("}")):
-        try:
-            return json.loads(val)
-        except ValueError:
-            if val.startswith("[") and val.endswith("]"):
-                inner = val[1:-1].strip()
-                return [_parse_yaml_scalar(x) for x in inner.split(",") if x.strip()] if inner else []
-    if re.fullmatch(r"-?\d+", val):
-        return int(val)
-    if re.fullmatch(r"-?\d+\.\d+", val):
-        return float(val)
-    return val
-
-
-def _split_yaml_kv(text: str) -> Optional[Tuple[str, str]]:
-    in_sq, in_dq = False, False
-    for idx, ch in enumerate(text):
-        if ch == "'" and not in_dq:
-            in_sq = not in_sq
-        elif ch == '"' and not in_sq and (idx == 0 or text[idx - 1] != "\\"):
-            in_dq = not in_dq
-        elif ch == ":" and not in_sq and not in_dq:
-            if idx + 1 == len(text) or text[idx + 1] == " ":
-                return text[:idx].strip().strip('"').strip("'"), text[idx + 1 :].strip()
-    return None
-
-
-def _next_yaml_line(lines: List[Tuple[int, str]], pos: int) -> Optional[Tuple[int, str]]:
-    return lines[pos] if pos < len(lines) else None
-
-
-def _parse_yaml_block(lines: List[Tuple[int, str]], pos: int, min_indent: int) -> Tuple[Any, int]:
-    first = _next_yaml_line(lines, pos)
-    if not first or first[0] < min_indent:
-        return {}, pos
-    if first[1].startswith("- ") or first[1] == "-":
-        return _parse_yaml_list(lines, pos, first[0])
-    return _parse_yaml_dict(lines, pos, first[0])
-
-
-def _parse_yaml_list(lines: List[Tuple[int, str]], pos: int, indent: int) -> Tuple[List[Any], int]:
-    items: List[Any] = []
-    while pos < len(lines) and lines[pos][0] == indent and (lines[pos][1].startswith("- ") or lines[pos][1] == "-"):
-        rest = lines[pos][1][1:].strip()
-        pos += 1
-        if not rest:
-            child, pos = _parse_yaml_block(lines, pos, indent + 1)
-            items.append(child)
-            continue
-        kv = _split_yaml_kv(rest)
-        if not kv:
-            items.append(_parse_yaml_scalar(rest))
-            continue
-        entry: Dict[str, Any] = {}
-        key, val_str = kv
-        if val_str:
-            entry[key] = _parse_yaml_scalar(val_str)
-        elif (nxt := _next_yaml_line(lines, pos)) and nxt[0] > indent:
-            entry[key], pos = _parse_yaml_block(lines, pos, nxt[0])
-        else:
-            entry[key] = None
-        if (nxt := _next_yaml_line(lines, pos)) and nxt[0] > indent:
-            extra, pos = _parse_yaml_dict(lines, pos, nxt[0])
-            entry.update(extra)
-        items.append(entry)
-    return items, pos
-
-
-def _parse_yaml_dict(lines: List[Tuple[int, str]], pos: int, indent: int) -> Tuple[Dict[str, Any], int]:
-    mapping: Dict[str, Any] = {}
-    while pos < len(lines) and lines[pos][0] == indent:
-        text = lines[pos][1]
-        if text.startswith("- ") or text == "-":
-            break
-        kv = _split_yaml_kv(text)
-        pos += 1
-        if not kv:
-            continue
-        key, val_str = kv
-        if val_str:
-            mapping[key] = _parse_yaml_scalar(val_str)
-            continue
-        nxt = _next_yaml_line(lines, pos)
-        if nxt and (nxt[0] > indent or (nxt[0] == indent and (nxt[1].startswith("- ") or nxt[1] == "-"))):
-            mapping[key], pos = _parse_yaml_block(lines, pos, nxt[0])
-        else:
-            mapping[key] = None
-    return mapping, pos
-
-
-def _parse_simple_yaml(raw_fm: str) -> Any:
-    stripped = raw_fm.lstrip()
-    if stripped.startswith("{"):
-        return json.loads(raw_fm)
-    parsed_lines: List[Tuple[int, str]] = []
-    for raw_line in raw_fm.splitlines():
-        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
-            continue
-        indent = len(raw_line) - len(raw_line.lstrip(" "))
-        parsed_lines.append((indent, raw_line.strip()))
-    if not parsed_lines:
-        return {}
-    data, _ = _parse_yaml_block(parsed_lines, 0, parsed_lines[0][0])
-    return data
-
-
 def parse_markdown_frontmatter(md_path: Path) -> Tuple[Dict[str, Any], str]:
     content = md_path.read_text(encoding="utf-8")
     if not content.startswith("---\n"):
@@ -152,7 +33,11 @@ def parse_markdown_frontmatter(md_path: Path) -> Tuple[Dict[str, Any], str]:
     if len(parts) != 2:
         raise ValueError(f"{md_path}: Missing YAML frontmatter closing '---'")
     raw_fm, body = parts[0][4:], parts[1]
-    data = yaml.safe_load(raw_fm) if yaml is not None else _parse_simple_yaml(raw_fm)
+    if yaml is not None:
+        data = yaml.safe_load(raw_fm)
+    else:
+        from schemas.yaml_lite import _parse_simple_yaml
+        data = _parse_simple_yaml(raw_fm)
     if not isinstance(data, dict):
         raise ValueError(f"{md_path}: Frontmatter must parse to a JSON/YAML object")
     return data, body

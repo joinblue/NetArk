@@ -47,6 +47,9 @@ DEFAULT_ENTERPRISE_POLICY: Dict[str, Any] = {
     "read_guard_exempt_paths": ["memory/codex/CONTEXT_MAP.md"],
     "enforce_stub_first_for_new_modules": True,
     "stub_first_edit_delta_lines": 25,
+    "modularity_soft_limit": 400,
+    "modularity_hard_limit": 550,
+    "modularity_exempt_paths": [],
 }
 
 CORE_MEMORY_MAP = (
