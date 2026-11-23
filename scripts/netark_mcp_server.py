@@ -170,10 +170,11 @@ def _run_hook_subcommand(argv: List[str]) -> int:
 
 def _run_init_subcommand(argv: List[str]) -> int:
     p = argparse.ArgumentParser(prog="netark-mcp init", description="NetArk Closed Zero-.py Project Initializer")
-    p.add_argument("--target", choices=["memory", "agy", "claude", "all"], default="memory")
+    p.add_argument("--target", choices=["memory", "agy", "claude", "pi", "all"], default="memory")
     p.add_argument("--lang", choices=["zh-TW", "en"], default="zh-TW")
     p.add_argument("--cwd", default=".")
     p.add_argument("--bin-path", default="")
+    p.add_argument("--brain-dir", default="")
     p.add_argument("--write-rules", action="store_true", help="Also write AGENTS.md/CLAUDE.md to repo root (default: off)")
     p.add_argument("--update", action="store_true")
     args = p.parse_args(argv)
@@ -183,7 +184,7 @@ def _run_init_subcommand(argv: List[str]) -> int:
         argv0_path = Path(argv0_raw) if argv0_raw else Path("")
         cand = shutil.which(argv0_raw) or (str(argv0_path.absolute()) if argv0_raw and argv0_path.is_file() else "")
         bin_cmd = cand if (cand and not cand.lower().endswith(".py")) else (shutil.which("netark-mcp") or "netark-mcp")
-    res = run_closed_mcp_init(cwd=args.cwd, target=args.target, lang=args.lang, bin_cmd=bin_cmd, update_rules=args.update, write_rules=(args.write_rules or args.update))
+    res = run_closed_mcp_init(cwd=args.cwd, target=args.target, lang=args.lang, bin_cmd=bin_cmd, update_rules=args.update, write_rules=(args.write_rules or args.update), brain_dir=args.brain_dir)
     print(json.dumps(res, indent=2, ensure_ascii=False))
     return 0
 
@@ -223,9 +224,9 @@ def _prune_mcp_netark(data: Dict[str, Any]) -> None:
         if not servers: data.pop("mcpServers", None)
 
 
-def _run_closed_mcp_uninstall(cwd: str, target: str = "all", purge_memory: bool = False) -> Dict[str, Any]:
+def _run_closed_mcp_uninstall(cwd: str, target: str = "all", purge_memory: bool = False, brain_dir: str = "") -> Dict[str, Any]:
     import shutil
-    root, targets, cleaned = Path(cwd).resolve(), (["agy", "claude"] if target == "all" else [target]), []
+    root, targets, cleaned = Path(cwd).resolve(), (["agy", "claude", "pi"] if target == "all" else [target]), []
     if "agy" in targets:
         _prune_json_file(root / ".agents" / "hooks.json", root, lambda d: [d.pop(k, None) for k in ("netark-enterprise-guard", "netark-v3-session-init", "netark-v3-guard")] and None, cleaned)
         plg = root / ".agents" / "plugins" / "netark"
@@ -236,6 +237,12 @@ def _run_closed_mcp_uninstall(cwd: str, target: str = "all", purge_memory: bool 
         _prune_json_file(root / ".mcp.json", root, _prune_mcp_netark, cleaned)
     if "claude" in targets:
         _prune_json_file(root / ".claude" / "settings.json", root, _prune_claude_hooks, cleaned)
+    if "pi" in targets:
+        for bdir in ([brain_dir.strip()] if brain_dir.strip() else [".pi", ".netark"]):
+            _prune_json_file(root / bdir / "mcp.json", root, _prune_mcp_netark, cleaned)
+            if (guard_ts := root / bdir / "extensions" / "netark-guard.ts").is_file():
+                guard_ts.unlink()
+                cleaned.append(f"{bdir}/extensions/netark-guard.ts (deleted)")
     if purge_memory and (root / "memory").exists():
         shutil.rmtree(root / "memory", ignore_errors=True)
         cleaned.append("memory/ (purged)")
@@ -244,11 +251,12 @@ def _run_closed_mcp_uninstall(cwd: str, target: str = "all", purge_memory: bool 
 
 def _run_uninstall_subcommand(argv: List[str]) -> int:
     p = argparse.ArgumentParser(prog="netark-mcp uninstall", description="NetArk Closed MCP Wiring Uninstaller")
-    p.add_argument("--target", choices=["memory", "agy", "claude", "all"], default="all")
+    p.add_argument("--target", choices=["memory", "agy", "claude", "pi", "all"], default="all")
     p.add_argument("--cwd", default=".")
+    p.add_argument("--brain-dir", default="")
     p.add_argument("--purge-memory", action="store_true", help="Also delete memory/ directory (default preserves memory/)")
     args = p.parse_args(argv)
-    print(json.dumps(_run_closed_mcp_uninstall(cwd=args.cwd, target=args.target, purge_memory=args.purge_memory), indent=2, ensure_ascii=False))
+    print(json.dumps(_run_closed_mcp_uninstall(cwd=args.cwd, target=args.target, purge_memory=args.purge_memory, brain_dir=args.brain_dir), indent=2, ensure_ascii=False))
     return 0
 
 

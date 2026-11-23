@@ -188,7 +188,7 @@ def _check_governance_pre_write(tool_name: str, args: Dict[str, Any], cwd: str) 
         return {"allowed": False, "code": "SEC-DOC-GOVERNANCE", "reason": f"Unmanaged root markdown '{rel}' is blocked. Place governed specs in memory/specs/ or memory/wiki/."}
     if (spec_err := check_spec_filename_format(rel, cwd)): return spec_err
     mod_warn: Optional[Dict[str, Any]] = None
-    if rel.endswith((".py", ".ts")) and not Path(rel).name.startswith("test_"):
+    if rel.endswith((".py", ".ts", ".js")) and not Path(rel).name.startswith("test_"):
         old_text = ""
         if target.exists():
             try: old_text = target.read_text(encoding="utf-8")

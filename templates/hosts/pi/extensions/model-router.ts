@@ -1,24 +1,11 @@
 /**
  * NetArk Orchestrator-First Router & Specialist Dispatcher (Pillar 3 - model-router.ts)
- * =====================================================================================
- * Stage 1+ & Router Handoff (M1 ~ M5) Upgrade:
- * 1. Anti-Hijack Main Orchestrator (`route()` 100% locked to `ROLE_MODELS.orchestrator`):
- *    Never hijacks main conversation history to 30B `vision` on image attachments; all image
- *    analysis is offloaded to `dispatch_specialist(specialist="vision", imagePath="...")` so
- *    image Base64 tokens never pollute the flagship orchestrator's context or break KV Cache.
- * 2. Zero-Cold-Start Specialist Dispatch Tool (`dispatch_specialist`) with Auto-Fallback Chain (M2)
- *    and Direct Multi-File Offload (`filePaths: string[]`, M3):
- *    Never falls back to `ROLE_MODELS.orchestrator` (protecting flagship tokens) and automatically
- *    iterates `ROLE_FALLBACK_CHAINS[role]` on `ResourceExhausted` / `429` / `5xx`.
- * 3. Tool-Call Token Offload Gate (M4) & Dual Strategy Modes (`apex-commander` | `hybrid-synergy`, M5):
- *    Hard-blocks direct image `read` and excessive multi-file `read` in `apex-commander` mode,
- *    and injects dynamic `[MANDATE]` directives on `before_agent_start`.
+ * M1~M5: Anti-Hijack Orchestrator, Zero-Cold-Start Specialist Dispatch (`dispatch_specialist`), Multi-File Offload & Strategy Modes.
  */
 
 import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { buildSpecialistSystemPrompt, validateRibcConstructionTask } from "./ribc-spec-gate.ts";
 import { type ImageContent, type Message, type TextContent, type Tool } from "@earendil-works/pi-ai";
 import {
 	detectSupportedImageMimeTypeFromFile,
@@ -41,6 +28,19 @@ export interface NetArkEpistemicBridge {
 declare global {
 	// eslint-disable-next-line no-var
 	var __fridayEpistemicBridge: NetArkEpistemicBridge | undefined;
+}
+
+export function buildSpecialistSystemPrompt(role: SpecialistRole, modelSpec: string): string {
+	const b = "輸出規範 (Brevity Cap): 嚴格控制在 <= 300 words 以內，僅使用高密度條列式重點，禁止客套寒暄或重複抄寫題目。";
+	const prompts: Record<SpecialistRole, string> = {
+		scout: `你是 NetArk 團隊中的 Scout (高速情報探索員)，搭載 ${modelSpec}。\n職責：快速檢索摘要、定位關鍵結構與事實，所有客觀結論必須標註 [FACT]，推論標註 [INFERRED]，保持極簡高信噪比。\n${b}`,
+		architect: `你是 NetArk 團隊中的 Architect (首席系統架構師)，搭載 ${modelSpec} 旗艦推理模型。\n職責：依據真實檔案與目錄快照擬定精準系統設計與 ADR 決策，明確區分 [FACT]、[INFERRED] 與 [HYPOTHESIS]，並定義可證偽驗證條件 (falsifiable_criterion)。\n${b}`,
+		challenger: `你是 NetArk 團隊中的 Challenger (跨模型紅隊對抗審查官)，搭載 ${modelSpec} 異體推理模型。\n核心鐵律：必須基於真實檔案內容進行實證審查；方案邏輯健全則直接給 VERDICT: APPROVED，否則給 VERDICT: CHALLENGED。\n${b}`,
+		code: `你是 NetArk 團隊中的 Worker/Code Specialist (專精程式碼工程師)，搭載 ${modelSpec} 模型。\n職責：呼叫內建工具完成修改與驗證，僅回傳精簡 Diff 摘要 (<= 200 words)，禁止貼回整份原始碼或硬編碼路徑；嚴格遵守 R-I-B-C 規格（1.[R]路徑職責 2.[I]不變量<=350行 3.[B]邊界與早返回<=4層 4.[C]型別與精度契約）。\n${b}`,
+		audit: `你是 NetArk 團隊中的 Auditor (獨立驗收稽核官)，搭載 ${modelSpec} 模型。\n職責：根據客觀驗證輸出、Schema 規則與測試結果進行嚴格核對，標註 [FACT] 並給出明確驗收結論。\n${b}`,
+		vision: `你是 NetArk 團隊中的 Vision Specialist (多模態視覺推理專家)，搭載 ${modelSpec} 模型。\n職責：精確解析圖片、圖表、UI 結構與視覺資訊，標註 [FACT] 與 [INFERRED]，使用繁體中文回報。\n${b}`,
+	};
+	return prompts[role];
 }
 
 function getEpistemicBridge(): NetArkEpistemicBridge | undefined {
@@ -1408,11 +1408,6 @@ export default function (pi: ExtensionAPI) {
 			const params = (rawParams ?? {}) as DispatchSpecialistArgs;
 			loadPersistedRoleModels();
 			const role = params.specialist as SpecialistRole;
-
-			const check = validateRibcConstructionTask(params.task, role, params.context);
-			if (!check.allowed) {
-				return { content: [{ type: "text", text: check.prescription || "Blocked by SPEC-RIBC-GATE" }], isError: true };
-			}
 
 			// M2: Build deduplicated candidate chain from ROLE_MODELS[role] + ROLE_FALLBACK_CHAINS[role].
 			// NEVER fallback to ROLE_MODELS.orchestrator (protects paid flagship tokens).

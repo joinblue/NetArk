@@ -27,8 +27,7 @@ import {
 	withFileMutationQueue,
 } from "@earendil-works/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
-import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.ts";
-import { validateRibcConstructionTask, getSubagentCandidateModels } from "../ribc-spec-gate.ts";
+import { type AgentConfig, type AgentScope, discoverAgents, getSubagentCandidateModels } from "./agents.ts";
 
 const MAX_PARALLEL_TASKS = 8;
 const MAX_CONCURRENCY = 4;
@@ -302,22 +301,6 @@ async function runSingleAgent(
 
 	const inheritsDispatchConfig = !agent.model;
 	const candidateModels = getSubagentCandidateModels(agentName, agent.model, dispatchDefaults.model);
-
-	if (agentName === "worker" || agentName === "code") {
-		const check = validateRibcConstructionTask(task, agentName);
-		if (!check.allowed) {
-			return {
-				agent: agentName,
-				agentSource: agent.source,
-				task,
-				exitCode: 1,
-				messages: [],
-				stderr: check.prescription || "Blocked by SPEC-RIBC-GATE",
-				usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
-				step,
-			};
-		}
-	}
 
 	let tmpPromptDir: string | null = null;
 	let tmpPromptPath: string | null = null;

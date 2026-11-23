@@ -312,10 +312,8 @@ def _merge_json_file(path: Path, updater: Callable[[Dict[str, Any]], None]) -> N
     if path.is_file():
         try:
             loaded = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(loaded, dict):
-                existing = loaded
-        except Exception:
-            existing = {}
+            if isinstance(loaded, dict): existing = loaded
+        except Exception: existing = {}
     updater(existing)
     path.write_text(json.dumps(existing, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -344,7 +342,7 @@ def _merge_claude_hooks(cfg: Dict[str, Any], cls_hooks: Dict[str, Any]) -> None:
         hooks[ev] = [x for x in (hooks.get(ev) if isinstance(hooks.get(ev), list) else []) if "netark-mcp hook" not in json.dumps(x)] + entries
 
 
-def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_rules: bool = False, update_rules: bool = False) -> None:
+def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_rules: bool = False, update_rules: bool = False, pi_brain_dir: str = ".pi") -> None:
     if "agy" in targets:
         agy_guard = {
             "enabled": True,
@@ -367,17 +365,22 @@ def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_
         }
         _merge_json_file(root / ".claude" / "settings.json", lambda c: _merge_claude_hooks(c, cls_hooks))
         if write_rules or update_rules: _copy_asset_if_needed("templates/hosts/claude/CLAUDE.md.tpl", root / "CLAUDE.md", overwrite=update_rules)
+    if "pi" in targets:
+        _merge_json_file(root / pi_brain_dir / "mcp.json", lambda c: _merge_mcp_netark(c, bin_cmd))
+        _copy_asset_if_needed("templates/hosts/pi/extensions/netark-guard.ts", root / pi_brain_dir / "extensions" / "netark-guard.ts", overwrite=update_rules)
+        if write_rules or update_rules: _copy_asset_if_needed("templates/hosts/pi/AGENTS.md.tpl", root / "AGENTS.md", overwrite=update_rules)
 
 
-def run_closed_mcp_init(cwd: str, target: str = "memory", lang: str = "zh-TW", bin_cmd: str = "netark-mcp", update_rules: bool = False, write_rules: bool = False) -> Dict[str, Any]:
+def run_closed_mcp_init(cwd: str, target: str = "memory", lang: str = "zh-TW", bin_cmd: str = "netark-mcp", update_rules: bool = False, write_rules: bool = False, brain_dir: str = "") -> Dict[str, Any]:
     """Initialize a target project in closed-source MCP mode with 0 .py files written."""
     root = Path(cwd).resolve()
     for sub in ("memory/codex", "memory/episodic", "memory/specs", "memory/wiki", "memory/audits", "memory/index", "memory/private", "projects", "scratch"): (root / sub).mkdir(parents=True, exist_ok=True)
-    pol_dir = ".agents" if (root / ".agents" / "enterprise-policy.json").is_file() else (".netark" if (root / ".netark" / "enterprise-policy.json").is_file() else (".agents" if target == "agy" else ".netark"))
+    pi_brain = brain_dir.strip() or (".netark" if (root / ".netark").is_dir() else ".pi")
+    pol_dir = next((d for d in (".agents", ".netark", ".pi") if (root / d / "enterprise-policy.json").is_file()), ".agents" if target == "agy" else (pi_brain if target == "pi" else ".netark"))
     _merge_json_file(root / pol_dir / "enterprise-policy.json", lambda d: d.update({**DEFAULT_ENTERPRISE_POLICY, **d}))
-    targets = ["agy", "claude"] if target == "all" else ([] if target == "memory" else [target])
+    targets = ["agy", "claude", "pi"] if target == "all" else ([] if target == "memory" else [target])
     if target in ("memory", "claude", "all"): _merge_json_file(root / ".mcp.json", lambda c: _merge_mcp_netark(c, bin_cmd))
-    _configure_closed_hosts(root, targets, bin_cmd, write_rules=write_rules, update_rules=update_rules)
+    _configure_closed_hosts(root, targets, bin_cmd, write_rules=write_rules, update_rules=update_rules, pi_brain_dir=pi_brain)
     _copy_asset_if_needed("memory/index/TAXONOMY.json", root / "memory" / "index" / "TAXONOMY.json")
     today, created, has_py_core = datetime.date.today().isoformat(), [], (root / "schemas" / "schema_validator.py").exists()
     for tmpl_name, dest_rel in CORE_MEMORY_MAP:

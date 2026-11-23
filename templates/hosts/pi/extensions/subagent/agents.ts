@@ -118,6 +118,8 @@ function findNearestProjectAgentsDir(cwd: string): string | null {
 	while (true) {
 		const candidate = path.join(currentDir, CONFIG_DIR_NAME, "agents");
 		if (isDirectory(candidate)) return candidate;
+		const fallbackCandidate = path.join(currentDir, ".netark", "agents");
+		if (isDirectory(fallbackCandidate)) return fallbackCandidate;
 
 		const parentDir = path.dirname(currentDir);
 		if (parentDir === currentDir) return null;
@@ -154,4 +156,63 @@ export function formatAgentList(agents: AgentConfig[], maxItems: number): { text
 		text: listed.map((a) => `${a.name} (${a.source}): ${a.description}`).join("; "),
 		remaining,
 	};
+}
+
+export const SUBAGENT_ROLE_FALLBACKS: Record<string, string[]> = {
+	scout: [
+		"nvidia/z-ai/glm-5.3-flash",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/deepseek-ai/deepseek-v4.1-flash",
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+	],
+	architect: [
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/deepseek-ai/deepseek-v4.1-flash",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/z-ai/glm-5.3-flash",
+	],
+	challenger: [
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/deepseek-ai/deepseek-v4.1-flash",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/z-ai/glm-5.3-flash",
+	],
+	worker: [
+		"nvidia/poolside/laguna-xs-2.1",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/deepseek-ai/deepseek-v4.1-flash",
+		"nvidia/z-ai/glm-5.3-flash",
+	],
+	code: [
+		"nvidia/poolside/laguna-xs-2.1",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/deepseek-ai/deepseek-v4.1-flash",
+		"nvidia/z-ai/glm-5.3-flash",
+	],
+	auditor: [
+		"nvidia/z-ai/glm-5.3-flash",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/deepseek-ai/deepseek-v4.1-flash",
+	],
+	audit: [
+		"nvidia/z-ai/glm-5.3-flash",
+		"nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+		"nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+		"nvidia/deepseek-ai/deepseek-v4.1-flash",
+	],
+};
+
+export function getSubagentCandidateModels(
+	agentName: string,
+	primaryModel: string | undefined,
+	dispatchDefaultsModel: string | undefined,
+): Array<string | undefined> {
+	const model = primaryModel ?? dispatchDefaultsModel;
+	const roleFallbacks = SUBAGENT_ROLE_FALLBACKS[agentName] ?? [];
+	return model || roleFallbacks.length > 0
+		? Array.from(new Set([model, ...roleFallbacks].filter((m): m is string => Boolean(m && m.trim()))))
+		: [undefined];
 }

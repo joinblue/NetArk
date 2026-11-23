@@ -86,7 +86,7 @@ def validate_ribc_construction_task(
     if not RE_DIM_B_BOUNDARY.search(text):
         missing.append("3. [B - Boundaries]: 缺少空值/負數/越界防護、Early-Return（巢狀<=4層）與具名例外處理")
     if not RE_DIM_C_CONTRACT.search(text):
-        missing.append("4. [C - Contracts]: 缺少強型別標註、數值精度（如 Decimal）與輸入輸出介面契約")
+        missing.append("4. [C - Contracts]: 缺少輸入輸出型別簽章、回傳結構或驗收基準（若涉及數值請註明精度）")
     if len(text) < MIN_SPEC_LENGTH:
         missing.append(f"5. [Length]: 任務描述過於簡略（目前 {len(text)} 字元，需至少 {MIN_SPEC_LENGTH} 字元）")
 
@@ -95,32 +95,41 @@ def validate_ribc_construction_task(
     return True, ""
 
 
+def _extract_role_label(payload: Dict[str, Any], fallback: str) -> str:
+    """Combine Role and TypeName/subagent_type so sandbox type is never shadowed by Role."""
+    role_val = str(payload.get("Role") or payload.get("role") or "").strip()
+    type_val = str(
+        payload.get("TypeName") or payload.get("subagent_type")
+        or payload.get("agent") or payload.get("specialist") or ""
+    ).strip()
+    if role_val and type_val and role_val.lower() != type_val.lower():
+        return f"{role_val} [{type_val}]"
+    return role_val or type_val or fallback
+
+
 def _collect_subagent_tasks(tool_name: str, tool_args: Dict[str, Any]) -> List[Tuple[str, str]]:
-    """Extract (prompt, role) pairs from AGY batch arrays or single subagent tool payloads."""
+    """Extract (prompt, role) pairs from batch arrays or single subagent tool payloads."""
     tasks_to_check: List[Tuple[str, str]] = []
-    subagents_list = tool_args.get("Subagents") or tool_args.get("subagents")
-    if isinstance(subagents_list, list):
-        for item in subagents_list:
+    for key in ("Subagents", "subagents", "tasks", "chain"):
+        items = tool_args.get(key)
+        if not isinstance(items, list):
+            continue
+        for item in items:
             if not isinstance(item, dict):
                 continue
-            prompt = str(item.get("Prompt") or item.get("prompt") or item.get("description") or "")
-            role = str(
-                item.get("Role") or item.get("role") or item.get("TypeName")
-                or item.get("subagent_type") or item.get("agent") or item.get("specialist") or "agy-subagent"
-            )
-            tasks_to_check.append((prompt, role))
-        return tasks_to_check
+            prompt = str(item.get("Prompt") or item.get("prompt") or item.get("description") or item.get("task") or "")
+            tasks_to_check.append((prompt, _extract_role_label(item, tool_name or "subagent")))
+        if tasks_to_check:
+            return tasks_to_check
 
     prompt = str(
         tool_args.get("Prompt") or tool_args.get("prompt")
         or tool_args.get("description") or tool_args.get("task") or ""
     )
-    role = str(
-        tool_args.get("Role") or tool_args.get("role") or tool_args.get("subagent_type")
-        or tool_args.get("TypeName") or tool_args.get("agent") or tool_args.get("specialist") or tool_name
-    )
+    if ctx := str(tool_args.get("context") or "").strip():
+        prompt = f"{prompt}\n{ctx}" if prompt else ctx
     if prompt or tool_name in SUBAGENT_TOOL_NAMES:
-        tasks_to_check.append((prompt, role))
+        tasks_to_check.append((prompt, _extract_role_label(tool_args, tool_name)))
     return tasks_to_check
 
 
@@ -183,7 +192,7 @@ def evaluate_subagent_invocation(tool_name: str, tool_args: Dict[str, Any], cwd:
 
 REMEDIATION_REGISTRY: Dict[str, Tuple[str, str]] = {
     "SIDECAR-GATE": ("memory/specs/500_04_SHARD_NEXUS_HOOK_ENHANCEMENTS.md", "Delegate large-file digestion to invoke_subagent(TypeName='research') / Task(subagent_type='Explore') or nexus-sidecar."),
-    "SPEC-RIBC-GATE": ("memory/specs/500_02_SHARD_RIBC_GATE.md", "Provide [R] path, [I] line cap, [B] bounds/errors, [C] typed contracts (>=60 chars), or use a readonly role."),
+    "SPEC-RIBC-GATE": ("memory/specs/500_02_SHARD_RIBC_GATE.md", "Path A (Readonly): set Role/TypeName to a readonly whitelist role (research, Explore, Plan, scout, auditor, reviewer, challenger, architect). Path B (Construction): provide [R] path, [I] line cap, [B] bounds/errors, [C] contracts (>=60 chars)."),
     "SEC-CRED": ("memory/codex/100_ARCH_RULES.md", "Never read/write .env*, auth.json, or key files; use os.environ.get('KEY_NAME') or *.example templates."),
     "SEC-CONTROL-PLANE": ("memory/codex/100_ARCH_RULES.md", "Control-plane updates require explicit human confirmation or authorized governance mode."),
     "SEC-CODE-PLACEMENT": ("memory/codex/100_ARCH_RULES.md", "Place business code under projects/<project_id>/{src,scripts,tests,configs}/ or tests under scratch/test_<name>.py."),
@@ -218,17 +227,22 @@ def format_guard_remediation(code: str, reason: str) -> str:
 
 
 def _format_prescription(role_label: str, missing_items: List[str]) -> str:
-    """Format actionable 4D R-I-B-C remediation guidance when a dispatch is blocked."""
+    """Format actionable two-path (Readonly vs. Construction) remediation guidance."""
     joined_missing = "\n".join(f"  - {item}" for item in missing_items)
     return (
         f"🏗️ [NetArk Construction Gate | SPEC-RIBC-GATE] "
         f"攔截到子代理派工（角色: {role_label}）規格不完整！\n"
         f"未通過審查項目：\n{joined_missing}\n\n"
-        f"RemediationPointer: 請主腦先補齊以下 R-I-B-C 四維規格後再重新呼叫子代理：\n"
-        f"  [R - Role & Path] 明確指定目標檔案路徑（如 path/to/module.py）與單一職責\n"
-        f"  [I - Invariants] 聲明業務不變量與單檔行數上限（<=350行）\n"
-        f"  [B - Boundaries] 規範空值/越界防護、控制流巢狀<=4層與具名 Exception 處理\n"
-        f"  [C - Contracts] 定義輸入輸出強型別簽章、回傳結構與數值精度（如 Decimal）"
+        f"RemediationPointer: 請先判斷此子代理任務性質，擇一修正後重試：\n"
+        f"  ▸ 路徑 A【純唯讀調查 / 搜尋 / 審閱】（嚴禁硬塞 R-I-B-C 關鍵字湊數）\n"
+        f"    直接將子代理角色（Role / subagent_type / TypeName）改為系統認可的唯讀白名單：\n"
+        f"    `research`、`Explore`、`Plan`、`scout`、`auditor`、`reviewer`、`challenger`、`architect`、`readonly`，即可免審放行。\n"
+        f"  ▸ 路徑 B【修改 / 新增程式碼（Construction）】\n"
+        f"    請補齊以下四維規格（總長 >= 60 字元）：\n"
+        f"    [R - Role & Path] 目標檔案路徑（如 path/to/module.py）與單一職責\n"
+        f"    [I - Invariants] 業務不變量與單檔行數上限（如 <= 350 行）\n"
+        f"    [B - Boundaries] 空值/越界防護、巢狀 <= 4 層（Early-Return）與具名例外處理\n"
+        f"    [C - Contracts] 輸入輸出型別簽章、回傳結構或驗收基準（若涉及數值請註明精度）"
     )
 
 
@@ -251,6 +265,7 @@ def _run_self_tests() -> None:
         assert evaluate_subagent_invocation("invoke_subagent", {"Subagents": [{"Prompt": "快速搜尋", "Role": "scout"}, {"Prompt": full_spec, "Role": "Worker"}]}, cwd=tmp)[0] is True
         assert consume_readonly_subagent_lease(tmp) is True
         assert evaluate_subagent_invocation("invoke_subagent", {"Subagents": [{"Prompt": "檢查", "Role": "research"}, {"Prompt": "隨便寫個程式", "Role": "Backend Builder"}]}, cwd=tmp)[0] is False
+        assert evaluate_subagent_invocation("invoke_subagent", {"TypeName": "research", "Role": "Validator & Dashboard Code Inspector", "Prompt": "唯讀調查"}, cwd=tmp)[0] is True
         assert evaluate_subagent_invocation("invoke_subagent", {"TypeName": "self", "Role": "Module Implementer", "Prompt": "幫我寫好這個模組"})[0] is False
         grant_readonly_subagent_lease(tmp, ttl_sec=60, quota=1)
         assert consume_readonly_subagent_lease(tmp) is True and consume_readonly_subagent_lease(tmp) is False

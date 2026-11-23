@@ -218,6 +218,21 @@ def install_pi_adapter(root: Path, brain_dir: str = ".netark", update: bool = Fa
                 df = ddir / sf.relative_to(sdir)
                 df.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(sf, df)
+    if update:
+        for old_ext in ("workspace-guard.ts", "guard-shell-parser.ts", "epistemic-gate.ts", "epistemic-library-tools.ts", "ribc-spec-gate.ts"):
+            if (old_p := bdir / "extensions" / old_ext).is_file(): old_p.unlink()
+    mcp_path, mcp_cfg = bdir / "mcp.json", {}
+    if mcp_path.is_file():
+        try:
+            if isinstance((loaded := json.loads(mcp_path.read_text(encoding="utf-8"))), dict): mcp_cfg = loaded
+        except Exception:  # noqa: silent-except
+            pass
+    if not isinstance(mcp_cfg.get("mcpServers"), dict): mcp_cfg["mcpServers"] = {}
+    mcp_cfg["mcpServers"]["netark"] = {"command": "netark-mcp", "args": ["serve"]}
+    mcp_path.write_text(json.dumps(mcp_cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if not (bdir / "auth.json").exists() and (global_auth := Path.home() / ".pi" / "agent" / "auth.json").is_file():
+        try: (bdir / "auth.json").symlink_to(global_auth)
+        except OSError: pass  # noqa: silent-except
     pi_settings = bdir / "settings.json"
     if not pi_settings.exists():
         default_pi = {
@@ -351,7 +366,7 @@ if __name__ == "__main__":
 
             res_pi = initialize_workspace(cwd=tmp_pi, target="pi", lang="zh-TW", brain_dir=args.brain_dir)
             assert res_pi["targets"] == ["pi"]
-            for pi_rel in ("extensions/epistemic-gate.ts", "extensions/subagent/index.ts", "models.json", "custom-models.json", "AGENTS.md", "settings.json", "agents/architect.md", "prompts/handover.md", "skills/root-cause-debugging/SKILL.md"):
+            for pi_rel in ("extensions/netark-guard.ts", "extensions/subagent/index.ts", "mcp.json", "models.json", "custom-models.json", "AGENTS.md", "settings.json", "agents/architect.md", "prompts/handover.md", "skills/root-cause-debugging/SKILL.md"):
                 assert (Path(tmp_pi) / args.brain_dir / pi_rel).exists(), f"Missing Pi asset: {pi_rel}"
         print(json.dumps({"status": "ok", "self_test": "passed", "targets_verified": ["pi", "agy", "claude"], "langs_verified": ["zh-TW", "en"]}))
         sys.exit(0)
