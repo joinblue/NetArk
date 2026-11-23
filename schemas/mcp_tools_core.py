@@ -324,16 +324,21 @@ def _copy_asset_if_needed(asset_rel: str, dest_path: Path, overwrite: bool = Fal
     dest_path.write_text(get_embedded_asset_text(asset_rel), encoding="utf-8")
 
 
-def _mcp_server_entry(bin_cmd: str) -> Dict[str, Any]:
-    return {"command": bin_cmd, "args": ["serve"], "env": {"NETARK_LICENSE_KEY": "${NETARK_LICENSE_KEY}", "NETARK_MEMORY_ROOT": "${NETARK_MEMORY_ROOT}"}}
+def _mcp_server_entry(bin_cmd: str, include_env: bool = True) -> Dict[str, Any]:
+    return {"command": bin_cmd, "args": ["serve"], **({"env": {"NETARK_LICENSE_KEY": "${NETARK_LICENSE_KEY}", "NETARK_MEMORY_ROOT": "${NETARK_MEMORY_ROOT}"}} if include_env else {})}
 
-
-def _merge_mcp_netark(cfg: Dict[str, Any], bin_cmd: str) -> None:
+def _merge_mcp_netark(cfg: Dict[str, Any], bin_cmd: str, include_env: bool = True) -> None:
     if not isinstance(cfg.get("mcpServers"), dict): cfg["mcpServers"] = {}
-    servers, entry = cfg["mcpServers"], _mcp_server_entry(bin_cmd)
-    if isinstance((old := servers.get("netark")), dict) and isinstance(old.get("env"), dict): entry["env"] = {**entry["env"], **old["env"]}
+    servers, entry = cfg["mcpServers"], _mcp_server_entry(bin_cmd, include_env=include_env)
+    if isinstance((old := servers.get("netark")), dict) and isinstance(old.get("env"), dict):
+        if include_env: entry["env"] = {**entry["env"], **old["env"]}
+        elif (kept := {k: v for k, v in old["env"].items() if v not in ("${NETARK_LICENSE_KEY}", "${NETARK_MEMORY_ROOT}")}): entry["env"] = kept
     servers["netark"] = entry
 
+def _list_asset_rels(prefix: str) -> List[str]:
+    norm, base = prefix.replace("\\", "/").strip("/") + "/", Path(__file__).resolve().parents[1]
+    if isinstance((assets := getattr(builtins, "__NETARK_EMBEDDED_ASSETS__", None)), dict): return sorted(k for k in assets if k.startswith(norm))
+    return sorted(str(p.relative_to(base)).replace("\\", "/") for p in (base / norm.rstrip("/")).rglob("*") if p.is_file()) if (base / norm.rstrip("/")).is_dir() else []
 
 def _merge_claude_hooks(cfg: Dict[str, Any], cls_hooks: Dict[str, Any]) -> None:
     if not isinstance(cfg.get("hooks"), dict): cfg["hooks"] = {}
@@ -341,13 +346,10 @@ def _merge_claude_hooks(cfg: Dict[str, Any], cls_hooks: Dict[str, Any]) -> None:
     for ev, entries in cls_hooks.items():
         hooks[ev] = [x for x in (hooks.get(ev) if isinstance(hooks.get(ev), list) else []) if "netark-mcp hook" not in json.dumps(x)] + entries
 
-
 def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_rules: bool = False, update_rules: bool = False, pi_brain_dir: str = ".pi") -> None:
     if "agy" in targets:
         agy_guard = {
-            "enabled": True,
-            "SessionStart": [{"type": "command", "command": f"{bin_cmd} hook --session-start-mode agy --cwd .", "timeout": 5}],
-            "PreInvocation": [{"type": "command", "command": f"{bin_cmd} hook --pre-invocation-mode agy --cwd .", "timeout": 5}],
+            "enabled": True, "SessionStart": [{"type": "command", "command": f"{bin_cmd} hook --session-start-mode agy --cwd .", "timeout": 5}], "PreInvocation": [{"type": "command", "command": f"{bin_cmd} hook --pre-invocation-mode agy --cwd .", "timeout": 5}],
             "PreToolUse": [{"matcher": "read_file|view_file|write_file|edit_file|multiedit|write_to_file|replace_file_content|multi_replace_file_content|run_command|bash|invoke_subagent|Agent|Task|subagent|dispatch_specialist|search_web|read_url_content|web_fetch|http_request|web_research", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --hook-mode agy --cwd .", "timeout": 5}]}],
             "PostToolUse": [{"matcher": "write_file|edit_file|multiedit|write_to_file|replace_file_content|multi_replace_file_content", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --post-hook-mode agy --cwd .", "timeout": 10}]}],
             "Stop": [{"type": "command", "command": f"{bin_cmd} hook --stop-mode agy --cwd .", "timeout": 10}],
@@ -357,17 +359,19 @@ def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_
         _merge_json_file(root / ".agents" / "plugins" / "netark" / "mcp_config.json", lambda c: _merge_mcp_netark(c, bin_cmd))
         if write_rules or update_rules: _copy_asset_if_needed("templates/hosts/agy/AGENTS.md.tpl", root / "AGENTS.md", overwrite=update_rules)
     if "claude" in targets:
-        cls_hooks = {
-            "SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --session-start-mode claude --cwd ."}]}],
-            "PreToolUse": [{"matcher": "Bash|Write|Edit|MultiEdit|Read|Task|Agent|WebFetch", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --hook-mode claude --cwd ."}]}],
-            "PostToolUse": [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --post-hook-mode claude --cwd ."}]}],
-            "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --stop-mode claude --cwd ."}]}],
-        }
+        cls_hooks = {"SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --session-start-mode claude --cwd ."}]}],
+                     "PreToolUse": [{"matcher": "Bash|Write|Edit|MultiEdit|Read|Task|Agent|WebFetch", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --hook-mode claude --cwd ."}]}],
+                     "PostToolUse": [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --post-hook-mode claude --cwd ."}]}],
+                     "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --stop-mode claude --cwd ."}]}]}
         _merge_json_file(root / ".claude" / "settings.json", lambda c: _merge_claude_hooks(c, cls_hooks))
         if write_rules or update_rules: _copy_asset_if_needed("templates/hosts/claude/CLAUDE.md.tpl", root / "CLAUDE.md", overwrite=update_rules)
     if "pi" in targets:
-        _merge_json_file(root / pi_brain_dir / "mcp.json", lambda c: _merge_mcp_netark(c, bin_cmd))
-        _copy_asset_if_needed("templates/hosts/pi/extensions/netark-guard.ts", root / pi_brain_dir / "extensions" / "netark-guard.ts", overwrite=update_rules)
+        _merge_json_file(root / pi_brain_dir / "mcp.json", lambda c: _merge_mcp_netark(c, bin_cmd, include_env=False))
+        for rel in _list_asset_rels("templates/hosts/pi"):
+            if (sub := rel[len("templates/hosts/pi/"):]) == "enterprise-policy.json.tpl": continue
+            _copy_asset_if_needed(rel, root / pi_brain_dir / (dsub := sub[:-4] if sub.endswith(".tpl") else sub), overwrite=update_rules and dsub not in ("settings.json", "role-models.json", "custom-models.json"))
+        for rel in _list_asset_rels("templates/skills"): _copy_asset_if_needed(rel, root / pi_brain_dir / "skills" / rel[len("templates/skills/"):], overwrite=update_rules)
+        if update_rules: (root / pi_brain_dir / "extensions" / "session-handover.ts").unlink(missing_ok=True)
         if write_rules or update_rules: _copy_asset_if_needed("templates/hosts/pi/AGENTS.md.tpl", root / "AGENTS.md", overwrite=update_rules)
 
 
@@ -375,7 +379,7 @@ def run_closed_mcp_init(cwd: str, target: str = "memory", lang: str = "zh-TW", b
     """Initialize a target project in closed-source MCP mode with 0 .py files written."""
     root = Path(cwd).resolve()
     for sub in ("memory/codex", "memory/episodic", "memory/specs", "memory/wiki", "memory/audits", "memory/index", "memory/private", "projects", "scratch"): (root / sub).mkdir(parents=True, exist_ok=True)
-    pi_brain = brain_dir.strip() or (".netark" if (root / ".netark").is_dir() else ".pi")
+    pi_brain = brain_dir.strip() or (".netark" if (root / ".netark" / "enterprise-policy.json").is_file() else ".pi")
     pol_dir = next((d for d in (".agents", ".netark", ".pi") if (root / d / "enterprise-policy.json").is_file()), ".agents" if target == "agy" else (pi_brain if target == "pi" else ".netark"))
     _merge_json_file(root / pol_dir / "enterprise-policy.json", lambda d: d.update({**DEFAULT_ENTERPRISE_POLICY, **d}))
     targets = ["agy", "claude", "pi"] if target == "all" else ([] if target == "memory" else [target])

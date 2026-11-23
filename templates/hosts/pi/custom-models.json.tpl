@@ -1,5 +1,5 @@
 {
-  "description": "不用隨 pi /model (models-store.json) 同步覆蓋的自訂/釘選模型清單。此檔案中的模型會由 model-router.ts 自動補齊 compat/headers/cost 並永久合併至 .netark/models.json。",
+  "description": "不用隨 pi /model (models-store.json) 同步覆蓋的自訂/釘選模型清單。此檔案中的模型會由 model-router.ts 自動補齊 compat/headers/cost 並永久合併至 .pi/models.json。",
   "models": [
     {
       "id": "nvidia/llama-3.1-nemotron-safety-guard-8b-v3",

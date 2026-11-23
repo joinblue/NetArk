@@ -219,7 +219,7 @@ def install_pi_adapter(root: Path, brain_dir: str = ".netark", update: bool = Fa
                 df.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(sf, df)
     if update:
-        for old_ext in ("workspace-guard.ts", "guard-shell-parser.ts", "epistemic-gate.ts", "epistemic-library-tools.ts", "ribc-spec-gate.ts"):
+        for old_ext in ("workspace-guard.ts", "guard-shell-parser.ts", "epistemic-gate.ts", "epistemic-library-tools.ts", "ribc-spec-gate.ts", "session-handover.ts"):
             if (old_p := bdir / "extensions" / old_ext).is_file(): old_p.unlink()
     mcp_path, mcp_cfg = bdir / "mcp.json", {}
     if mcp_path.is_file():

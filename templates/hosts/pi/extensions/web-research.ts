@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
 
 export interface OutboundCheckResult {
 	allowed: boolean;
@@ -71,23 +72,36 @@ export function validateOutboundSafety(params: { query?: string; url?: string })
 	return { allowed: true };
 }
 
+function appendUniqueNvidiaKeys(keys: string[], nvEntry: { keys?: unknown; key?: unknown } | undefined): void {
+	const rawList = Array.isArray(nvEntry?.keys)
+		? nvEntry.keys
+		: typeof nvEntry?.key === "string"
+			? [nvEntry.key]
+			: [];
+	for (const candidate of rawList) {
+		if (typeof candidate !== "string") continue;
+		const trimmed = candidate.trim();
+		if (trimmed && !trimmed.includes("REDACTED") && !keys.includes(trimmed)) {
+			keys.push(trimmed);
+		}
+	}
+}
+
 export function loadNvidiaApiKeys(cwd: string): string[] {
 	const keys: string[] = [];
-	const authPath = path.join(cwd, ".netark", "auth.json");
-	try {
-		if (fs.existsSync(authPath)) {
+	const authCandidates = [
+		path.join(cwd, ".pi", "auth.json"),
+		path.join(cwd, ".netark", "auth.json"),
+		path.join(getAgentDir(), "auth.json"),
+	];
+	for (const authPath of authCandidates) {
+		try {
+			if (!fs.existsSync(authPath)) continue;
 			const raw = JSON.parse(fs.readFileSync(authPath, "utf-8"));
-			const nvEntry = raw?.nvidia;
-			if (Array.isArray(nvEntry?.keys)) {
-				for (const k of nvEntry.keys) {
-					if (typeof k === "string" && k.trim() && !k.includes("REDACTED")) keys.push(k.trim());
-				}
-			} else if (typeof nvEntry?.key === "string" && nvEntry.key.trim() && !nvEntry.key.includes("REDACTED")) {
-				keys.push(nvEntry.key.trim());
-			}
+			appendUniqueNvidiaKeys(keys, raw?.nvidia);
+		} catch {
+			// Fall through to next candidate or env check
 		}
-	} catch {
-		// Fall through to env check
 	}
 	if (process.env.NVIDIA_API_KEY && !keys.includes(process.env.NVIDIA_API_KEY)) {
 		keys.push(process.env.NVIDIA_API_KEY);

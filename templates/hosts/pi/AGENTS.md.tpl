@@ -10,26 +10,23 @@
 2. **自適應高信噪比輸出協議 (Adaptive SNR Protocol)**：
    - **一般對話、問答、診斷與小型修改**：直接給出精準答案與結果，零社交寒暄、不強制套用大型表格。
    - **重大多檔交付與規格完成**：採用精煉三段式總結（**§1 變更摘要【結論】**、**§2 驗證結果【邊界與異常】**、**§3 下一步【下一步行動】**）；客觀數據、測試輸出與程式碼區塊豁免行數限制。
-3. **提示詞導航 + Hook 處方籤執法黃金比例 (Silent Guardrails)**：
-   - 正常對話中嚴禁向使用者背誦內部底層攔截代碼；僅當工具呼叫實際遭底層 Hook 攔截時，依據回傳之 `RemediationPointer` 處方籤自動修正行為（例如寫檔觸發 `SEC-PREWRITE-SECRET` 時，改用 `os.environ.get('KEY_NAME')` 並請人類使用者設定 `.env`，嚴禁 Agent 讀寫 `.env`）。
+3. **Silent Guardrails**：正常對話勿背誦內部攔截代碼；工具遭攔截時依 `RemediationPointer` 修正（觸發 `SEC-PREWRITE-SECRET` 改用 `os.environ.get('KEY_NAME')`，嚴禁讀寫 `.env*`、`auth.json`、`*vault*.json`）。
 
-## 2. 三區記憶分流與 Turn-1 代號壓縮地圖 (3-Zone Memory & `@D/@C/@G` Codebook)
+## 2. 記憶治理生命週期、三大 MCP 工具與 Turn-1 代號地圖
 
-1. **公私分離與雙軌圖書館檔案治理 (Memory File Placement & Dual-Track Library)**：
-   - **公開框架公文區 (`memory/codex/` & `memory/specs/`，編號 `000`–`699`)**：存放架構憲法與公開規格，具備合規 YAML Frontmatter，自動編入 `memory/index/CONTEXT_INDEX.json` 與 `memory/codex/CONTEXT_MAP.md`。
-   - **開架雙向圖書館區 (`memory/wiki/`，編號 `310`–`499` 等可插拔分類)**：存放 Wiki 知識節點、操作指南與 SOP，免除雙簽與 Oracle 剛性門檻，支援 `[[wikilink]]` 雙向圖譜。
-   - **私有專案記憶區 (`memory/private/specs/`，編號 `900`–`999`)**：存放私有專案計畫與敏感分析，自動分流索引至 Git 忽略之 `memory/index/PRIVATE_INDEX.json`。
-   - **自由暫存與實驗區 (`scratch/`)**：存放未定案草稿、臨時腳本與本地測試產物，受 `.gitignore` 忽略且免除 YAML Schema 驗證鎖；專案根目錄 (`./`) 僅允許 `README.md`、`README.zh-TW.md` 與 `AGENTS.md`。
-2. **Turn-1 凍結 `@D/@C/@G` 代號壓縮地圖與認知誠實**：
-   - **優先使用 `@D/@C/@G` 代號地圖與 `query_library`**：系統於 Turn 1 開局自動凍結注入 `@D`（目錄字典）、`@C`（腳本代號 `C0..Cn`）與 `@G`（拓撲突觸邊）及 `HANDOVER.md` 快照。查閱規格或腳本時，**可直接呼叫 `query_library(query="C1")` 或 `query_library(query="100")` 反查展開完整路徑與 AST 函數行號**，避免第一輪盲目執行 `ls`/`find`。
-   - 唯一活躍台帳 `memory/LEDGER.md` 嚴格保持 $\le 80$ 行；微對話交接快照 `memory/episodic/HANDOVER.md` 保持 $\le 65$ 行。
-   - 關鍵架構陳述於 Markdown 列表行首標註 `- [FACT]`、`- [INFERRED]`、`- [HYPOTHESIS]` 或 `- [UNVERIFIED]`；公文軌節點標記為 `verified` 時，`author.model` 與 `reviewer.model` 須為不同模型家族並通過 `python3 schemas/schema_validator.py --run-oracle`。
-3. **強制專家派工觸發鐵律 (`Mandatory Specialist Delegation IF-THEN Rules`)**：
-   - **【IF 多檔檢索 / 雜亂大檔提純 $\rightarrow$ MUST 派 `scout`】**：凡涉及 $\ge 2$ 個檔案檢索比對、或整理 `scratch/` 內雜亂/衝突/大型舊文件（單檔 $> 300$ 行），主腦**必須主動呼叫** `dispatch_specialist(specialist="scout", filePaths=[...], task="...")` 或 `subagent(agent="scout")` 側路提純，**嚴禁主腦自行連續 `read` 分段硬讀污染主 Context**（無須等使用者點名才呼叫）。
-   - **【IF 模組實作 / 跨檔重構 $\rightarrow$ MUST 派 `code` / `worker`】**：凡涉及撰寫 $> 50$ 行程式碼、新建模組或跨檔修改，主腦**必須優先呼叫** `dispatch_specialist(specialist="code", filePaths=[...], task="...")`（內建 `edit_file`, `write_file`, `run_syntax_check`）或 `subagent(agent="worker")` 執行，主腦專注於架構規劃、契約審查與驗收。
-   - **【禁繞過寫檔門禁與禁寫專案外 `/tmp`】**：撰寫或測試程式碼必須使用 `write`/`edit` 工具（測試與草稿一律放專案內 `scratch/`），**嚴禁使用 `bash` (`cat > ... << 'EOF'`) 或寫入 `/tmp` 繞過 Pre-Write AST 護欄**。
+1. **三區記憶分流與 5 階段治理生命週期**：
+   - **分區邊界**：公開公文區 `memory/{codex,specs}/` (`000`–`699`)、開架雙向圖書館 `memory/wiki/` (`310`–`499`，`[[wikilink]]`)、私有專案區 `memory/private/specs/` (`900`–`999`)、暫存區 `scratch/`（專案根目錄僅允許 `README*.md` 與 `AGENTS.md`）。
+   - **5 階段生命週期**：`note (draft ➔ reviewing) ➔ blueprint (reviewing ➔ stub_ready ➔ verified) ➔ shard spec (draft ➔ reviewing ➔ stub_ready ➔ verified) ➔ code`（複雜規格須填 `parent_blueprint` 與 `stub_paths`）。
+2. **三大 MCP 工具 (`netark_query`, `netark_record`, `netark_guard`) 與認知誠實**：
+   - **Turn-1 `@D/@C/@G` 查詢**：開局自動凍結注入 `@D/@C/@G` 與 `HANDOVER.md` 快照；請呼叫 `netark_query(query="C1")` 或 `netark_query(query="100")` 反查路徑、規格與 AST 函數座標，避免首輪盲目 `ls`/`find`。
+   - **文件寫入與神諭驗證**：使用 `netark_record(intent=..., title=..., body=..., mode="write")` 撰寫或更新 `wiki`/`note`/`blueprint`/`spec`/`handover`；使用 `netark_guard(action="oracle" | "status")` 執行神諭驗證與檢視護欄狀態（若工作區含本機腳本亦支援 `python3 schemas/schema_validator.py --run-oracle`）。
+   - **認知標籤與行數上限**：關鍵架構陳述須標註 `- [FACT]`、`- [INFERRED]`、`- [HYPOTHESIS]` 或 `- [UNVERIFIED]`；`memory/LEDGER.md` $\le 80$ 行、`memory/episodic/HANDOVER.md` $\le 65$ 行；公文標記 `verified` 須跨模型雙簽並通過 Oracle。
+3. **Hub + Specialist 強制派工與 `SPEC-RIBC-GATE`**：
+   - **【IF 多檔檢索 / 雜亂大檔 $> 300$ 行 $\rightarrow$ MUST 派 `scout`】**：主動呼叫 `dispatch_specialist(specialist="scout", filePaths=[...], task="...")` 或 `subagent(agent="scout")` 側路提純，嚴禁主腦硬讀大檔污染主 Context。
+   - **【IF 模組實作 / 跨檔修改 $\rightarrow$ MUST 派 `code` / `worker`】**：呼叫 `dispatch_specialist(specialist="code", ...)` 或 `subagent(agent="worker")`。所有專家派工之 `task` **必須通過 `SPEC-RIBC-GATE`**：明確包含 `[R]`（角色與路徑）、`[I]`（不變量與行數上限）、`[B]`（邊界防護）、`[C]`（契約與驗證）且總長 $\ge 60$ 字元。
+   - **【禁繞過寫檔門禁與 `/tmp`】**：一律使用 `write`/`edit` 工具（草稿與測試放 `scratch/`），嚴禁以 `bash` (`cat > ... << 'EOF'`) 或 `/tmp` 繞過 AST 護欄。
 
-## 3. 專案目錄與內建專屬指令
+## 3. 核心目錄與專屬指令
 
-- **核心目錄**：`.netark/`（可攜式大腦）、`memory/`（`codex/`, `specs/`, `wiki/`, `episodic/HANDOVER.md`, `LEDGER.md`）、`schemas/`（Schema、Tier 0 `netark_guard_core.py` 與 `schema_validator.py`）、`scripts/`（`auto_update_map.py`, `netark_guard_daemon.py`, `netark_init.py`）、`templates/`（跨宿主與雙語母版）、`dashboard/`（視覺化戰情室）、`scratch/`（暫存區）。
-- **專屬快捷指令**：`/mode`（切換路由策略與設定多組 API Keys）、`/roles`（檢視 `.netark/role-models.json` SSOT 模型綁定）、`/guard`（查看工作區護欄與攔截統計）、`/handover`（生成微對話交接快照至 `memory/episodic/HANDOVER.md`）、`/dream`（記憶重整與索引重編譯）、`/team <task>`（啟動跨模型子代理管線）。
+- **核心目錄**：`.pi/`（Pi 宿主與 NetArk 設定/擴充大腦，向下相容 `.netark/`）、`memory/`（`codex/`, `specs/`, `wiki/`, `episodic/HANDOVER.md`, `LEDGER.md`）、`scratch/`（暫存區）；（完整開發庫另含 `schemas/`、`scripts/`、`templates/`）。
+- **專屬快捷指令**：`/mode`（切換路由策略與設定 API Keys）、`/roles`（檢視 `.pi/role-models.json` 模型綁定）、`/handover`（透過 `netark_record` 更新 `memory/episodic/HANDOVER.md`）、`/dream`（記憶重整、台帳瘦身與 Oracle 驗證）、`/team <task>`（啟動跨模型子代理管線）、`/mcp`（檢視與管理 `netark` MCP 伺服器連線）。

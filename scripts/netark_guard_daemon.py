@@ -169,7 +169,7 @@ def _resolve_audit_path(cwd: Optional[str] = None) -> Path:
     if (env_dir := os.environ.get("PI_CODING_AGENT_DIR")):
         return Path(env_dir) / "audit" / "soc2_audit.jsonl"
     base = Path(cwd).resolve() if cwd else ROOT_DIR
-    brain_sub = ".agents" if (base / ".agents").exists() and not (base / ".netark").exists() else ".netark"
+    brain_sub = ".agents" if (base / ".agents").exists() and not (base / ".netark" / "enterprise-policy.json").is_file() else (".pi" if (base / ".pi").exists() and not (base / ".netark" / "enterprise-policy.json").is_file() else ".netark")
     return base / brain_sub / "audit" / "soc2_audit.jsonl"
 
 

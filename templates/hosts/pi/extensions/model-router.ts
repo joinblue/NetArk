@@ -172,12 +172,49 @@ interface NetArkRouterState {
 
 type NetArkRouteRequest = ModelRouteRequest<NetArkRouterState>;
 
-function getRoleModelsFilePath(): string {
-	return path.join(getAgentDir(), "role-models.json");
+function resolvePiBrainDir(cwd = process.cwd()): string {
+	const piDir = path.join(cwd, ".pi");
+	if (fs.existsSync(piDir)) return piDir;
+	const legacyDir = path.join(cwd, ".netark");
+	if (fs.existsSync(legacyDir)) return legacyDir;
+	return getAgentDir();
 }
 
-function getAuthFilePath(): string {
-	return path.join(getAgentDir(), "auth.json");
+function resolveFirstExistingPath(candidates: string[], fallback: string): string {
+	return candidates.find((p) => fs.existsSync(p)) ?? fallback;
+}
+
+function getRoleModelsFilePath(cwd = process.cwd()): string {
+	return resolveFirstExistingPath(
+		[
+			path.join(cwd, ".pi", "role-models.json"),
+			path.join(cwd, ".netark", "role-models.json"),
+			path.join(getAgentDir(), "role-models.json"),
+		],
+		path.join(resolvePiBrainDir(cwd), "role-models.json"),
+	);
+}
+
+function getCustomModelsFilePath(cwd = process.cwd()): string {
+	return resolveFirstExistingPath(
+		[
+			path.join(cwd, ".pi", "custom-models.json"),
+			path.join(cwd, ".netark", "custom-models.json"),
+			path.join(getAgentDir(), "custom-models.json"),
+		],
+		path.join(resolvePiBrainDir(cwd), "custom-models.json"),
+	);
+}
+
+function getAuthFilePath(cwd = process.cwd()): string {
+	return resolveFirstExistingPath(
+		[
+			path.join(getAgentDir(), "auth.json"),
+			path.join(cwd, ".pi", "auth.json"),
+			path.join(cwd, ".netark", "auth.json"),
+		],
+		path.join(getAgentDir(), "auth.json"),
+	);
 }
 
 function getModelsJsonFilePath(): string {
@@ -210,8 +247,8 @@ function toProviderQualifiedModelSpec(spec: string): string {
 }
 
 /**
- * Synchronizes `.netark/models-store.json` ( dynamically updated by `pi` `/model` via `pi.dev/api/models` )
- * into `.netark/models.json` ( the local parameter override & active whitelist layer ).
+ * Synchronizes `~/.pi/agent/models-store.json` ( dynamically updated by `pi` `/model` via `pi.dev/api/models` )
+ * into `~/.pi/agent/models.json` (and `.pi/models.json` if present, the local parameter override & active whitelist layer ).
  * - Enforces provider-level and model-level `"headers": { "NVCF-POLL-SECONDS": "30" }` (overriding 3600s default).
  * - Normalizes NVIDIA NIM free tier `cost` to `0`.
  * - Automatically imports newly added models from `models-store.json` and prunes EOL/410 models in `DEPRECATED_404_MODELS`
@@ -221,12 +258,28 @@ function toProviderQualifiedModelSpec(spec: string): string {
 export function syncNvidiaModelsFromStore(): { updated: boolean; count: number } {
 	const modelsJsonPath = getModelsJsonFilePath();
 	const modelsStorePath = getModelsStoreFilePath();
-	if (!fs.existsSync(modelsJsonPath)) {
-		return { updated: false, count: 0 };
-	}
+	const projectModelsPath = [
+		path.join(process.cwd(), ".pi", "models.json"),
+		path.join(process.cwd(), ".netark", "models.json"),
+	].find((p) => fs.existsSync(p));
 	try {
-		const rawModelsJsonText = fs.readFileSync(modelsJsonPath, "utf-8");
-		const modelsJson = JSON.parse(rawModelsJsonText);
+		const rawModelsJsonText = fs.existsSync(modelsJsonPath)
+			? fs.readFileSync(modelsJsonPath, "utf-8")
+			: projectModelsPath
+				? fs.readFileSync(projectModelsPath, "utf-8")
+				: "";
+		const modelsJson = rawModelsJsonText
+			? JSON.parse(rawModelsJsonText)
+			: {
+					$schema: "https://pi.dev/schemas/models.schema.json",
+					providers: {
+						nvidia: {
+							baseUrl: "https://integrate.api.nvidia.com/v1",
+							api: "openai-completions",
+							models: [],
+						},
+					},
+				};
 		if (!modelsJson?.providers?.nvidia || typeof modelsJson.providers.nvidia !== "object") {
 			return { updated: false, count: 0 };
 		}
@@ -251,8 +304,8 @@ export function syncNvidiaModelsFromStore(): { updated: boolean; count: number }
 			}
 		}
 
-		// Merge persistent user-defined models from .netark/custom-models.json and any pinned: true entries in models.json
-		const customModelsPath = path.join(fridayDir, "custom-models.json");
+		// Merge persistent user-defined models from .pi/custom-models.json and any pinned: true entries in models.json
+		const customModelsPath = getCustomModelsFilePath();
 		const customEntries: any[] = [];
 		if (fs.existsSync(customModelsPath)) {
 			try {
@@ -319,11 +372,20 @@ export function syncNvidiaModelsFromStore(): { updated: boolean; count: number }
 
 		nvidiaProvider.models = normalizedModels;
 		const nextText = `${JSON.stringify(modelsJson, null, 2)}\n`;
-		if (nextText !== rawModelsJsonText) {
+		let anyUpdated = false;
+		if (!fs.existsSync(modelsJsonPath) || nextText !== rawModelsJsonText) {
+			fs.mkdirSync(path.dirname(modelsJsonPath), { recursive: true });
 			fs.writeFileSync(modelsJsonPath, nextText, "utf-8");
-			return { updated: true, count: normalizedModels.length };
+			anyUpdated = true;
 		}
-		return { updated: false, count: normalizedModels.length };
+		if (projectModelsPath && path.resolve(projectModelsPath) !== path.resolve(modelsJsonPath)) {
+			const prevProjectText = fs.existsSync(projectModelsPath) ? fs.readFileSync(projectModelsPath, "utf-8") : "";
+			if (nextText !== prevProjectText) {
+				fs.writeFileSync(projectModelsPath, nextText, "utf-8");
+				anyUpdated = true;
+			}
+		}
+		return { updated: anyUpdated, count: normalizedModels.length };
 	} catch {
 		return { updated: false, count: 0 };
 	}
@@ -331,7 +393,7 @@ export function syncNvidiaModelsFromStore(): { updated: boolean; count: number }
 
 /**
  * Permanently excises a deprecated (HTTP 410 Gone / 404 Not Found) model from runtime routing,
- * `.netark/models.json`, and `.netark/role-models.json` if any role was still bound to it.
+ * `~/.pi/agent/models.json` (and `.pi/models.json`), and `.pi/role-models.json` if any role was still bound to it.
  */
 export function pruneDeprecatedModelFromModelsJson(candidateKey: string, modelId: string): void {
 	const cleanId = modelId.replace(/^nvidia\//, "").trim();
@@ -364,17 +426,25 @@ export function pruneDeprecatedModelFromModelsJson(candidateKey: string, modelId
 function syncAgentMarkdownModel(role: RoleName, fullModelSpec: string): void {
 	const fileName = ROLE_TO_AGENT_FILE[role];
 	if (!fileName) return;
-	const agentPath = path.join(getAgentDir(), "agents", fileName);
-	if (!fs.existsSync(agentPath)) return;
-	try {
-		const normalizedFull = toProviderQualifiedModelSpec(fullModelSpec);
-		const content = fs.readFileSync(agentPath, "utf-8");
-		const updated = content.replace(/^model:\s*.+$/m, `model: ${normalizedFull}`);
-		if (updated !== content) {
-			fs.writeFileSync(agentPath, updated, "utf-8");
+	const normalizedFull = toProviderQualifiedModelSpec(fullModelSpec);
+	const candidates = Array.from(
+		new Set([
+			path.resolve(process.cwd(), ".pi", "agents", fileName),
+			path.resolve(process.cwd(), ".netark", "agents", fileName),
+			path.resolve(getAgentDir(), "agents", fileName),
+		]),
+	);
+	for (const agentPath of candidates) {
+		if (!fs.existsSync(agentPath)) continue;
+		try {
+			const content = fs.readFileSync(agentPath, "utf-8");
+			const updated = content.replace(/^model:\s*.+$/m, `model: ${normalizedFull}`);
+			if (updated !== content) {
+				fs.writeFileSync(agentPath, updated, "utf-8");
+			}
+		} catch {
+			// Best-effort sync
 		}
-	} catch {
-		// Best-effort sync
 	}
 }
 
@@ -462,7 +532,7 @@ function writeAuthJson(data: Record<string, any>): void {
 
 /**
  * Multi-Account API Key Pool (Per-Loop Round-Robin + Sticky Key within Loop):
- * Extracts all configured API keys for a provider from `.netark/auth.json` (`keys: string[]` or comma-separated `key`).
+ * Extracts all configured API keys for a provider from `auth.json` (`~/.pi/agent/auth.json` or `.pi/auth.json`) (`keys: string[]` or comma-separated `key`).
  */
 export function getProviderKeyPool(providerId: string): string[] {
 	const authData = readAuthJson();
@@ -488,7 +558,7 @@ export function getProviderKeyPool(providerId: string): string[] {
 }
 
 /**
- * Saves one or more API keys into `.netark/auth.json` for `providerId`.
+ * Saves one or more API keys into `auth.json` (`~/.pi/agent/auth.json` or `.pi/auth.json`) for `providerId`.
  * When `append = true`, appends to the existing `keys` pool; otherwise replaces the pool.
  */
 export function saveProviderKeyPool(providerId: string, rawKeysInput: string, append = false): string[] {
@@ -623,7 +693,7 @@ const SPECIALIST_CODE_WRITE_TOOLS: Tool[] = [
 	},
 	{
 		name: "write_file",
-		description: "Create or overwrite a file inside the workspace (protected core dirs .netark/, schemas/, and root .md are blocked).",
+		description: "Create or overwrite a file inside the workspace (protected core dirs .pi/, .agents/, .netark/, schemas/, and root .md are blocked).",
 		parameters: {
 			type: "object",
 			properties: {
@@ -658,11 +728,9 @@ function isSpecialistWriteBlockedPath(relPath: string, absPath: string): string 
 	if (isProtectedSecretPath(absPath)) {
 		return `Protected credential file blocked (${relPath})`;
 	}
+	const protectedDirs = [".pi", ".agents", ".netark", "schemas"];
 	if (
-		relPath === ".netark" ||
-		relPath.startsWith(".netark/") ||
-		relPath === "schemas" ||
-		relPath.startsWith("schemas/") ||
+		protectedDirs.some((dir) => relPath === dir || relPath.startsWith(`${dir}/`)) ||
 		relPath === "memory/LEDGER.md"
 	) {
 		return `Protected core path blocked for specialist direct write (${relPath})`;
@@ -2230,7 +2298,7 @@ export default function (pi: ExtensionAPI) {
 		lines.push(`──────────────────────────────────────────────────`);
 		lines.push(`⚙️ 目前調度策略模式 (strategyMode): ${STRATEGY_MODE} — ${STRATEGY_LABELS[STRATEGY_MODE]}`);
 		lines.push(
-			`🔑 已設定憑證之 Providers (.netark/auth.json): ${configuredProviders.length > 0 ? configuredProviders.join(", ") : "(無)"}`,
+			`🔑 已設定憑證之 Providers (~/.pi/agent/auth.json): ${configuredProviders.length > 0 ? configuredProviders.join(", ") : "(無)"}`,
 		);
 		lines.push(`💡 快速指令:`);
 		lines.push(`  • /mode                                         : 開啟互動式設定選單`);
@@ -2366,7 +2434,7 @@ export default function (pi: ExtensionAPI) {
 	async function openInteractiveModeMenu(ctx: ExtensionContext): Promise<void> {
 		const action = await scrollableSelect(ctx, "🧠 NetArk 路由、角色模型與憑證管理中心 (/mode)", [
 			`1. 🎯 設定各角色綁定模型 (主腦 orchestrator / 各分工專家)`,
-			`2. 🔑 設定 Provider API Key 與 GCP Vertex 專案憑證 (.netark/auth.json)`,
+			`2. 🔑 設定 Provider API Key 與 GCP Vertex 專案憑證 (~/.pi/agent/auth.json)`,
 			`3. 🔄 切換路由鎖定模式 (目前: ${forcedMode.toUpperCase()})`,
 			`4. ⚙️ 切換雙調度策略模式 (目前: ${STRATEGY_MODE})`,
 			`5. 📋 檢視目前角色模型與憑證狀態總覽`,
@@ -2460,7 +2528,7 @@ export default function (pi: ExtensionAPI) {
 		if (action.startsWith("2.")) {
 			const providerChoice = await scrollableSelect(
 				ctx,
-				"請選擇要設定憑證的 Provider (.netark/auth.json):",
+				"請選擇要設定憑證的 Provider (~/.pi/agent/auth.json):",
 				[
 					"google-vertex — GCP Vertex AI (設定 Project ID + Location 或 API Key)",
 					"anthropic     — Anthropic Claude (設定 API Key，若用 Claude 訂閱請執行 /login anthropic)",
@@ -2505,7 +2573,7 @@ export default function (pi: ExtensionAPI) {
 					writeAuthJson(authData);
 					await ctx.modelRegistry.refresh();
 					ctx.ui.notify(
-						`✅ 已將 GCP Vertex AI 專案 (${project.trim()} @ ${location}) 寫入 .netark/auth.json！\n💡 若尚未完成本機 Google 帳號 OAuth 授權，請於終端機執行: gcloud auth application-default login`,
+						`✅ 已將 GCP Vertex AI 專案 (${project.trim()} @ ${location}) 寫入 ~/.pi/agent/auth.json！\n💡 若尚未完成本機 Google 帳號 OAuth 授權，請於終端機執行: gcloud auth application-default login`,
 						"info",
 					);
 				} else {
@@ -2517,7 +2585,7 @@ export default function (pi: ExtensionAPI) {
 					};
 					writeAuthJson(authData);
 					await ctx.modelRegistry.refresh();
-					ctx.ui.notify("✅ 已儲存 Google Vertex AI API Key 至 .netark/auth.json 並重新整理模型池！", "info");
+					ctx.ui.notify("✅ 已儲存 Google Vertex AI API Key 至 ~/.pi/agent/auth.json 並重新整理模型池！", "info");
 				}
 				return;
 			}
@@ -2538,14 +2606,14 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			const keyInput = await ctx.ui.input(
-				`請輸入 [${providerId}] 的 API Key (可輸入單組或以逗號分隔多組 Key1,Key2，權限 600 存入 .netark/auth.json):`,
+				`請輸入 [${providerId}] 的 API Key (可輸入單組或以逗號分隔多組 Key1,Key2，權限 600 存入 ~/.pi/agent/auth.json):`,
 			);
 			if (!keyInput?.trim()) return;
 
 			const pool = saveProviderKeyPool(providerId, keyInput.trim(), appendMode);
 			await ctx.modelRegistry.refresh();
 			ctx.ui.notify(
-				`✅ 已儲存 [${providerId}] 金鑰池 (共 ${pool.length} 組 API Key，Per-Loop Sticky Round-Robin 已啟用) 至 .netark/auth.json！`,
+				`✅ 已儲存 [${providerId}] 金鑰池 (共 ${pool.length} 組 API Key，Per-Loop Sticky Round-Robin 已啟用) 至 ~/.pi/agent/auth.json！`,
 				"info",
 			);
 			return;
@@ -2706,7 +2774,7 @@ export default function (pi: ExtensionAPI) {
 				const pool = saveProviderKeyPool(providerId, apiKey, isAdd);
 				await ctx.modelRegistry.refresh();
 				ctx.ui.notify(
-					`✅ 已將 [${providerId}] API Key 安全存入 .netark/auth.json (權限 600，金鑰池共 ${pool.length} 組，Per-Loop Sticky Round-Robin 已啟用)！`,
+					`✅ 已將 [${providerId}] API Key 安全存入 ~/.pi/agent/auth.json (權限 600，金鑰池共 ${pool.length} 組，Per-Loop Sticky Round-Robin 已啟用)！`,
 					"info",
 				);
 				return;
@@ -2734,7 +2802,7 @@ export default function (pi: ExtensionAPI) {
 				writeAuthJson(authData);
 				await ctx.modelRegistry.refresh();
 				ctx.ui.notify(
-					`✅ 已設定 GCP Vertex AI 專案 (${projectId} @ ${location}) 至 .netark/auth.json！\n💡 請確認本機已執行 gcloud auth application-default login 完成 Google OAuth 授權。`,
+					`✅ 已設定 GCP Vertex AI 專案 (${projectId} @ ${location}) 至 ~/.pi/agent/auth.json！\n💡 請確認本機已執行 gcloud auth application-default login 完成 Google OAuth 授權。`,
 					"info",
 				);
 				return;

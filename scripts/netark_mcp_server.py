@@ -240,9 +240,14 @@ def _run_closed_mcp_uninstall(cwd: str, target: str = "all", purge_memory: bool 
     if "pi" in targets:
         for bdir in ([brain_dir.strip()] if brain_dir.strip() else [".pi", ".netark"]):
             _prune_json_file(root / bdir / "mcp.json", root, _prune_mcp_netark, cleaned)
-            if (guard_ts := root / bdir / "extensions" / "netark-guard.ts").is_file():
-                guard_ts.unlink()
-                cleaned.append(f"{bdir}/extensions/netark-guard.ts (deleted)")
+            ext_dir = root / bdir / "extensions"
+            for ext_name in ("netark-guard.ts", "model-router.ts", "web-research.ts", "session-handover.ts"):
+                if (ext_p := ext_dir / ext_name).is_file():
+                    ext_p.unlink()
+                    cleaned.append(f"{bdir}/extensions/{ext_name} (deleted)")
+            if (sub_dir := ext_dir / "subagent").exists():
+                shutil.rmtree(sub_dir, ignore_errors=True)
+                cleaned.append(f"{bdir}/extensions/subagent (deleted)")
     if purge_memory and (root / "memory").exists():
         shutil.rmtree(root / "memory", ignore_errors=True)
         cleaned.append("memory/ (purged)")
