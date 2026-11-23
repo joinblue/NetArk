@@ -58,11 +58,12 @@ def check_web_and_ssrf_guard(tool_name: str, args: Dict[str, Any], policy: Optio
 def check_code_placement(rel_path: str, cwd: str, policy: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     rel = (rel_path or "").replace("\\", "/").lstrip("./")
     if not rel or not rel.lower().endswith(CODE_FILE_EXTS): return None
+    root = Path(cwd or ".").resolve()
+    if (root / rel).is_file(): return None
     pol = policy if isinstance(policy, dict) else {}
     raw_roots, raw_subs = pol.get("approved_code_roots"), pol.get("project_subdirs")
     roots = {str(r).strip().strip("/") for r in raw_roots if str(r).strip()} if isinstance(raw_roots, (list, tuple, set)) else APPROVED_CODE_ROOTS
     subdirs = {str(s).strip().strip("/") for s in raw_subs if str(s).strip()} if isinstance(raw_subs, (list, tuple, set)) else PROJECT_SUBDIRS
-    root = Path(cwd or ".").resolve()
     existing_projects = [p.name for p in sorted((root / "projects").iterdir()) if p.is_dir() and not p.name.startswith(".")] if (root / "projects").is_dir() else []
     proj_hint = f" Existing projects: {existing_projects}." if existing_projects else ""
     if "/" not in rel:
