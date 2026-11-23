@@ -2,6 +2,15 @@
 
 NetArk is packaged as a zero-dependency Python CLI & stdio MCP server (`requires-python >= 3.10`, `dependencies = []`). Target business repositories stay completely clean with **0 `.py` runtime files** copied into your codebase.
 
+> [!WARNING]
+> **⚠️ For Developers & AI Coding Agents: Do NOT `git clone` this repository into your project!**
+> - **NetArk (`netark-mcp`) is a global CLI & MCP server** designed to leave **0 `.py` runtime files** inside your target repository.
+> - **For AI Agents (Claude Code / Google Antigravity / Cursor / Pi)**: Read the raw docs first via `curl -fsSL https://raw.githubusercontent.com/joinblue/NetArk/main/README.md`, then install globally and initialize in place:
+>   ```bash
+>   uv tool install netark-mcp
+>   netark-mcp init --target agy --cwd /path/to/your-project   # or --target claude / memory
+>   ```
+
 ---
 
 ## 1. Install `netark-mcp`
@@ -48,7 +57,7 @@ netark-mcp init --lang en --cwd .
 ```
 
 ### Mode 2: Claude Code (MCP + Native Lifecycle Hooks)
-Wires `.mcp.json`, `.claude/settings.json` (`SessionStart`, `PreToolUse`, `PostToolUse`, `Stop`), slash commands in `.claude/commands/`, and `memory/`:
+Wires `.mcp.json`, `.claude/settings.json` (`SessionStart`, `PreToolUse`, `PostToolUse`, `Stop`), and `memory/`:
 
 ```bash
 netark-mcp init --target claude --lang en --cwd .
@@ -56,8 +65,8 @@ netark-mcp init --target claude --lang en --cwd .
 netark-mcp init --target claude --lang en --write-rules --cwd .
 ```
 
-### Mode 3: Google Antigravity (`agy` — MCP + Hooks + Workflows/Skills)
-Wires `.agents/hooks.json`, `.agents/plugins/netark/mcp_config.json`, `.agents/enterprise-policy.json`, `.agents/skills/`, `.agents/workflows/`, and `memory/`:
+### Mode 3: Google Antigravity (`agy` — MCP + Hooks)
+Wires `.agents/hooks.json`, `.agents/plugins/netark/mcp_config.json`, `.agents/enterprise-policy.json`, and `memory/`:
 
 ```bash
 netark-mcp init --target agy --lang en --cwd .

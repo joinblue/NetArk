@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "netark-mcp"
-version = "3.2.0"
+version = "3.2.1"
 description = "NetArk (N.E.T.A.R.K.) — Zero-Dependency Deterministic AI Coding Harness & Portable Markdown Governance MCP"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -91,6 +91,7 @@ include = [
   "memory/index/TAXONOMY.json",
   "docs/**",
   "LICENSE",
+  "CLA.md",
   "README.md",
   "README.zh-TW.md",
   "CONTRIBUTING.md",

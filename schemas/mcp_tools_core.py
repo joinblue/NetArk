@@ -345,7 +345,6 @@ def _merge_claude_hooks(cfg: Dict[str, Any], cls_hooks: Dict[str, Any]) -> None:
 
 
 def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_rules: bool = False, update_rules: bool = False) -> None:
-    prompts = ("handover.md", "dream.md", "team.md")
     if "agy" in targets:
         agy_guard = {
             "enabled": True,
@@ -359,8 +358,6 @@ def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_
         _merge_json_file(root / ".agents" / "plugins" / "netark" / "plugin.json", lambda c: c.setdefault("name", "netark") and None)
         _merge_json_file(root / ".agents" / "plugins" / "netark" / "mcp_config.json", lambda c: _merge_mcp_netark(c, bin_cmd))
         if write_rules or update_rules: _copy_asset_if_needed("templates/hosts/agy/AGENTS.md.tpl", root / "AGENTS.md", overwrite=update_rules)
-        for cmd_name in prompts: _copy_asset_if_needed(f"templates/hosts/pi/prompts/{cmd_name}", root / ".agents" / "workflows" / cmd_name)
-        for skill in ("root-cause-debugging", "safe-refactoring"): _copy_asset_if_needed(f"templates/skills/{skill}/SKILL.md", root / ".agents" / "skills" / skill / "SKILL.md")
     if "claude" in targets:
         cls_hooks = {
             "SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": f"{bin_cmd} hook --session-start-mode claude --cwd ."}]}],
@@ -370,7 +367,6 @@ def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_
         }
         _merge_json_file(root / ".claude" / "settings.json", lambda c: _merge_claude_hooks(c, cls_hooks))
         if write_rules or update_rules: _copy_asset_if_needed("templates/hosts/claude/CLAUDE.md.tpl", root / "CLAUDE.md", overwrite=update_rules)
-        for cmd_name in prompts: _copy_asset_if_needed(f"templates/hosts/pi/prompts/{cmd_name}", root / ".claude" / "commands" / cmd_name)
 
 
 def run_closed_mcp_init(cwd: str, target: str = "memory", lang: str = "zh-TW", bin_cmd: str = "netark-mcp", update_rules: bool = False, write_rules: bool = False) -> Dict[str, Any]:

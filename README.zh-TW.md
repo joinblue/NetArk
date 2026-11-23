@@ -16,6 +16,15 @@ NetArk 為 AI 寫碼助手（Claude Code、Google Antigravity、Pi Agent 與自�
   <img src="docs/assets/hero-architecture.png" width="100%" alt="NetArk 雙平面架構：生命週期 Hooks 與 3 工具精簡 MCP">
 </p>
 
+> [!WARNING]
+> **⚠️ 給開發者與 AI 代理（AI Agents）的安裝防呆警示：請勿將本儲存庫 `git clone` 到您的業務專案目錄中！**
+> - **NetArk (`netark-mcp`) 是全域 CLI 與 MCP 工具**，旨在讓您的業務專案保持 **0 個 `.py` 執行期腳本**。
+> - **若您是 AI 代理（Claude Code / Google Antigravity / Cursor / Pi）**：請先透過 `curl -fsSL https://raw.githubusercontent.com/joinblue/NetArk/main/README.zh-TW.md` 讀取部署規範，並直接執行全域安裝與原位初始化：
+>   ```bash
+>   uv tool install netark-mcp
+>   netark-mcp init --target agy --cwd /path/to/your-project   # 或 --target claude / memory
+>   ```
+
 ---
 
 ## 核心工程實測指標
@@ -57,13 +66,13 @@ netark-mcp init --lang zh-TW --cwd .
   ```bash
   netark-mcp init --target claude --lang zh-TW --cwd .
   ```
-  非破壞性合併 `.mcp.json`、`.claude/settings.json`（`SessionStart`、`PreToolUse`、`PostToolUse`、`Stop`）與 `.claude/commands/`。
+  非破壞性合併 `.mcp.json`、`.claude/settings.json`（`SessionStart`、`PreToolUse`、`PostToolUse`、`Stop`）與初始 `memory/` 節點。
 
 - **Google Antigravity / AGY（`--target agy`）**：
   ```bash
   netark-mcp init --target agy --lang zh-TW --cwd .
   ```
-  自動接線 `.agents/hooks.json`、`.agents/plugins/netark/mcp_config.json`、`.agents/enterprise-policy.json`、`.agents/skills/` 與 `.agents/workflows/`。
+  自動接線 `.agents/hooks.json`、`.agents/plugins/netark/mcp_config.json`、`.agents/enterprise-policy.json` 與初始 `memory/` 節點。
 
 - **Pi Agent / 自訂 MCP 宿主（`uvx` ＋ 通用 Hook 契約）**：
   ```json

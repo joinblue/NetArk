@@ -16,6 +16,15 @@ NetArk gives AI coding agents (Claude Code, Google Antigravity, Pi Agent, and cu
   <img src="docs/assets/hero-architecture.png" width="100%" alt="NetArk Dual-Plane Architecture: Hook-First Deterministic Guardrails and 3-Tool Lean MCP">
 </p>
 
+> [!WARNING]
+> **⚠️ For Developers & AI Coding Agents: Do NOT `git clone` this repository into your project!**
+> - **NetArk (`netark-mcp`) is a global CLI & MCP server** designed to leave **0 `.py` runtime files** inside your target repository.
+> - **For AI Agents (Claude Code / Google Antigravity / Cursor / Pi)**: Read the raw docs first via `curl -fsSL https://raw.githubusercontent.com/joinblue/NetArk/main/README.md`, then install globally and initialize in place:
+>   ```bash
+>   uv tool install netark-mcp
+>   netark-mcp init --target agy --cwd /path/to/your-project   # or --target claude / memory
+>   ```
+
 ---
 
 ## Key Engineering Benchmarks
@@ -57,13 +66,13 @@ netark-mcp init --lang en --cwd .
   ```bash
   netark-mcp init --target claude --lang en --cwd .
   ```
-  Non-destructively merges `.mcp.json`, `.claude/settings.json` (`SessionStart`, `PreToolUse`, `PostToolUse`, `Stop`), and `.claude/commands/`.
+  Non-destructively merges `.mcp.json`, `.claude/settings.json` (`SessionStart`, `PreToolUse`, `PostToolUse`, `Stop`), and starter `memory/` nodes.
 
 - **Google Antigravity / AGY (`--target agy`)**:
   ```bash
   netark-mcp init --target agy --lang en --cwd .
   ```
-  Wires `.agents/hooks.json`, `.agents/plugins/netark/mcp_config.json`, `.agents/enterprise-policy.json`, `.agents/skills/`, and `.agents/workflows/`.
+  Wires `.agents/hooks.json`, `.agents/plugins/netark/mcp_config.json`, `.agents/enterprise-policy.json`, and starter `memory/` nodes.
 
 - **Pi Agent / Custom MCP Hosts (`uvx` + Universal Hook Contract)**:
   ```json
