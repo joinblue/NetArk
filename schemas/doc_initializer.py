@@ -165,8 +165,7 @@ def init_memory_node(  # noqa: god-function
         if ref and ref not in outbound:
             outbound.append(ref)
 
-    body_for_hash = raw_body.lstrip("\r\n") if raw_body.startswith("\r\n") else (raw_body.lstrip("\n") if raw_body.startswith("\n") else raw_body)
-    content_checksum = hashlib.sha256(body_for_hash.encode("utf-8")).hexdigest()[:16]
+    content_checksum = sv.compute_body_checksum(raw_body)
 
     actual_counts = _compute_epistemic_counts(raw_body)
     is_official = artifact_type in sv.OFFICIAL_TYPES

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-import builtins, datetime, hashlib, json, os, re, sys
+import builtins, datetime, json, os, re, sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
@@ -12,14 +12,15 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from schemas import schema_validator as sv  # noqa: E402
-from schemas.code_hygiene_ast import verify_spec_ast_symbols  # noqa: E402
 from schemas.codebook_compiler import render_context_map, render_private_context_map  # noqa: E402
-from schemas.doc_initializer import allocate_next_node_id, collect_existing_topics, default_lifecycle_status, normalize_scope_profile, normalize_topic_tag  # noqa: E402
-from schemas.netark_guard_core import check_prewrite_secret_lint  # noqa: E402
+from schemas.doc_initializer import allocate_next_node_id, collect_existing_topics, normalize_scope_profile, normalize_topic_tag  # noqa: E402
+from schemas.guard_slots_and_audit import _resolve_audit_path, verify_enterprise_license  # noqa: E402
+from schemas.mcp_record_builder import (  # noqa: E402,F401
+    INTENT_ROUTES, _build_record_frontmatter, _dump_yaml_frontmatter, _emit_yaml_lines,
+    _resolve_record_target, _validate_path_list, _validate_record_inputs,
+)
 from schemas.topology_graph import check_topology_graph, load_all_memory_nodes, parse_markdown_frontmatter, query_codebook_entry  # noqa: E402
-from schemas.workspace_placement_guard import check_spec_blueprint_required, check_spec_filename_format  # noqa: E402
-from scripts.auto_update_map import build_public_and_private_indices, extract_wikilinks_outside_fenced_blocks, verify_no_plaintext_secrets_before_index_write  # noqa: E402
-from scripts.netark_guard_daemon import _resolve_audit_path, verify_enterprise_license  # noqa: E402
+from scripts.auto_update_map import build_public_and_private_indices, verify_no_plaintext_secrets_before_index_write  # noqa: E402
 from scripts.netark_init import CORE_MEMORY_MAP, DEFAULT_ENTERPRISE_POLICY  # noqa: E402
 from scripts.sync_doc_metadata import apply_supersedes_transitions  # noqa: E402
 
@@ -28,13 +29,6 @@ MCP_TOOLS_SCHEMA: List[Dict[str, Any]] = [
     {"name": "netark_record", "description": "Record md", "inputSchema": {"type": "object", "properties": {"intent": {"enum": ["wiki", "note", "sop", "glossary", "blueprint", "spec", "audit", "handover"]}, "title": {"type": "string"}, "body": {"type": "string"}, "mode": {"enum": ["preflight", "write"]}, "domain_code": {}, "slug": {}, "topic": {}, "parent_blueprint": {}, "shard_modules": {}, "stub_paths": {}, "scope_profile": {}, "supersedes": {}, "relates_to": {}, "affected_paths": {}}, "required": ["intent", "title", "body"]}},
     {"name": "netark_guard", "description": "Guard/handover/setup (never whole-read CONTEXT_MAP.md past '## 2.')", "inputSchema": {"type": "object", "properties": {"action": {"enum": ["status", "oracle", "handover", "setup"], "description": "handover=tracks/objective; oracle=schema+DAG; status=policy; setup=hooks"}}, "required": ["action"]}},
 ]
-
-INTENT_ROUTES: Dict[str, Tuple[str, str, str]] = {
-    "wiki": ("memory/wiki", "310", "wiki"), "note": ("memory/wiki", "310", "note"),
-    "sop": ("memory/wiki", "320", "sop"), "glossary": ("memory/wiki", "330", "glossary"),
-    "blueprint": ("memory/specs", "200", "blueprint"),
-    "spec": ("memory/specs", "500", "spec"), "audit": ("memory/audits", "700", "audit"), "handover": ("memory/episodic", "900", "digest"),
-}
 
 
 def get_embedded_asset_text(rel_path: str) -> str:
@@ -74,140 +68,6 @@ def compile_and_write_indices(root: Path) -> Dict[str, Any]:
     return {"total_nodes": index["total_nodes"], "private_nodes": private_index.get("total_nodes", 0), "map_path": "memory/codex/CONTEXT_MAP.md"}
 
 
-def _emit_yaml_lines(data: Dict[str, Any], indent: int = 0) -> List[str]:
-    pad, lines = "  " * indent, []
-    for k, v in data.items():
-        lines.extend([f"{pad}{k}:", *_emit_yaml_lines(v, indent + 1)] if isinstance(v, dict) else [f"{pad}{k}: {json.dumps(v, ensure_ascii=False)}"])
-    return lines
-
-
-def _dump_yaml_frontmatter(fm: Dict[str, Any]) -> str:
-    return "---\n" + "\n".join(_emit_yaml_lines(fm)) + "\n---\n"
-
-
-def _resolve_record_target(intent: str, title: str, slug: str, dom_arg: str, root: Path) -> Tuple[str, str, str, str]:
-    target_dir, default_dom, art_type = INTENT_ROUTES[intent]
-    dom = dom_arg.strip() or default_dom
-    clean_slug = re.sub(r"[^A-Za-z0-9]+", "_", (slug or title or "ENTRY")).strip("_").upper() or "ENTRY"
-    if intent == "handover":
-        if not slug.strip():
-            return f"{target_dir}/HANDOVER.md", dom, art_type, "HANDOVER"
-        max_seq = max((int(m.group(1)) for p in (root / target_dir).glob("HANDOVER_*.md") if (m := re.match(r"^HANDOVER_(\d{2})_", p.name))), default=1)
-        clean_ho = re.sub(r"^\d{2}_", "", clean_slug) or clean_slug
-        return f"{target_dir}/HANDOVER_{max_seq + 1:02d}_{clean_ho}.md", dom, art_type, f"HANDOVER_{clean_ho}"
-    tdir = root / target_dir
-    existing = list(tdir.glob(f"{dom}_*.md")) if tdir.is_dir() else []
-    max_seq = max((int(m.group(1)) for p in existing if (m := re.match(rf"^{re.escape(dom)}_(\d{{2}})_", p.name))), default=0)
-    return f"{target_dir}/{dom}_{max_seq + 1:02d}_{clean_slug}.md", dom, art_type, clean_slug
-
-
-def _validate_affected_paths(affected_paths: Any, rel_path: str, root: Path, errors: List[str], prescriptions: List[str]) -> None:
-    if affected_paths is None: return
-    if not isinstance(affected_paths, list):
-        errors.append("affected_paths must be an array of workspace-relative paths.")
-        return
-    for raw_p in affected_paths:
-        p_str = str(raw_p).strip().replace("\\", "/")
-        if not p_str: continue
-        if sv.is_gitignored_path(p_str, root):
-            errors.append(f"[AS-03 Gitignore Violation] affected_paths cannot bind gitignored path: {p_str}")
-            prescriptions.append(f"Remove '{p_str}' from affected_paths.")
-            continue
-        cand = (root / p_str).resolve()
-        if not cand.is_relative_to(root) or (not cand.exists() and p_str != rel_path):
-            errors.append(f"[AS-03 Grounding] affected_paths target does not exist: {p_str}")
-            prescriptions.append(f"Create '{p_str}' first or omit it from affected_paths.")
-
-
-def _validate_record_inputs(
-    intent: str, mode: str, title: str, body: str, rel_path: str, dom: str, art_type: str, affected_paths: Any, root: Path,
-    stub_paths: Any = None, scope_err: str | None = None, supersedes: Any = None, shard_modules: Any = None, parent_blueprint: Any = None,
-    scope_profile: Any = None,
-) -> Tuple[Dict[str, int], int, int, List[str], List[str]]:
-    errors, prescriptions = [], []
-    if mode not in {"preflight", "write"}: errors.append(f"Invalid mode '{mode}'. Expected 'preflight' or 'write'.")
-    if not title.strip() or not body.strip(): errors.append("Both 'title' and 'body' must be non-empty.")
-    if scope_err: errors.append(scope_err)
-    if supersedes is not None and not isinstance(supersedes, list): errors.append("supersedes must be an array of node_id or node_key strings.")
-    if shard_modules is not None and not isinstance(shard_modules, list): errors.append("shard_modules must be an array of node_key strings.")
-    if parent_blueprint is not None and not isinstance(parent_blueprint, str): errors.append("parent_blueprint must be a string or null.")
-    if (sec_err := check_prewrite_secret_lint(f"{title}\n{body}", target_path=rel_path, cwd=str(root))):
-        errors.append(sec_err["reason"])
-        prescriptions.append("Remove plaintext secrets and read via os.environ.get().")
-    if (fn_err := check_spec_filename_format(rel_path, str(root))):
-        errors.append(fn_err["reason"])
-    if not re.match(r"^\d{3}$", dom) or dom not in sv.load_valid_taxonomy_codes(root):
-        errors.append(f"[AS-07 Taxonomy] Unregistered or invalid domain_code '{dom}'.")
-        prescriptions.append("Use a registered 3-digit domain_code from memory/index/TAXONOMY.json.")
-    for port_err in sv.check_as05_portability(title) + sv.check_as05_portability(body):
-        errors.append(port_err)
-        prescriptions.append("Replace local user/home absolute paths with workspace-relative paths.")
-    if str(root) in body or str(Path.home()) in body:
-        errors.append("[AS-05 Portability] Absolute workspace or home path detected in body.")
-        prescriptions.append("Use workspace-relative paths instead of absolute machine paths.")
-    budget, prose_lc = sv.PROSE_LINE_BUDGETS.get(art_type, 500), sv.count_prose_lines(body)
-    if prose_lc > budget:
-        errors.append(f"[ProseBudget] Prose lines ({prose_lc}) exceed budget ({budget}) for '{art_type}'.")
-        prescriptions.append("Convert long prose paragraphs into concise Markdown tables or bullets.")
-    if rel_path == "memory/episodic/HANDOVER.md" and len(body.splitlines()) > 39:
-        errors.append("[ProseBudget / HANDOVER] Body exceeds 39 lines (total file must stay <= 65 lines).")
-    counts = {k: len(pat.findall(body)) for k, pat in sv.EPISTEMIC_TAGS.items()}
-    if intent in ("spec", "blueprint", "audit") and (counts["fact_count"] + counts["inferred_count"] < 1 or counts["unverified_count"] > 0):
-        errors.append("[AS-02 Epistemic Gate] Official blueprint/spec/audit requires >=1 '- [FACT]'/'- [INFERRED]' item and 0 '[UNVERIFIED]' items.")
-        prescriptions.append("Prefix at least one list item with '- [FACT] ' or '- [INFERRED] ' and remove '[UNVERIFIED]'.")
-    _validate_affected_paths(affected_paths, rel_path, root, errors, prescriptions)
-    if intent in ("spec", "blueprint"):
-        for e in verify_spec_ast_symbols(body, affected_paths if isinstance(affected_paths, list) else [], stub_paths if isinstance(stub_paths, list) else [], root):
-            errors.append(e)
-            prescriptions.append("Align spec symbol names with actual AST symbols in affected_paths or mark as '新增'.")
-    if intent == "spec":
-        tmp_fm = {"artifact_type": art_type, "context_index": {"domain_code": dom}, "scope_profile": scope_profile if isinstance(scope_profile, dict) else {}, "topology": {"parent_blueprint": parent_blueprint, "affected_paths": affected_paths if isinstance(affected_paths, list) else [], "stub_paths": stub_paths if isinstance(stub_paths, list) else []}}
-        if (bp_err := check_spec_blueprint_required(tmp_fm, body, rel_path)):
-            errors.append(bp_err["reason"])
-            prescriptions.append("Create a blueprint first and pass parent_blueprint.")
-    return counts, prose_lc, budget, errors, prescriptions
-
-
-def _build_record_frontmatter(
-    node_id: str, art_type: str, dom: str, node_slug: str, title: str, rel_path: str, checksum: str,
-    counts: Dict[str, int], body: str, relates_to: Any, affected_paths: Any, root: Path, stub_paths: Any = None,
-    topic_tag: str = "General", has_explicit_topic: bool = False, parent_blueprint: Any = None,
-    shard_modules: Any = None, supersedes: Any = None, scope_profile: Dict[str, Any] | None = None,
-) -> Dict[str, Any]:
-    today, is_official = datetime.date.today().isoformat(), art_type in sv.OFFICIAL_TYPES
-    has_soul = any(n.get("context_index", {}).get("node_key") == "000.SOUL.v1" for n in load_all_memory_nodes(root).values())
-    deps = [str(x) for x in relates_to if str(x).strip()] if isinstance(relates_to, list) and relates_to else (["000.SOUL.v1"] if has_soul else [])
-    aff = [str(x).strip().replace("\\", "/") for x in affected_paths if str(x).strip()] if isinstance(affected_paths, list) and affected_paths else [rel_path]
-    clean_title = re.sub(r"[\r\n\"]+", " ", title).strip()
-    summary = clean_title if 10 <= len(clean_title) <= 160 else f"NetArk {art_type}: {clean_title}"[:160]
-    summary = f"{summary} governance node"[:160] if len(summary) < 10 else summary
-    has_disk_val = (root / "schemas" / "schema_validator.py").exists()
-    oracle = ({
-        "type": "schema_check" if has_disk_val else "bash_assert",
-        "command": f"python3 schemas/schema_validator.py --file {rel_path}" if has_disk_val else f"test -f {rel_path}",
-        "expected_exit_code": 0, "falsifiable_criterion": f"Fail if {rel_path} is missing or fails schema checks.",
-    } if is_official else None)
-    init_status, reviewer_obj = default_lifecycle_status(art_type, counts.get("unverified_count", 0))
-    facet = "NetArk:Episodic:Handover:SessionState" if (art_type == "digest" and not has_explicit_topic) else f"NetArk:{topic_tag}:{art_type.title()}:{'Official' if is_official else art_type.title()}"
-    sups = [str(x).strip() for x in supersedes if str(x).strip()] if isinstance(supersedes, list) else []
-    shards = [str(x).strip() for x in shard_modules if str(x).strip()] if isinstance(shard_modules, list) else []
-    stubs = [str(x).strip().replace("\\", "/") for x in stub_paths if str(x).strip()] if isinstance(stub_paths, list) else []
-    pb = str(parent_blueprint).strip() if isinstance(parent_blueprint, str) and parent_blueprint.strip() else None
-    topo: Dict[str, Any] = {"depends_on": deps, "supersedes": sups, "conflicts_with": [], "outbound_links": extract_wikilinks_outside_fenced_blocks(body), "backlinks": [], "verified_by": ["schemas/schema_validator.py" if has_disk_val else "netark-mcp"], "affected_paths": aff}
-    if art_type in ("blueprint", "spec") or pb is not None: topo["parent_blueprint"] = pb
-    if art_type == "blueprint" or shards: topo["shard_modules"] = shards
-    if art_type in ("blueprint", "spec") or stubs: topo["stub_paths"] = stubs
-    return {
-        "node_id": node_id, "artifact_type": art_type, "access_tier": "restricted" if is_official else "standard",
-        "priority": "high" if (is_official or art_type == "digest") else "normal",
-        "status": init_status, "created_at": today, "updated_at": today, "author": {"role": "architect", "model": "agy/orchestrator-argon"},
-        "reviewer": reviewer_obj, "content_checksum": checksum, "epistemic_profile": counts, "verification_oracle": oracle,
-        **({"scope_profile": scope_profile} if scope_profile is not None else {}),
-        "context_index": {"domain_code": dom, **({"subdomain": "910"} if art_type == "digest" and dom == "900" else {}), "node_key": f"{dom}.{node_slug}.v1", **({"topic": topic_tag} if has_explicit_topic else {}), "artifact_track": "official" if is_official else "wiki", "facet_tags": [facet], "keywords": [node_slug, art_type], "summary_1line": summary},
-        "topology": topo,
-    }
-
-
 def _handle_netark_record(args: Dict[str, Any], root: Path, lic: Dict[str, Any]) -> Dict[str, Any]:
     intent = str(args.get("intent") or "").strip().lower()
     if intent not in INTENT_ROUTES:
@@ -228,7 +88,7 @@ def _handle_netark_record(args: Dict[str, Any], root: Path, lic: Dict[str, Any])
         body_clean = f"# {title.strip()}\n\n{body_clean}"
     body_clean += "\n"
     node_id = allocate_next_node_id(root / "memory")
-    fm = _build_record_frontmatter(node_id, art_type, dom, node_slug, title, rel_path, hashlib.sha256(body_clean.encode("utf-8")).hexdigest()[:16], counts, body_clean, args.get("relates_to"), args.get("affected_paths"), root, args.get("stub_paths"), resolved_topic, bool(raw_topic), args.get("parent_blueprint"), args.get("shard_modules"), args.get("supersedes"), norm_scope)
+    fm = _build_record_frontmatter(node_id, art_type, dom, node_slug, title, rel_path, sv.compute_body_checksum(body_clean), counts, body_clean, args.get("relates_to"), args.get("affected_paths"), root, args.get("stub_paths"), resolved_topic, bool(raw_topic), args.get("parent_blueprint"), args.get("shard_modules"), args.get("supersedes"), norm_scope)
     target_path = root / rel_path
     target_path.parent.mkdir(parents=True, exist_ok=True)
     existed, tmp_path = target_path.exists(), target_path.with_name(f".{target_path.name}.tmp")
@@ -330,6 +190,7 @@ def _copy_asset_if_needed(asset_rel: str, dest_path: Path, overwrite: bool = Fal
 def _mcp_server_entry(bin_cmd: str, include_env: bool = True) -> Dict[str, Any]:
     return {"command": bin_cmd, "args": ["serve"], **({"env": {"NETARK_LICENSE_KEY": "${NETARK_LICENSE_KEY}", "NETARK_MEMORY_ROOT": "${NETARK_MEMORY_ROOT}"}} if include_env else {})}
 
+
 def _merge_mcp_netark(cfg: Dict[str, Any], bin_cmd: str, include_env: bool = True) -> None:
     if not isinstance(cfg.get("mcpServers"), dict): cfg["mcpServers"] = {}
     servers, entry = cfg["mcpServers"], _mcp_server_entry(bin_cmd, include_env=include_env)
@@ -338,16 +199,19 @@ def _merge_mcp_netark(cfg: Dict[str, Any], bin_cmd: str, include_env: bool = Tru
         elif (kept := {k: v for k, v in old["env"].items() if v not in ("${NETARK_LICENSE_KEY}", "${NETARK_MEMORY_ROOT}")}): entry["env"] = kept
     servers["netark"] = entry
 
+
 def _list_asset_rels(prefix: str) -> List[str]:
     norm, base = prefix.replace("\\", "/").strip("/") + "/", Path(__file__).resolve().parents[1]
     if isinstance((assets := getattr(builtins, "__NETARK_EMBEDDED_ASSETS__", None)), dict): return sorted(k for k in assets if k.startswith(norm))
     return sorted(str(p.relative_to(base)).replace("\\", "/") for p in (base / norm.rstrip("/")).rglob("*") if p.is_file()) if (base / norm.rstrip("/")).is_dir() else []
+
 
 def _merge_claude_hooks(cfg: Dict[str, Any], cls_hooks: Dict[str, Any]) -> None:
     if not isinstance(cfg.get("hooks"), dict): cfg["hooks"] = {}
     hooks = cfg["hooks"]
     for ev, entries in cls_hooks.items():
         hooks[ev] = [x for x in (hooks.get(ev) if isinstance(hooks.get(ev), list) else []) if "netark-mcp hook" not in json.dumps(x)] + entries
+
 
 def _configure_closed_hosts(root: Path, targets: List[str], bin_cmd: str, write_rules: bool = False, update_rules: bool = False, pi_brain_dir: str = ".pi") -> None:
     if "agy" in targets:

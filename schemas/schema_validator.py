@@ -7,11 +7,10 @@ import argparse
 import hashlib
 import json
 import re
-import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 SCHEMAS_DIR = Path(__file__).resolve().parent
 if str(SCHEMAS_DIR) not in sys.path:
@@ -21,13 +20,18 @@ from topology_graph import (  # type: ignore  # noqa: E402
     WIKI_TYPES,
     _match_gitignore_rule,
     check_as06_node_exclusivity,
+    check_stub_syntax,
     check_topology_graph,
+    collect_changed_memory_files,
     detect_unlinked_topology_references,
     is_gitignored_path,
+    is_self_schema_oracle,
     load_all_memory_nodes,
     parse_markdown_frontmatter,
+    run_cached_oracle,
+    split_top_level_and,
 )
-from code_hygiene_ast import verify_spec_ast_symbols  # type: ignore  # noqa: E402
+from code_hygiene_ast import find_residual_python_stubs, verify_spec_ast_symbols  # type: ignore  # noqa: E402
 from workspace_placement_guard import check_spec_blueprint_required  # type: ignore  # noqa: E402
 
 try: import jsonschema  # type: ignore
@@ -163,6 +167,12 @@ def validate_against_schema(data: Dict[str, Any], schema: Dict[str, Any], label:
     return errors
 
 
+def compute_body_checksum(body: str) -> str:
+    """Compute canonical 16-char SHA-256 checksum over Markdown body (stripping leading CRLF/LF)."""
+    body_for_hash = body.lstrip("\r\n") if body.startswith("\r\n") else (body.lstrip("\n") if body.startswith("\n") else body)
+    return hashlib.sha256(body_for_hash.encode("utf-8")).hexdigest()[:16]
+
+
 def validate_document(  # noqa: god-function
     md_path: Path,
     project_root: Path,
@@ -170,6 +180,9 @@ def validate_document(  # noqa: god-function
     node_schema: Dict[str, Any],
     run_oracle: bool = False,
     all_nodes: Dict[str, Dict[str, Any]] | None = None,
+    valid_tax_codes: Optional[Set[str]] = None,
+    oracle_cache: Optional[Dict[str, Tuple[int, str]]] = None,
+    checked_stubs: Optional[Set[Path]] = None,
 ) -> Tuple[Dict[str, Any] | None, List[str]]:
     errors: List[str] = []
     raw_content = md_path.read_text(encoding="utf-8")
@@ -185,12 +198,12 @@ def validate_document(  # noqa: god-function
     errors.extend(validate_against_schema(fm, node_schema, "ContextNodeSchema"))
 
     ctx_idx = fm.get("context_index") if isinstance(fm.get("context_index"), dict) else {}
-    valid_tax_codes = load_valid_taxonomy_codes(project_root)
+    tax_codes = valid_tax_codes if valid_tax_codes is not None else load_valid_taxonomy_codes(project_root)
     dom_code = ctx_idx.get("domain_code")
-    if isinstance(dom_code, str) and dom_code and dom_code not in valid_tax_codes:
+    if isinstance(dom_code, str) and dom_code and dom_code not in tax_codes:
         errors.append(f"[AS-07 Taxonomy Unregistered] 領域碼 {dom_code} 尚未註冊於 memory/index/TAXONOMY.json，請先編輯 TAXONOMY.json 註冊該分類或改用既有分類碼。")
     sub_code = ctx_idx.get("subdomain") or fm.get("subdomain")
-    if isinstance(sub_code, str) and sub_code and sub_code not in valid_tax_codes:
+    if isinstance(sub_code, str) and sub_code and sub_code not in tax_codes:
         errors.append(f"[AS-07 Taxonomy Unregistered] 子領域碼 {sub_code} 尚未註冊於 memory/index/TAXONOMY.json，請先編輯 TAXONOMY.json 註冊該分類或改用既有分類碼。")
 
     artifact_type = fm.get("artifact_type", "")
@@ -209,8 +222,7 @@ def validate_document(  # noqa: god-function
 
     content_checksum = fm.get("content_checksum")
     if content_checksum:
-        body_for_hash = body.lstrip("\r\n") if body.startswith("\r\n") else (body.lstrip("\n") if body.startswith("\n") else body)
-        actual_checksum = hashlib.sha256(body_for_hash.encode("utf-8")).hexdigest()[:16]
+        actual_checksum = compute_body_checksum(body)
         alt_checksum = hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
         if content_checksum not in (actual_checksum, alt_checksum):
             errors.append(f"[Checksum Mismatch] 內文 content_checksum ({content_checksum}) 與實際計算值 ({actual_checksum}) 不符！")
@@ -255,15 +267,16 @@ def validate_document(  # noqa: god-function
             errors.append(f"[AS-03 Grounding] topology.affected_paths 指向不存在的路徑: {rel_path}")
 
     for stub_rel in (topo.get("stub_paths") if isinstance(topo.get("stub_paths"), list) else []):
-        if not isinstance(stub_rel, str) or not stub_rel.strip():
-            continue
+        if not isinstance(stub_rel, str) or not stub_rel.strip(): continue
         stub_target = (project_root / stub_rel).resolve()
-        if not stub_target.exists():
-            errors.append(f"[AS-03 Stub Grounding] topology.stub_paths 指向不存在的路徑: {stub_rel}")
+        if is_gitignored_path(stub_rel, project_root):
+            errors.append(f"[AS-03 Gitignore Violation] topology.stub_paths 禁止綁定 .gitignore 忽略之路徑: {stub_rel}")
+        elif not stub_target.is_relative_to(project_root) or (not stub_target.exists() and status not in ("draft", "reviewing")):
+            errors.append(f"[AS-03 Stub Grounding] topology.stub_paths 指向不存在或越界的路徑: {stub_rel}")
         elif status in ("stub_ready", "verified") and stub_rel.endswith(".py") and stub_target.is_file():
-            compile_proc = subprocess.run([sys.executable, "-m", "py_compile", str(stub_target)], cwd=str(project_root), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=15)
-            if compile_proc.returncode != 0:
-                errors.append(f"[AS-03 Stub Syntax Failed] 空殼或測試檔 `{stub_rel}` 語法編譯失敗: {(compile_proc.stderr or compile_proc.stdout or '').strip()}")
+            if compile_err := check_stub_syntax(stub_target, checked_stubs): errors.append(f"[AS-03 Stub Syntax Failed] 空殼或測試檔 `{stub_rel}` 語法編譯失敗: {compile_err}")
+            elif status == "verified" and not stub_target.name.startswith("test_") and not stub_rel.endswith("_test.py"):
+                if rem := find_residual_python_stubs(stub_target): errors.append(f"[AS-03 Residual Stub] 節點已標記 verified，但 `{stub_rel}` 仍殘留未實作空殼: {', '.join(rem[:8])}")
 
     if artifact_type in ("spec", "blueprint"):
         errors.extend(verify_spec_ast_symbols(body, topo.get("affected_paths") or [], topo.get("stub_paths") or [], project_root))
@@ -286,10 +299,8 @@ def validate_document(  # noqa: god-function
         if isinstance(oracle, dict) and oracle.get("command"):
             cmd, expected_code = oracle.get("command", ""), oracle.get("expected_exit_code", 0)
             if cmd and status != "stub_ready":
-                safe_cmd = re.sub(r"\s+--run-oracle\b", "", cmd) if "schema_validator.py" in cmd else cmd
-                proc = subprocess.run(safe_cmd, shell=True, cwd=str(project_root), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30)
-                if proc.returncode != expected_code:
-                    errors.append(f"[AS-03 Oracle Failed] 指令 `{cmd}` 回傳碼 {proc.returncode} != 預期 {expected_code}。輸出: {proc.stderr.strip() or proc.stdout.strip()}")
+                if oracle_err := run_cached_oracle(cmd, expected_code, md_path, project_root, oracle_cache):
+                    errors.append(oracle_err)
         elif is_official:
             errors.append("[AS-03 Oracle] 公文軌文件缺少 verification_oracle 執行命令！")
 
@@ -322,6 +333,7 @@ def main() -> int:
     parser.add_argument("--project-root", default=".", help="Project root directory")
     parser.add_argument("--file", help="Validate a single Markdown file")
     parser.add_argument("--all", action="store_true", help="Validate all documents across memory/ (default)")
+    parser.add_argument("--changed-only", action="store_true", help="Validate only git-changed memory/*.md files")
     parser.add_argument("--run-oracle", action="store_true", help="Execute verification_oracle commands")
     args = parser.parse_args()
 
@@ -330,22 +342,29 @@ def main() -> int:
     header_schema = json.loads((schemas_dir / "artifact_header.schema.json").read_text(encoding="utf-8"))
     node_schema = json.loads((schemas_dir / "context_node.schema.json").read_text(encoding="utf-8"))
 
-    md_files = (
-        [Path(args.file).resolve()]
-        if args.file
-        else sorted(p for p in (project_root / "memory").rglob("*.md") if p.name != "CONTEXT_MAP.md")
-    )
-    if not md_files:
-        print("⚠️ No governed Markdown memory nodes found in memory/.")
-        return 0
+    if args.file:
+        md_files = [Path(args.file).resolve()]
+    elif args.changed_only:
+        md_files = collect_changed_memory_files(project_root)
+    else:
+        md_files = sorted(p for p in (project_root / "memory").rglob("*.md") if p.name != "CONTEXT_MAP.md")
 
     existing_nodes = load_all_memory_nodes(project_root)
+    if not md_files and not args.changed_only:
+        print("⚠️ No governed Markdown memory nodes found in memory/.")
+        return 0
+    if not md_files and args.changed_only:
+        print("✅ No changed Markdown memory nodes to validate.")
+
+    valid_tax_codes = load_valid_taxonomy_codes(project_root)
+    oracle_cache: Dict[str, Tuple[int, str]] = {}
+    checked_stubs: Set[Path] = set()
     all_nodes: Dict[str, Dict[str, Any]] = {}
     total_errors = 0
 
     for md_file in md_files:
         rel = md_file.relative_to(project_root) if md_file.is_relative_to(project_root) else md_file
-        fm, errs = validate_document(md_file, project_root, header_schema, node_schema, args.run_oracle, all_nodes=existing_nodes)
+        fm, errs = validate_document(md_file, project_root, header_schema, node_schema, args.run_oracle, all_nodes=existing_nodes, valid_tax_codes=valid_tax_codes, oracle_cache=oracle_cache, checked_stubs=checked_stubs)
         if fm and "node_id" in fm:
             all_nodes[fm["node_id"]] = fm
         if errs:
@@ -362,8 +381,9 @@ def main() -> int:
             if fm:
                 _emit_post_pass_warnings(md_file, project_root, node_id, fm, existing_nodes)
 
-    if not args.file and all_nodes:
-        topo_errors = check_topology_graph(all_nodes)
+    dag_nodes = {**existing_nodes, **all_nodes} if args.changed_only else all_nodes
+    if not args.file and dag_nodes:
+        topo_errors = check_topology_graph(dag_nodes)
         if topo_errors:
             total_errors += len(topo_errors)
             print("❌ Topology Graph Check: FAILED")

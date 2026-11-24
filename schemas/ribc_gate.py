@@ -191,7 +191,7 @@ def evaluate_subagent_invocation(tool_name: str, tool_args: Dict[str, Any], cwd:
 
 
 REMEDIATION_REGISTRY: Dict[str, Tuple[str, str]] = {
-    "SIDECAR-GATE": ("memory/specs/500_04_SHARD_NEXUS_HOOK_ENHANCEMENTS.md", "Delegate large-file digestion to invoke_subagent(TypeName='research') / Task(subagent_type='Explore') or nexus-sidecar."),
+    "SIDECAR-GATE": ("memory/specs/500_04_SHARD_NEXUS_HOOK_ENHANCEMENTS.md", "Delegate large-file digestion to invoke_subagent(TypeName='research') / Task(subagent_type='Explore')."),
     "SPEC-RIBC-GATE": ("memory/specs/500_02_SHARD_RIBC_GATE.md", "Path A (Readonly): set Role/TypeName to a readonly whitelist role (research, Explore, Plan, scout, auditor, reviewer, challenger, architect). Path B (Construction): provide [R] path, [I] line cap, [B] bounds/errors, [C] contracts (>=60 chars)."),
     "SEC-CRED": ("memory/codex/100_ARCH_RULES.md", "Never read/write .env*, auth.json, or key files; use os.environ.get('KEY_NAME') or *.example templates."),
     "SEC-CONTROL-PLANE": ("memory/codex/100_ARCH_RULES.md", "Control-plane updates require explicit human confirmation or authorized governance mode."),
@@ -207,7 +207,7 @@ REMEDIATION_REGISTRY: Dict[str, Tuple[str, str]] = {
     "MCP-PROB-01-REDIRECT": ("memory/specs/500_03_SHARD_CLOSED_MCP_PACKAGE.md", "Use MCP netark_record(intent=..., title=..., body=..., mode='preflight'|'write') instead of direct writes."),
     "SPEC-AST-SYNC-GATE": ("memory/specs/500_04_SHARD_NEXUS_HOOK_ENHANCEMENTS.md", "Cite real AST public symbols from affected_paths or tag planned/new files with stub/new intent."),
     "SPEC-BLUEPRINT-REQUIRED": ("memory/specs/500_05_SHARD_LIFECYCLE_AND_STEP_GATE.md", "Create a Master Blueprint (netark_record intent='blueprint') first, then bind this shard spec via topology.parent_blueprint."),
-    "STUB-FIRST-GATE": ("memory/specs/500_05_SHARD_LIFECYCLE_AND_STEP_GATE.md", "Create/update a Shard Spec (status: stub_ready) binding this module in stub_paths/affected_paths before writing module code."),
+    "STUB-FIRST-GATE": ("memory/specs/500_05_SHARD_LIFECYCLE_AND_STEP_GATE.md", "Bind the new module in a draft/reviewing Spec's topology.stub_paths -> create a Python stub skeleton (pass/.../raise NotImplementedError) -> promote Spec to status: 'stub_ready' -> implement full code."),
     "CODE-ARROW-NESTING": ("memory/specs/100_01_SHARD_AST_DLP_GUARD.md", "Flatten control-flow nesting to <=4 layers using Early-Return guard clauses or helper functions."),
     "CODE-SILENT-EXCEPT": ("memory/specs/100_01_SHARD_AST_DLP_GUARD.md", "Handle or log exceptions explicitly, or annotate intentional fallbacks with '# noqa: silent-except'."),
     "CODE-NESTED-LOOPS": ("memory/specs/100_01_SHARD_AST_DLP_GUARD.md", "Flatten loop nesting to <=2 layers via helper extraction or dict/set lookups."),

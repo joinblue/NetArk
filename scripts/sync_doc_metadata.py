@@ -323,8 +323,7 @@ def sync_governed_markdown(md_path: Path, project_root: Path, today_str: str | N
             counts_changed = counts_changed or did_set
     checksum_changed = False
     if "content_checksum" in fm:
-        body_for_hash = new_body.lstrip("\r\n") if new_body.startswith("\r\n") else (new_body.lstrip("\n") if new_body.startswith("\n") else new_body)
-        new_chk = hashlib.sha256(body_for_hash.encode("utf-8")).hexdigest()[:16]
+        new_chk = sv.compute_body_checksum(new_body)
         if fm.get("content_checksum") != new_chk: new_raw_fm, checksum_changed = surgical_try_set_scalar(new_raw_fm, "content_checksum", f'"{new_chk}"')
     date_changed = False
     if str(fm.get("created_at", "")) > today_str: new_raw_fm, date_changed = surgical_try_set_scalar(new_raw_fm, "created_at", today_str)

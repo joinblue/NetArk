@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "schemas"))
 from code_hygiene_ast import discover_workspace_code_files, get_brain_rel_dir, scan_code_intelligence_single_pass  # type: ignore
 from codebook_compiler import compile_codebook_map, render_context_map, render_private_context_map  # type: ignore
 from netark_guard_core import scan_plaintext_secrets  # type: ignore
-from schema_validator import is_gitignored_path, parse_markdown_frontmatter  # type: ignore
+from schema_validator import compute_body_checksum, is_gitignored_path, parse_markdown_frontmatter  # type: ignore
 from topology_graph import query_codebook_entry  # type: ignore
 
 build_codebook_map = compile_codebook_map
@@ -78,6 +78,63 @@ def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
+_FM_RE = re.compile(r"^(\ufeff?---\r?\n)([\s\S]*?)(\r?\n---(?:\r?\n|$))([\s\S]*)$")
+_CHK_LINE_RE = re.compile(r'^([ \t]*content_checksum:[ \t]*)(["\']?)[0-9a-fA-F]+\2([ \t]*)$', re.MULTILINE)
+
+
+def _refresh_frontmatter_checksum(raw_text: str) -> str:
+    """Recompute frontmatter content_checksum in-place while preserving indentation and quote style."""
+    m = _FM_RE.match(raw_text)
+    if not m or "content_checksum:" not in m.group(2):
+        return raw_text
+    new_chk = compute_body_checksum(m.group(4))
+    new_fm = _CHK_LINE_RE.sub(rf"\g<1>\g<2>{new_chk}\g<2>\g<3>", m.group(2), count=1)
+    return f"{m.group(1)}{new_fm}{m.group(3)}{m.group(4)}"
+
+
+def _heal_file_dead_links(md_path: Path, project_root: Path, basename_map: Dict[str, List[Path]]) -> List[Dict[str, str]]:
+    lines = md_path.read_text(encoding="utf-8").splitlines(keepends=True)
+    records: List[Dict[str, str]] = []
+    idx, in_fence, modified, new_lines = 0, False, False, []
+    if lines and lines[0].lstrip("\ufeff").strip() == "---":
+        new_lines.append(lines[0])
+        idx = 1
+        while idx < len(lines):
+            new_lines.append(lines[idx])
+            if lines[idx].strip() == "---":
+                idx += 1
+                break
+            idx += 1
+
+    def _replace_link(match: re.Match[str]) -> str:
+        nonlocal modified
+        prefix, raw_target, suffix = match.group(1), match.group(2), match.group(3)
+        if raw_target.startswith(("http://", "https://", "mailto:", "#", "file://")):
+            return match.group(0)
+        target_no_anchor = raw_target.split("#", 1)[0]
+        anchor = ("#" + raw_target.split("#", 1)[1]) if "#" in raw_target else ""
+        if not target_no_anchor or (md_path.parent / target_no_anchor).resolve().exists():
+            return match.group(0)
+        candidates = basename_map.get(Path(target_no_anchor).name, [])
+        if len(candidates) != 1:
+            return match.group(0)
+        healed_rel = os.path.relpath(candidates[0], md_path.parent).replace("\\", "/") + anchor
+        modified = True
+        records.append({"file": str(md_path.relative_to(project_root)), "old_target": raw_target, "new_target": healed_rel})
+        return f"{prefix}{healed_rel}{suffix}"
+
+    for line in lines[idx:]:
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            new_lines.append(line)
+            continue
+        new_lines.append(line if in_fence else MD_LINK_PATTERN.sub(_replace_link, line))
+
+    if modified:
+        md_path.write_text(_refresh_frontmatter_checksum("".join(new_lines)), encoding="utf-8")
+    return records
+
+
 def heal_dead_links(project_root: Path, md_files: List[Path]) -> List[Dict[str, str]]:
     healed_records: List[Dict[str, str]] = []
     brain_rel = get_brain_rel_dir(project_root)
@@ -89,39 +146,8 @@ def heal_dead_links(project_root: Path, md_files: List[Path]) -> List[Dict[str, 
         for p in sub_dir.rglob("*"):
             if p.is_file() and not is_gitignored_path(str(p.relative_to(project_root)).replace("\\", "/"), project_root):
                 basename_map.setdefault(p.name, []).append(p)
-
     for md_path in md_files:
-        lines = md_path.read_text(encoding="utf-8").splitlines(keepends=True)
-        in_fence, modified, new_lines = False, False, []
-        for line in lines:
-            if line.strip().startswith("```"):
-                in_fence = not in_fence
-                new_lines.append(line)
-                continue
-            if in_fence:
-                new_lines.append(line)
-                continue
-
-            def _replace_link(match: re.Match[str]) -> str:
-                nonlocal modified
-                prefix, raw_target, suffix = match.group(1), match.group(2), match.group(3)
-                if raw_target.startswith(("http://", "https://", "mailto:", "#", "file://")):
-                    return match.group(0)
-                target_no_anchor = raw_target.split("#", 1)[0]
-                anchor = ("#" + raw_target.split("#", 1)[1]) if "#" in raw_target else ""
-                if not target_no_anchor or (md_path.parent / target_no_anchor).resolve().exists():
-                    return match.group(0)
-                candidates = basename_map.get(Path(target_no_anchor).name, [])
-                if len(candidates) == 1:
-                    healed_rel = os.path.relpath(candidates[0], md_path.parent).replace("\\", "/") + anchor
-                    modified = True
-                    healed_records.append({"file": str(md_path.relative_to(project_root)), "old_target": raw_target, "new_target": healed_rel})
-                    return f"{prefix}{healed_rel}{suffix}"
-                return match.group(0)
-
-            new_lines.append(MD_LINK_PATTERN.sub(_replace_link, line))
-        if modified:
-            md_path.write_text("".join(new_lines), encoding="utf-8")
+        healed_records.extend(_heal_file_dead_links(md_path, project_root, basename_map))
     return healed_records
 
 

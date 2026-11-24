@@ -13,9 +13,9 @@ Extracted from `schema_validator.py` to enforce modular separation:
 
 from __future__ import annotations
 
-import fnmatch, json, re
+import fnmatch, json, py_compile, re, subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 try:
     import yaml  # type: ignore
@@ -288,3 +288,98 @@ def check_code_to_spec_drift(project_root: Path, rel_path: str) -> Optional[str]
     bullets = "\n".join(f"  - [{s.get('node_key') or s.get('node_id', '')} | {s.get('node_id', '')}] `{s.get('path', '')}`" for s in specs if isinstance(s, dict))
     if not bullets: return None
     return f"⚠️ [Code-to-Spec Drift Alert | 源碼變更連動警報] 已修改受規格綁定源碼 `{rel}`：\n{bullets}\n💡 若本次變更涉及介面、路由或安全規則調整，請同步檢視並更新對應記憶節點與 `epistemic_profile`。"
+
+
+_SELF_SCHEMA_RE = re.compile(
+    r'^python3?\s+(?:["\']?)schemas/schema_validator\.py(?:["\']?)\s+--file\s+(?:"([^"]+)"|\'([^\']+)\'|(\S+))\s*$'
+)
+
+
+def check_stub_syntax(stub_target: Path, checked_stubs: Optional[Set[Path]] = None) -> Optional[str]:
+    """Compile a Python stub file in-process with optional per-run deduplication."""
+    resolved = stub_target.resolve()
+    if checked_stubs is not None and resolved in checked_stubs:
+        return None
+    try:
+        py_compile.compile(str(resolved), doraise=True)
+    except (py_compile.PyCompileError, OSError) as exc:
+        return str(exc).strip()
+    if checked_stubs is not None:
+        checked_stubs.add(resolved)
+    return None
+
+
+def split_top_level_and(cmd: str) -> Optional[List[str]]:
+    """Split a command on unquoted '&&' unless unquoted shell operators make splitting unsafe."""
+    parts, buf, quote, esc, i, n = [], [], "", False, 0, len(cmd)
+    while i < n:
+        ch = cmd[i]
+        if esc: buf.append(ch); esc = False
+        elif ch == "\\" and quote != "'": buf.append(ch); esc = True
+        elif quote:
+            buf.append(ch)
+            if ch == quote: quote = ""
+        elif ch in ("'", '"'): quote = ch; buf.append(ch)
+        elif cmd.startswith("&&", i):
+            if not (seg := "".join(buf).strip()): return None
+            parts.append(seg); buf = []; i += 2; continue
+        elif ch in "|;><`" or cmd.startswith("$(", i): return None
+        else: buf.append(ch)
+        i += 1
+    if quote or esc or not (tail := "".join(buf).strip()):
+        return None
+    return parts + [tail]
+
+
+def is_self_schema_oracle(cmd: str, expected_code: int, md_path: Path, project_root: Path) -> bool:
+    """Return True when the oracle command only re-validates the current Markdown file with expected_code == 0."""
+    if expected_code != 0:
+        return False
+    parts = split_top_level_and(cmd.strip())
+    if parts is None or len(parts) != 1:
+        return False
+    match = _SELF_SCHEMA_RE.match(parts[0])
+    if not match:
+        return False
+    target = match.group(1) or match.group(2) or match.group(3)
+    return (project_root / target).resolve() == md_path.resolve()
+
+
+def _exec_oracle_cmd(sub_cmd: str, project_root: Path, oracle_cache: Optional[Dict[str, Tuple[int, str]]]) -> Tuple[int, str]:
+    if oracle_cache is not None and sub_cmd in oracle_cache:
+        return oracle_cache[sub_cmd]
+    proc = subprocess.run(sub_cmd, shell=True, cwd=str(project_root), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
+    res = (proc.returncode, (proc.stderr or "").strip() or (proc.stdout or "").strip())
+    if oracle_cache is not None:
+        oracle_cache[sub_cmd] = res
+    return res
+
+
+def run_cached_oracle(cmd: str, expected_code: int, md_path: Path, project_root: Path, oracle_cache: Optional[Dict[str, Tuple[int, str]]] = None) -> Optional[str]:
+    """Execute a verification_oracle command with self-schema short-circuit, && splitting, and caching."""
+    safe_cmd = re.sub(r"\s+--run-oracle\b", "", cmd) if "schema_validator.py" in cmd else cmd
+    if is_self_schema_oracle(safe_cmd, expected_code, md_path, project_root):
+        return None
+    if expected_code == 0 and (parts := split_top_level_and(safe_cmd)) and len(parts) > 1:
+        for sub_cmd in parts:
+            rc, out = _exec_oracle_cmd(sub_cmd, project_root, oracle_cache)
+            if rc != 0:
+                return f"[AS-03 Oracle Failed] 指令 `{cmd}` 子命令 `{sub_cmd}` 回傳碼 {rc} != 預期 0。輸出: {out}"
+        return None
+    rc, out = _exec_oracle_cmd(safe_cmd, project_root, oracle_cache)
+    return f"[AS-03 Oracle Failed] 指令 `{cmd}` 回傳碼 {rc} != 預期 {expected_code}。輸出: {out}" if rc != expected_code else None
+
+
+def collect_changed_memory_files(project_root: Path) -> List[Path]:
+    """Return existing modified/untracked governed Markdown files under memory/ (excluding CONTEXT_MAP.md)."""
+    proc = subprocess.run(["git", "status", "--porcelain", "-uall", "--", "memory"], cwd=str(project_root), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+    if proc.returncode != 0:
+        return []
+    found: Set[Path] = set()
+    for line in proc.stdout.splitlines():
+        if len(line) < 4:
+            continue
+        raw_rel = line[3:].strip().split(" -> ")[-1].strip().strip('"')
+        if raw_rel.endswith(".md") and Path(raw_rel).name != "CONTEXT_MAP.md" and (cand := (project_root / raw_rel).resolve()).is_file():
+            found.add(cand)
+    return sorted(found)

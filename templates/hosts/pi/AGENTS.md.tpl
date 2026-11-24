@@ -16,13 +16,13 @@
 
 1. **三區記憶分流與 5 階段治理生命週期**：
    - **分區邊界**：公開公文區 `memory/{codex,specs}/` (`000`–`699`)、開架雙向圖書館 `memory/wiki/` (`310`–`499`，`[[wikilink]]`)、私有專案區 `memory/private/specs/` (`900`–`999`)、暫存區 `scratch/`（專案根目錄僅允許 `README*.md` 與 `AGENTS.md`）。
-   - **5 階段生命週期**：`note (draft ➔ reviewing) ➔ blueprint (reviewing ➔ stub_ready ➔ verified) ➔ shard spec (draft ➔ reviewing ➔ stub_ready ➔ verified) ➔ code`（複雜規格須填 `parent_blueprint` 與 `stub_paths`）。
+   - **5 階段生命週期**：`note (draft ➔ reviewing) ➔ blueprint (reviewing ➔ stub_ready ➔ verified) ➔ shard spec (draft/reviewing + planned stub_paths ➔ stub 空殼 ➔ stub_ready ➔ 完整程式碼 ➔ verified)`（複雜規格須填 `parent_blueprint` 與 `stub_paths`）。
 2. **三大 MCP 工具 (`netark_query`, `netark_record`, `netark_guard`) 與認知誠實**：
    - **Turn-1 `@D/@C/@G` 查詢**：開局自動凍結注入 `@D/@C/@G` 與 `HANDOVER.md` 快照；請呼叫 `netark_query(query="C1")` 或 `netark_query(query="100")` 反查路徑、規格與 AST 函數座標，避免首輪盲目 `ls`/`find`。
    - **文件寫入與神諭驗證**：使用 `netark_record(intent=..., title=..., body=..., mode="write")` 撰寫或更新 `wiki`/`note`/`blueprint`/`spec`/`handover`；使用 `netark_guard(action="oracle" | "status")` 執行神諭驗證與檢視護欄狀態（若工作區含本機腳本亦支援 `python3 schemas/schema_validator.py --run-oracle`）。
    - **認知標籤與行數上限**：關鍵架構陳述須標註 `- [FACT]`、`- [INFERRED]`、`- [HYPOTHESIS]` 或 `- [UNVERIFIED]`；`memory/LEDGER.md` $\le 80$ 行、`memory/episodic/HANDOVER.md` $\le 65$ 行；公文標記 `verified` 須跨模型雙簽並通過 Oracle。
 3. **Hub + Specialist 強制派工與 `SPEC-RIBC-GATE`**：
-   - **【IF 多檔檢索 / 雜亂大檔 $> 300$ 行 $\rightarrow$ MUST 派 `scout`】**：主動呼叫 `dispatch_specialist(specialist="scout", filePaths=[...], task="...")` 或 `subagent(agent="scout")` 側路提純，嚴禁主腦硬讀大檔污染主 Context。
+   - **【IF 多檔檢索 / 雜亂大檔 $> 600$ 行 $\rightarrow$ MUST 派 `scout`】**：主動呼叫 `dispatch_specialist(specialist="scout", filePaths=[...], task="...")` 或 `subagent(agent="scout")` 側路提純，嚴禁主腦硬讀大檔污染主 Context。
    - **【IF 模組實作 / 跨檔修改 $\rightarrow$ MUST 派 `code` / `worker`】**：呼叫 `dispatch_specialist(specialist="code", ...)` 或 `subagent(agent="worker")`。所有專家派工之 `task` **必須通過 `SPEC-RIBC-GATE`**：明確包含 `[R]`（角色與路徑）、`[I]`（不變量與行數上限）、`[B]`（邊界防護）、`[C]`（契約與驗證）且總長 $\ge 60$ 字元。
    - **【禁繞過寫檔門禁與 `/tmp`】**：一律使用 `write`/`edit` 工具（草稿與測試放 `scratch/`），嚴禁以 `bash` (`cat > ... << 'EOF'`) 或 `/tmp` 繞過 AST 護欄。
 

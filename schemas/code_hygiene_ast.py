@@ -296,6 +296,7 @@ def _extract_file_symbols(fp: Path) -> Set[str]:
         for node in tree.body:
             if isinstance(node, ast.Assign): syms.update(t.id for t in node.targets if isinstance(t, ast.Name))
             elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name): syms.add(node.target.id)
+            elif isinstance(node, ast.ImportFrom) and (node.level > 0 or (node.module or "").startswith(("schemas.", "scripts.", "projects.", "src."))): syms.update(a.asname or a.name for a in node.names if a.name != "*")
         return syms
     if fp.suffix in {".ts", ".tsx", ".js", ".jsx"}: return {m.group(2) for ln in src.splitlines() if (m := TS_EXPORT_SYMBOL_RE.match(ln))}
     return set()
@@ -323,6 +324,76 @@ def verify_spec_ast_symbols(body: str, affected_paths: List[str], stub_paths: Li
     if all_aff and not has_new_intent and not any(s in body for s in all_aff):
         errors.append(f"[SPEC-AST-SYNC-GATE] 規格綁定之程式碼 ({', '.join(code_affected[:3])}) 未於內文對齊任何既有 AST 符號；實際符號包含: {', '.join(sorted(all_aff)[:10])}。請對齊真實符號名稱或標註『新增』。")
     return errors
+
+
+_DISALLOWED_STUB_EXPR = (ast.Call, ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+
+
+def _is_not_implemented_raise(stmt: ast.AST) -> bool:
+    if not isinstance(stmt, ast.Raise) or stmt.exc is None: return False
+    exc = stmt.exc.func if isinstance(stmt.exc, ast.Call) else stmt.exc
+    return (isinstance(exc, ast.Name) and exc.id == "NotImplementedError") or (isinstance(exc, ast.Attribute) and exc.attr == "NotImplementedError")
+
+
+def _is_stub_stmt(stmt: ast.stmt) -> bool:
+    return isinstance(stmt, ast.Pass) or _is_not_implemented_raise(stmt) or (
+        isinstance(stmt, ast.Expr) and isinstance(getattr(stmt, "value", None), ast.Constant)
+        and (isinstance(stmt.value.value, str) or stmt.value.value is Ellipsis)
+    )
+
+
+def _is_pure_stub_assign(stmt: ast.stmt) -> bool:
+    return isinstance(stmt, (ast.Assign, ast.AnnAssign)) and not any(isinstance(n, _DISALLOWED_STUB_EXPR) for n in ast.walk(stmt))
+
+
+def _is_stub_class_item(stmt: ast.stmt) -> bool:
+    return _is_stub_stmt(stmt) or _is_pure_stub_assign(stmt) or (
+        isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)) and bool(stmt.body) and all(_is_stub_stmt(s) for s in stmt.body)
+    )
+
+
+def is_python_stub_skeleton(source: str) -> bool:
+    """Return True iff Python source contains only imports, pure constants, and stub defs/classes."""
+    if not source or not source.strip(): return True
+    try: tree = ast.parse(source)
+    except SyntaxError: return False
+    for stmt in tree.body:
+        if isinstance(stmt, (ast.Import, ast.ImportFrom)) or _is_stub_stmt(stmt) or _is_pure_stub_assign(stmt): continue
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not stmt.body or not all(_is_stub_stmt(s) for s in stmt.body): return False
+        elif isinstance(stmt, ast.ClassDef):
+            if not stmt.body or not all(_is_stub_class_item(s) for s in stmt.body): return False
+        else: return False
+    return True
+
+
+def _has_stub_exempt_decorator(node: ast.AST) -> bool:
+    for dec in getattr(node, "decorator_list", ()) or ():
+        target = dec.func if isinstance(dec, ast.Call) else dec
+        name = target.id if isinstance(target, ast.Name) else (target.attr if isinstance(target, ast.Attribute) else "")
+        if name in {"abstractmethod", "overload"}: return True
+    return False
+
+
+def find_residual_python_stubs(py_path: Path) -> List[str]:
+    """Return unimplemented stub locations (`name:L<n>`) in py_path, exempting @abstractmethod/@overload/# noqa: stub-ok."""
+    try:
+        src = py_path.read_text(encoding="utf-8")
+        tree = ast.parse(src, filename=str(py_path))
+    except (OSError, SyntaxError): return []
+    lines = src.splitlines()
+    if not any(isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Assign, ast.AnnAssign)) for s in tree.body):
+        if py_path.name == "__init__.py" or any("noqa: stub-ok" in ln.lower() for ln in lines[:3]): return []
+        return ["<module>:L1 (empty stub)"]
+    hits: List[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or not node.body or _has_stub_exempt_decorator(node): continue
+        if all(_is_stub_stmt(s) for s in node.body):
+            ln = getattr(node, "lineno", 1)
+            end_ln = getattr(node, "end_lineno", None) or ln
+            if not any("noqa: stub-ok" in lines[i].lower() for i in range(max(0, ln - 1), min(len(lines), end_ln))):
+                hits.append(f"{node.name}:L{ln}")
+    return hits
 
 
 scan_workspace_code_single_pass = scan_code_intelligence_single_pass

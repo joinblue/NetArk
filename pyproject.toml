@@ -57,19 +57,7 @@ packages = ["src/netark_mcp"]
 exclude = ["**/__pycache__", "**/*.pyc", "**/*.pyo"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"schemas/artifact_header.schema.json" = "netark_mcp/_core/schemas/artifact_header.schema.json"
-"schemas/context_node.schema.json" = "netark_mcp/_core/schemas/context_node.schema.json"
-"schemas/code_hygiene_ast.py" = "netark_mcp/_core/schemas/code_hygiene_ast.py"
-"schemas/codebook_compiler.py" = "netark_mcp/_core/schemas/codebook_compiler.py"
-"schemas/doc_initializer.py" = "netark_mcp/_core/schemas/doc_initializer.py"
-"schemas/hook_lifecycle.py" = "netark_mcp/_core/schemas/hook_lifecycle.py"
-"schemas/mcp_tools_core.py" = "netark_mcp/_core/schemas/mcp_tools_core.py"
-"schemas/netark_guard_core.py" = "netark_mcp/_core/schemas/netark_guard_core.py"
-"schemas/ribc_gate.py" = "netark_mcp/_core/schemas/ribc_gate.py"
-"schemas/schema_validator.py" = "netark_mcp/_core/schemas/schema_validator.py"
-"schemas/topology_graph.py" = "netark_mcp/_core/schemas/topology_graph.py"
-"schemas/workspace_placement_guard.py" = "netark_mcp/_core/schemas/workspace_placement_guard.py"
-"schemas/yaml_lite.py" = "netark_mcp/_core/schemas/yaml_lite.py"
+"schemas" = "netark_mcp/_core/schemas"
 "scripts/auto_update_map.py" = "netark_mcp/_core/scripts/auto_update_map.py"
 "scripts/netark_guard_daemon.py" = "netark_mcp/_core/scripts/netark_guard_daemon.py"
 "scripts/netark_init.py" = "netark_mcp/_core/scripts/netark_init.py"

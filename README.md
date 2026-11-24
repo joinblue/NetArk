@@ -22,7 +22,7 @@ NetArk gives AI coding agents (Claude Code, Google Antigravity, Pi Agent, and cu
 > - **For AI Agents (Claude Code / Google Antigravity / Cursor / Pi)**: Read the raw docs first via `curl -fsSL https://raw.githubusercontent.com/joinblue/NetArk/main/README.md`, then install globally and initialize in place:
 >   ```bash
 >   uv tool install netark-mcp
->   netark-mcp init --target agy --cwd /path/to/your-project   # or --target claude / memory
+>   netark-mcp init --target agy --cwd /path/to/your-project   # or --target claude / pi / memory
 >   ```
 
 ---
@@ -74,7 +74,13 @@ netark-mcp init --lang en --cwd .
   ```
   Wires `.agents/hooks.json`, `.agents/plugins/netark/mcp_config.json`, `.agents/enterprise-policy.json`, and starter `memory/` nodes.
 
-- **Pi Agent / Custom MCP Hosts (`uvx` + Universal Hook Contract)**:
+- **Pi Agent (`--target pi`)**:
+  ```bash
+  netark-mcp init --target pi --lang en --cwd .
+  ```
+  Wires `.pi/mcp.json`, `.pi/extensions/`, `.pi/agents/`, `.pi/skills/`, `.pi/enterprise-policy.json`, and starter `memory/` nodes.
+
+- **Custom MCP Hosts (`uvx` + Universal Hook Contract)**:
   ```json
   {
     "mcpServers": {

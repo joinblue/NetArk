@@ -62,7 +62,7 @@ jobs:
 
           with tempfile.TemporaryDirectory() as tmp:
               tmp_root = Path(tmp)
-              for idx, target in enumerate(("memory", "claude", "agy")):
+              for idx, target in enumerate(("memory", "claude", "agy", "pi")):
                   ws = tmp_root / f"ws_{idx}_{target}"
                   ws.mkdir()
                   res = subprocess.run([cli, "init", "--target", target, "--lang", "en", "--cwd", str(ws)], text=True, encoding="utf-8", capture_output=True, check=True)
@@ -74,6 +74,7 @@ jobs:
               assert (ws_mem / ".mcp.json").is_file()
               assert (tmp_root / "ws_1_claude" / ".claude" / "settings.json").is_file()
               assert (tmp_root / "ws_2_agy" / ".agents" / "hooks.json").is_file()
+              assert (tmp_root / "ws_3_pi" / ".pi" / "mcp.json").is_file() and (tmp_root / "ws_3_pi" / ".pi" / "extensions" / "netark-guard.ts").is_file()
 
               # Verify MCP stdio server (initialize, ping, tools/list, tools/call)
               fake_secret = "sk-proj-" + "1234567890abcdefghijklmnop"

@@ -264,7 +264,7 @@ def _check_context_map_read_bound(tool: str, args: Dict[str, Any], root: Path) -
 def check_direct_read_guard(tool_name: str, args: Dict[str, Any], cwd: str, policy: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Block unleased large-file direct reads, salami-slicing, and shell read dumps (SIDECAR-GATE)."""
     tool = (tool_name or "").lower()
-    max_lines = 300 if policy.get("max_direct_read_lines") is None else int(policy["max_direct_read_lines"])
+    max_lines = 600 if policy.get("max_direct_read_lines") is None else int(policy["max_direct_read_lines"])
     if max_lines <= 0 or tool not in (READ_TOOLS_E1 | SHELL_TOOLS_E1): return None
     max_slices = 2 if policy.get("max_salami_slices_per_file") is None else int(policy["max_salami_slices_per_file"])
     exempt = set(policy.get("read_guard_exempt_paths") if policy.get("read_guard_exempt_paths") is not None else ["memory/codex/CONTEXT_MAP.md"])
@@ -346,24 +346,26 @@ def _top_level_defs(source: str) -> Set[str]:
         return set(re.findall(r"(?m)^(?:async\s+def|def|class)\s+([A-Za-z_]\w*)", source))
 
 
-def _scan_stub_bindings(rel: str, cwd: str) -> Tuple[bool, bool]:
-    """Return (has_active_work_auth, has_any_valid_binding) for rel across memory/*.md."""
+def _scan_stub_bindings(rel: str, cwd: str) -> Tuple[bool, bool, bool]:
+    """Return (has_active, has_any, has_planned_stub) for rel across memory/*.md."""
     mem_dir = Path(cwd).resolve() / "memory"
-    if not mem_dir.is_dir(): return False, False
+    if not mem_dir.is_dir(): return False, False, False
     from schemas.topology_graph import parse_markdown_frontmatter
-    has_active, has_any = False, False
+    has_active, has_any, has_planned = False, False, False
     for md_path in sorted(mem_dir.rglob("*.md")):
         if md_path.name == "CONTEXT_MAP.md": continue
         try: fm, _ = parse_markdown_frontmatter(md_path)
         except Exception: continue
         topo = fm.get("topology") if isinstance(fm.get("topology"), dict) else {}
-        bound = {str(p).strip().replace("\\", "/").lstrip("./") for k in ("affected_paths", "stub_paths", "verified_by") for p in (topo.get(k) if isinstance(topo.get(k), list) else []) if isinstance(p, str) and p.strip()}
+        stubs = {str(p).strip().replace("\\", "/").lstrip("./") for p in (topo.get("stub_paths") if isinstance(topo.get("stub_paths"), list) else []) if isinstance(p, str) and p.strip()}
+        bound = stubs | {str(p).strip().replace("\\", "/").lstrip("./") for k in ("affected_paths", "verified_by") for p in (topo.get(k) if isinstance(topo.get(k), list) else []) if isinstance(p, str) and p.strip()}
         if rel not in bound: continue
         art, status = str(fm.get("artifact_type") or ""), str(fm.get("status") or "")
         if (art in ("spec", "blueprint") and status == "stub_ready") or (art == "audit" and status in ("draft", "reviewing", "verified")): has_active = True
         if (art in ("spec", "blueprint") and status in ("stub_ready", "verified")) or (art in ("constitution", "rule", "adr") and status == "verified"): has_any = True
-        if has_active and has_any: return True, True
-    return has_active, has_any
+        if art in ("spec", "blueprint") and status in ("draft", "reviewing") and rel in stubs: has_planned = True
+        if has_active and has_any and has_planned: return True, True, True
+    return has_active, has_any, has_planned
 
 
 def check_stub_first_gate(rel_path: str, old_text: str, new_text: str, existed: bool, cwd: str, policy: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
@@ -373,12 +375,14 @@ def check_stub_first_gate(rel_path: str, old_text: str, new_text: str, existed: 
     rel = (rel_path or "").replace("\\", "/").lstrip("./")
     fname = Path(rel).name
     if rel.startswith("scratch/") or fname == "__init__.py" or fname.startswith("test_") or fname.endswith("_test.py") or not GOVERNED_PY_RE.match(rel): return None
-    has_active, has_any = _scan_stub_bindings(rel, cwd or ".")
+    from schemas.code_hygiene_ast import count_effective_code_lines, is_python_stub_skeleton
+    has_active, has_any, has_planned = _scan_stub_bindings(rel, cwd or ".")
+    if has_planned and is_python_stub_skeleton(new_text or ""): return None
     if not existed:
         if has_any: return None
-        return {"allowed": False, "code": "STUB-FIRST-GATE", "reason": f"[STUB-FIRST-GATE] Creating new governed module '{rel}' is blocked because no 'stub_ready' or 'verified' Spec binds it in stub_paths/affected_paths. Follow: note -> blueprint -> shard spec (stub_ready) -> code."}
+        reason = (f"[STUB-FIRST-GATE] '{rel}' is bound in stub_paths of a draft/reviewing Spec/Blueprint: create a Python stub skeleton (pass/.../raise NotImplementedError) first, then promote the Spec to status: 'stub_ready' before writing full implementation." if has_planned else f"[STUB-FIRST-GATE] Creating new governed module '{rel}' is blocked because no Spec/Blueprint binds it in stub_paths (draft/reviewing for stub skeleton, or stub_ready/verified for full code). Follow: note -> blueprint -> shard spec (draft/reviewing + stub_paths) -> stub file -> spec (stub_ready) -> code.")
+        return {"allowed": False, "code": "STUB-FIRST-GATE", "reason": reason}
     if has_active: return None
-    from schemas.code_hygiene_ast import count_effective_code_lines
     old_s, new_s = old_text or "", new_text or ""
     delta_eff = count_effective_code_lines(new_s, ".py") - count_effective_code_lines(old_s, ".py")
     added_defs = _top_level_defs(new_s) - _top_level_defs(old_s)

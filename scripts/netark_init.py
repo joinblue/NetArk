@@ -42,7 +42,7 @@ DEFAULT_ENTERPRISE_POLICY: Dict[str, Any] = {
     "ssrf_allowed_hosts": [],
     "approved_code_roots": ["projects", "scratch", "schemas", "scripts", "dashboard", "templates", "src", "tests", ".netark", ".agents", ".claude"],
     "project_subdirs": ["src", "scripts", "tests", "configs"],
-    "max_direct_read_lines": 300,
+    "max_direct_read_lines": 600,
     "max_salami_slices_per_file": 2,
     "read_guard_exempt_paths": ["memory/codex/CONTEXT_MAP.md"],
     "enforce_stub_first_for_new_modules": True,
@@ -249,19 +249,9 @@ def install_pi_adapter(root: Path, brain_dir: str = ".netark", update: bool = Fa
 def _sync_python_core_if_external(root: Path, update: bool = False) -> None:
     if root.resolve() == NETARK_SOURCE_ROOT.resolve():
         return
-    for rel_file in (
+    schema_files = sorted(f"schemas/{p.name}" for p in (NETARK_SOURCE_ROOT / "schemas").iterdir() if p.is_file() and (p.suffix == ".py" or p.name.endswith(".schema.json"))) if (NETARK_SOURCE_ROOT / "schemas").is_dir() else []
+    static_files = (
         ".gitignore",
-        "schemas/artifact_header.schema.json",
-        "schemas/context_node.schema.json",
-        "schemas/code_hygiene_ast.py",
-        "schemas/codebook_compiler.py",
-        "schemas/topology_graph.py",
-        "schemas/doc_initializer.py",
-        "schemas/schema_validator.py",
-        "schemas/netark_guard_core.py",
-        "schemas/workspace_placement_guard.py",
-        "schemas/hook_lifecycle.py",
-        "schemas/ribc_gate.py",
         "scripts/netark_guard_daemon.py",
         "scripts/netark_init.py",
         "scripts/auto_update_map.py",
@@ -275,7 +265,8 @@ def _sync_python_core_if_external(root: Path, update: bool = False) -> None:
         "dashboard/frontend/graph_canvas.js",
         "dashboard/frontend/app.js",
         "dashboard/tests/test_dashboard_shards.py",
-    ):
+    )
+    for rel_file in (*schema_files, *static_files):
         src = NETARK_SOURCE_ROOT / rel_file
         dst = root / rel_file
         if src.exists() and (not dst.exists() or (update and rel_file != ".gitignore")):
