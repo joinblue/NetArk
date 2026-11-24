@@ -124,7 +124,7 @@ def _is_benign_entropy_token(lhs: str, tok: str) -> bool:
         return True
     if PATH_EXT_RE.search(tok) or re.fullmatch(r"[a-z0-9_.-]+(?:/[a-z0-9_.-]+)+", tok):
         return True
-    if re.fullmatch(r"[0-9a-fA-F]{24,}", tok) or re.fullmatch(r"\d{3}\.[A-Z0-9_.-]+\.v\d+", tok) or re.fullmatch(r"[0-9a-f]{16}_\d{3}_[A-Za-z0-9_]+", tok) or (not tok.startswith("eyJ") and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+", tok)):
+    if re.fullmatch(r"[0-9a-fA-F]{24,}", tok) or re.fullmatch(r"\d{3}\.[A-Z0-9_.-]+\.v\d+", tok) or re.fullmatch(r"[0-9a-f]{16}_\d{3}_[A-Za-z0-9_]+", tok) or re.fullmatch(r"(?:\d{3}(?:\.\d+)?=)?\d+_[A-Z0-9]+(?:_[A-Z0-9]+)+", tok) or (not tok.startswith("eyJ") and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+", tok)):
         return True
     return lhs.lower() in {"sha256_16", "sha256", "sha1", "md5", "checksum", "content_checksum", "commit", "node_key", "node_id"} and "_" in tok
 

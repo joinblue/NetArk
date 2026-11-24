@@ -235,6 +235,32 @@ def _check_large_rel(target: Path, root: Path, exempt: Set[str], max_lines: int)
     return (rel, total) if total > max_lines else (None, 0)
 
 
+def _check_context_map_read_bound(tool: str, args: Dict[str, Any], root: Path) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    cm_path = (root / "memory" / "codex" / "CONTEXT_MAP.md").resolve()
+    cutoff = next((i for i, ln in enumerate(cm_path.read_text(encoding="utf-8", errors="ignore").splitlines(), 1) if ln.startswith("## 2.")), 180) if cm_path.is_file() else 180
+    verdict = {"allowed": False, "code": "CONTEXT-MAP-READ-GATE", "reason": (
+        f"禁止整檔或越過 '## 2.' (Line {cutoff}) 讀取 memory/codex/CONTEXT_MAP.md。請優先改用 MCP "
+        '`netark_query(query="status:reviewing"|"status:draft"|"310:draft"|"<Topic>")` 與 '
+        f'`netark_guard(action="handover")`，或限縮讀取 `StartLine=1, EndLine={cutoff - 1}`。\n'
+        "  [RuleDoc]: memory/specs/500_08_SHARD_HOST_INJECTION_AND_MCP_DISCOVERY_CONTRACT.md\n"
+        f"  [SuggestedAlternative]: Call netark_query(query='status:reviewing'|'status:draft'|'310:draft'|'<Topic>') and netark_guard(action='handover'), or read StartLine=1, EndLine={cutoff - 1}."
+    )}
+    if tool in SHELL_TOOLS_E1:
+        cmd = str(args.get("command") or args.get("CommandLine") or "")
+        hit = any(p == cm_path for p in _extract_shell_dump_targets(cmd, root)) or bool(re.search(r"\b(?:cat|head|tail|sed|awk|less|more)\b", cmd) and re.search(r"(?:^|[/\\\s\"'])CONTEXT_MAP\.md\b", cmd) and "private/CONTEXT_MAP.md" not in cmd.replace("\\", "/"))
+        return (True, verdict) if hit else (False, None)
+    raw_path = str(args.get("path") or args.get("Path") or args.get("file_path") or args.get("TargetFile") or args.get("file") or "")
+    if not raw_path or (_resolve_in_root(raw_path, root) != cm_path and not raw_path.replace("\\", "/").lstrip("./").endswith("memory/codex/CONTEXT_MAP.md")): return False, None
+    def _arg_int(keys: Tuple[str, ...]) -> Optional[int]:
+        for k in keys:
+            if (v := args.get(k)) not in (None, "") and not isinstance(v, bool):
+                try: return int(v)
+                except (TypeError, ValueError): pass  # noqa: silent-except
+        return None
+    if (end_ln := _arg_int(("EndLine", "end_line"))) is None and (lim := _arg_int(("limit", "Limit"))) is not None:
+        end_ln = max(1, _arg_int(("offset", "Offset")) or 1) + lim - 1
+    return (True, None) if end_ln is not None and 1 <= end_ln <= cutoff else (True, verdict)
+
 def check_direct_read_guard(tool_name: str, args: Dict[str, Any], cwd: str, policy: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Block unleased large-file direct reads, salami-slicing, and shell read dumps (SIDECAR-GATE)."""
     tool = (tool_name or "").lower()
@@ -243,6 +269,8 @@ def check_direct_read_guard(tool_name: str, args: Dict[str, Any], cwd: str, poli
     max_slices = 2 if policy.get("max_salami_slices_per_file") is None else int(policy["max_salami_slices_per_file"])
     exempt = set(policy.get("read_guard_exempt_paths") if policy.get("read_guard_exempt_paths") is not None else ["memory/codex/CONTEXT_MAP.md"])
     root = Path(cwd).resolve()
+    handled, cm_verdict = _check_context_map_read_bound(tool, args, root)
+    if handled: return cm_verdict
     if tool in SHELL_TOOLS_E1:
         cmd_str = str(args.get("command") or args.get("CommandLine") or "")
         large = [rel for p in _extract_shell_dump_targets(cmd_str, root) if (rel := _check_large_rel(p, root, exempt, max_lines)[0])]

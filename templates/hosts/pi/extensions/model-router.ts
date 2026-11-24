@@ -3,7 +3,7 @@
  * M1~M5: Anti-Hijack Orchestrator, Zero-Cold-Start Specialist Dispatch (`dispatch_specialist`), Multi-File Offload & Strategy Modes.
  */
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { type ImageContent, type Message, type TextContent, type Tool } from "@earendil-works/pi-ai";
@@ -206,15 +206,34 @@ function getCustomModelsFilePath(cwd = process.cwd()): string {
 	);
 }
 
+function hasPopulatedJsonFile(filePath: string): boolean {
+	if (!fs.existsSync(filePath)) return false;
+	try {
+		const stat = fs.statSync(filePath);
+		if (!stat.isFile() || stat.size === 0) return false;
+		const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+		return Boolean(parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.keys(parsed).length > 0);
+	} catch {
+		return false;
+	}
+}
+
 function getAuthFilePath(cwd = process.cwd()): string {
-	return resolveFirstExistingPath(
-		[
-			path.join(getAgentDir(), "auth.json"),
-			path.join(cwd, ".pi", "auth.json"),
-			path.join(cwd, ".netark", "auth.json"),
-		],
+	const candidates = [
+		path.join(cwd, ".pi", "auth.json"),
+		path.join(cwd, ".netark", "auth.json"),
 		path.join(getAgentDir(), "auth.json"),
-	);
+	];
+	const populated = candidates.find((p) => hasPopulatedJsonFile(p));
+	if (populated) return populated;
+	const nonEmpty = candidates.find((p) => {
+		try {
+			return fs.existsSync(p) && fs.statSync(p).size > 0;
+		} catch {
+			return false;
+		}
+	});
+	return nonEmpty ?? path.join(getAgentDir(), "auth.json");
 }
 
 function getModelsJsonFilePath(): string {
@@ -728,7 +747,7 @@ function isSpecialistWriteBlockedPath(relPath: string, absPath: string): string 
 	if (isProtectedSecretPath(absPath)) {
 		return `Protected credential file blocked (${relPath})`;
 	}
-	const protectedDirs = [".pi", ".agents", ".netark", "schemas"];
+	const protectedDirs = [".pi", ".agents", ".claude", ".netark", ".github/workflows", "schemas", "scripts"];
 	if (
 		protectedDirs.some((dir) => relPath === dir || relPath.startsWith(`${dir}/`)) ||
 		relPath === "memory/LEDGER.md"
@@ -739,6 +758,48 @@ function isSpecialistWriteBlockedPath(relPath: string, absPath: string): string 
 		return `SEC-DOC-GOVERNANCE: Root-level unmanaged .md file blocked (${relPath}); use scratch/ or memory/`;
 	}
 	return null;
+}
+
+function resolveSpecialistGuardRunner(cwd: string): { cmd: string; prefixArgs: string[] } {
+	const envBin = process.env.NETARK_MCP_BIN?.trim();
+	if (envBin) return { cmd: envBin, prefixArgs: [] };
+	for (const cfgPath of [path.join(cwd, ".pi", "mcp.json"), path.join(cwd, ".netark", "mcp.json")]) {
+		if (!fs.existsSync(cfgPath)) continue;
+		try {
+			const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf-8")) as { mcpServers?: { netark?: { command?: unknown } } };
+			const cmd = cfg?.mcpServers?.netark?.command;
+			if (typeof cmd === "string" && cmd.trim()) return { cmd: cmd.trim(), prefixArgs: [] };
+		} catch {
+			continue;
+		}
+	}
+	const localScript = path.join(cwd, "scripts", "netark_mcp_server.py");
+	if (fs.existsSync(localScript)) return { cmd: "python3", prefixArgs: [localScript] };
+	return { cmd: "netark-mcp", prefixArgs: [] };
+}
+
+function runSpecialistNetArkGuard(
+	cwd: string,
+	modeFlag: "--hook-mode" | "--post-hook-mode",
+	toolName: string,
+	toolInput: Record<string, any>,
+): { blocked: boolean; message: string } {
+	const { cmd, prefixArgs } = resolveSpecialistGuardRunner(cwd);
+	const args = ["hook", modeFlag, "pi", "--cwd", cwd];
+	const opts = { cwd, input: JSON.stringify({ tool_name: toolName, tool_input: toolInput }), encoding: "utf-8" as const, timeout: 10000 };
+	let res = spawnSync(cmd, [...prefixArgs, ...args], opts);
+	const localScript = path.join(cwd, "scripts", "netark_mcp_server.py");
+	if (res.error && !(cmd === "python3" && prefixArgs[0] === localScript) && fs.existsSync(localScript)) {
+		res = spawnSync("python3", [localScript, ...args], opts);
+	}
+	const msg = `${String(res.stderr || "")}\n${String(res.stdout || "")}`.trim();
+	if (modeFlag === "--hook-mode") {
+		if (res.error || res.status !== 0) {
+			return { blocked: true, message: msg || res.error?.message || "Blocked by NetArk Enterprise Guard" };
+		}
+		return { blocked: false, message: msg };
+	}
+	return { blocked: false, message: msg };
 }
 
 export function executeSpecialistToolCall(
@@ -858,11 +919,13 @@ export function executeSpecialistToolCall(
 			if ("error" in res) return { output: res.error, isError: true, summary: `edit_file(${rawArgs?.path}) -> blocked` };
 			const blockReason = isSpecialistWriteBlockedPath(res.relPath, res.absPath);
 			if (blockReason) return { output: `❌ ${blockReason}`, isError: true, summary: `edit_file(${res.relPath}) -> blocked` };
+			const target = String(rawArgs?.target ?? "");
+			const replacement = String(rawArgs?.replacement ?? "");
+			const preGuard = runSpecialistNetArkGuard(rootResolved, "--hook-mode", "edit", { path: res.relPath, oldText: target, newText: replacement });
+			if (preGuard.blocked) return { output: `❌ ${preGuard.message}`, isError: true, summary: `edit_file(${res.relPath}) -> guard blocked` };
 			if (!fs.existsSync(res.absPath) || !fs.statSync(res.absPath).isFile()) {
 				return { output: `❌ File not found: ${res.relPath}`, isError: true, summary: `edit_file(${res.relPath}) -> not found` };
 			}
-			const target = String(rawArgs?.target ?? "");
-			const replacement = String(rawArgs?.replacement ?? "");
 			if (!target) {
 				return { output: "❌ edit_file requires a non-empty target string", isError: true, summary: `edit_file(${res.relPath}) -> empty target` };
 			}
@@ -876,10 +939,12 @@ export function executeSpecialistToolCall(
 			}
 			const updated = existing.replace(target, replacement);
 			fs.writeFileSync(res.absPath, updated, "utf-8");
+			const postGuard = runSpecialistNetArkGuard(rootResolved, "--post-hook-mode", "edit", { path: res.relPath });
 			const removedLines = target.split(/\r?\n/).length;
 			const addedLines = replacement.split(/\r?\n/).length;
-			const msg = `✅ Edited ${res.relPath} (+${addedLines}/-${removedLines} lines)`;
-			return { output: msg, isError: false, summary: msg };
+			const baseMsg = `✅ Edited ${res.relPath} (+${addedLines}/-${removedLines} lines)`;
+			const msg = postGuard.message ? `${baseMsg}\n${postGuard.message}` : baseMsg;
+			return { output: msg, isError: false, summary: baseMsg };
 		}
 
 		if (role === "code" && toolName === "write_file") {
@@ -888,11 +953,15 @@ export function executeSpecialistToolCall(
 			const blockReason = isSpecialistWriteBlockedPath(res.relPath, res.absPath);
 			if (blockReason) return { output: `❌ ${blockReason}`, isError: true, summary: `write_file(${res.relPath}) -> blocked` };
 			const content = String(rawArgs?.content ?? "");
+			const preGuard = runSpecialistNetArkGuard(rootResolved, "--hook-mode", "write", { path: res.relPath, content });
+			if (preGuard.blocked) return { output: `❌ ${preGuard.message}`, isError: true, summary: `write_file(${res.relPath}) -> guard blocked` };
 			fs.mkdirSync(path.dirname(res.absPath), { recursive: true });
 			fs.writeFileSync(res.absPath, content, "utf-8");
+			const postGuard = runSpecialistNetArkGuard(rootResolved, "--post-hook-mode", "write", { path: res.relPath });
 			const lineCount = content.split(/\r?\n/).length;
-			const msg = `✅ Wrote ${res.relPath} (${lineCount} lines, ${content.length} bytes)`;
-			return { output: msg, isError: false, summary: msg };
+			const baseMsg = `✅ Wrote ${res.relPath} (${lineCount} lines, ${content.length} bytes)`;
+			const msg = postGuard.message ? `${baseMsg}\n${postGuard.message}` : baseMsg;
+			return { output: msg, isError: false, summary: baseMsg };
 		}
 
 		if (role === "code" && toolName === "run_syntax_check") {

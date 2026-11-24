@@ -236,8 +236,16 @@ def _load_codebook_data(root: Path) -> Tuple[str, Dict[str, Any]]:
 
 def _load_compact_codebook(root: Path) -> str: return _load_codebook_data(root)[0]
 
+AGY_SESSION_LRU_CAP = 32
 def _agy_tmp_path(root: Path, prefix: str) -> Path:
     return Path(tempfile.gettempdir()) / f"{prefix}_{hashlib.sha256(str(root).encode('utf-8')).hexdigest()[:12]}.json"
+
+def _agy_session_state_path() -> Path: return Path(tempfile.gettempdir()) / "netark_agy_session_state.json"
+
+def _cleanup_legacy_agy_tmp_files() -> None:
+    try:
+        for p in Path(tempfile.gettempdir()).glob("netark_codebook_state_*.json"): p.unlink(missing_ok=True)
+    except Exception: pass  # noqa: silent-except
 
 def queue_agy_post_alert(cwd: str, message: str) -> None:
     """Persist a one-shot PostToolUse alert for AGY PreInvocation to consume."""
@@ -255,14 +263,39 @@ def pop_agy_post_alert(cwd: str) -> str:
         return str(data.get("message") or "").strip() if isinstance(data, dict) else ""
     except Exception: return ""  # noqa: silent-except
 
-def _codebook_changed_for_agy(root: Path, compact: str) -> bool:
-    if not compact: return False
-    state_file, cur_hash = _agy_tmp_path(root, "netark_codebook_state"), hashlib.sha256(compact.encode("utf-8")).hexdigest()[:16]
+def _agy_session_keys(root: Path, payload: Optional[Dict[str, Any]]) -> Tuple[str, str, Optional[int]]:
+    rhash, p = hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()[:12], payload if isinstance(payload, dict) else {}
+    raw_inv, inv_num = p.get("invocationNum"), None
+    if raw_inv not in (None, "") and not isinstance(raw_inv, bool):
+        try: inv_num = int(raw_inv)
+        except (TypeError, ValueError): pass  # noqa: silent-except
+    return rhash, str(p.get("conversationId") or "").strip(), inv_num
+
+def _update_agy_lru(session_key: str, cur_hash: str) -> Tuple[Optional[str], bool]:
+    state_file = _agy_session_state_path()
     try:
-        if state_file.exists() and json.loads(state_file.read_text(encoding="utf-8")).get("hash") == cur_hash: return False
-        state_file.write_text(json.dumps({"hash": cur_hash}), encoding="utf-8")
-    except Exception: return True  # noqa: silent-except
-    return True
+        raw = json.loads(state_file.read_text(encoding="utf-8")) if state_file.exists() else {}
+        data = raw if isinstance(raw, dict) else {}
+        raw_order, raw_hashes = (data.get("order") if isinstance(data.get("order"), list) else []), (data.get("hashes") if isinstance(data.get("hashes"), dict) else {})
+        prev_hash = raw_hashes.get(session_key) if isinstance(raw_hashes.get(session_key), str) else None
+        order = ([k for k in dict.fromkeys(raw_order) if isinstance(k, str) and k != session_key] + [session_key])[-AGY_SESSION_LRU_CAP:]
+        keep = set(order)
+        hashes = {**{str(k): str(v) for k, v in raw_hashes.items() if k in keep and v is not None}, session_key: cur_hash}
+        state_file.write_text(json.dumps({"order": order, "hashes": hashes}), encoding="utf-8")
+        return prev_hash, prev_hash != cur_hash
+    except Exception: return None, True  # noqa: silent-except
+
+def _codebook_changed_for_agy(root: Path, compact: str, payload: Optional[Dict[str, Any]] = None) -> Tuple[bool, bool]:
+    _cleanup_legacy_agy_tmp_files()
+    if not compact: return False, False
+    cur_hash, (rhash, conv_id, inv_num) = hashlib.sha256(compact.encode("utf-8")).hexdigest()[:16], _agy_session_keys(root, payload)
+    if conv_id:
+        prev_hash, changed = _update_agy_lru(f"{rhash}:{conv_id}", cur_hash)
+        return (True, True) if prev_hash is None else (changed, False)
+    if inv_num is not None:
+        _, changed = _update_agy_lru(f"{rhash}:__inv__", cur_hash)
+        return (True, True) if inv_num == 1 else (changed, False)
+    return True, True
 
 def _collect_active_side_tracks(root: Path) -> str:
     """Scan memory/episodic/HANDOVER_*.md (excluding archived/deprecated) for 1-line index."""
@@ -275,7 +308,7 @@ def _collect_active_side_tracks(root: Path) -> str:
         if not txt.strip() or scan_plaintext_secrets(txt): continue
         meta = _parse_handover_meta(txt, p.name)
         if meta["status"] in {"archived", "deprecated"}: continue
-        tid = meta["track_id"] or p.stem.removeprefix("HANDOVER_")
+        tid = meta["track_id"] or re.sub(r"^\d{2}_", "", p.stem.removeprefix("HANDOVER_"))
         lines.append(f"- `{p.name}` (`{tid}`): {(meta['summary_1line'] or meta['s1_first'] or '(active side-track)')[:80]}")
     return "[Active Side-Tracks (Read on demand)]\n" + "\n".join(lines) if lines else ""
 
@@ -331,21 +364,33 @@ def _read_payload_and_cwd(default_cwd: str, payload: Optional[Dict[str, Any]] = 
 
 def _run_session_start_mode(host: str, default_cwd: str, payload: Optional[Dict[str, Any]] = None) -> int:
     """Inject Turn-1 Codebook Map & Handover into host session context."""
-    _, cwd = _read_payload_and_cwd(default_cwd, payload)
+    payload, cwd = _read_payload_and_cwd(default_cwd, payload)
     ctx = build_session_context(cwd)
-    if host == "agy": print(json.dumps({"additionalContext": ctx} if ctx else {}, ensure_ascii=False))
-    elif ctx: print(ctx)
+    if host == "agy":
+        _cleanup_legacy_agy_tmp_files()
+        if ctx:
+            rhash, conv_id, inv_num = _agy_session_keys(root := Path(cwd).resolve(), payload)
+            if (conv_id or inv_num is not None) and (compact := _load_compact_codebook(root)):
+                _update_agy_lru(f"{rhash}:{conv_id or '__inv__'}", hashlib.sha256(compact.encode("utf-8")).hexdigest()[:16])
+        print(json.dumps({"injectSteps": [{"systemMessage": {"systemMessage": ctx}}] if ctx else []}, ensure_ascii=False))
+        return 0
+    if ctx: print(ctx)
     return 0
 
+def _format_refresh_codebook(compact: str) -> str:
+    """F5: tag mid-session refresh header so it is distinguishable from Turn-1 Frozen."""
+    if not compact: return ""
+    first, sep, rest = re.sub(r"^(## 🧭 \[[^\]]+?)\s+Turn-1 Frozen Codebook Map\]", r"\1 Codebook Map · Refresh]", compact, count=1).partition("\n")
+    return f"{first}\n> 🔄 [Codebook Refresh] 本份取代先前 Map，舊短代碼以本份為準。{sep}{rest}"
+
 def _run_pre_invocation_mode(host: str, default_cwd: str, payload: Optional[Dict[str, Any]] = None) -> int:
-    """Inject Turn-N ephemeral Codebook Context before model invocation (delta-only for AGY)."""
-    _, cwd = _read_payload_and_cwd(default_cwd, payload)
+    """Inject Turn-N systemMessage Codebook Context before model invocation (3-tier/delta for AGY)."""
+    payload, cwd = _read_payload_and_cwd(default_cwd, payload)
     if host == "agy":
-        root = Path(cwd).resolve()
-        compact = _load_compact_codebook(root)
-        steps: List[Dict[str, Any]] = [{"ephemeralMessage": compact}] if _codebook_changed_for_agy(root, compact) else []
-        if (post_alert := pop_agy_post_alert(cwd)): steps.append({"ephemeralMessage": post_alert})
-        print(json.dumps({"injectSteps": steps}, ensure_ascii=False))
+        compact = _load_compact_codebook(root := Path(cwd).resolve())
+        should_inject, is_first = _codebook_changed_for_agy(root, compact, payload)
+        msg = (build_session_context(cwd) if is_first else _format_refresh_codebook(compact)) if should_inject else ""
+        print(json.dumps({"injectSteps": [{"systemMessage": {"systemMessage": s}} for s in (msg, pop_agy_post_alert(cwd)) if s]}, ensure_ascii=False))
         return 0
     ctx = build_session_context(cwd)
     if host == "claude": print(json.dumps({"additionalContext": ctx} if ctx else {}, ensure_ascii=False))

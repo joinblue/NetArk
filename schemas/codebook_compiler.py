@@ -4,6 +4,7 @@ NetArk Turn-1 Frozen @D/@R/@M/@C/@G Codebook Compiler & Context Map Renderer (co
 ===================================================================================================
 Governing Node: 100.ARCH-RULES.v1 (MEM-2026-0002) & 200.ADR-001.v1 (MEM-2026-0003)
 1. Compiles `@D/@R/@M/@C/@G` compressed codebook map with `[HYG-AST]` and `[HYG-DEBUG]` Turn-1 injection.
+   Short codes are stable (derived from each file's own name/seq, F1-F4); duplicates fail fast (`[CODEBOOK-DUP-CODE]`).
 2. Renders `CONTEXT_MAP.md` and `memory/private/CONTEXT_MAP.md` with active vs. archived/deprecated separation.
 """
 
@@ -37,17 +38,49 @@ def _select_codebook_scripts(tier: str, ordered_scripts: List[str], governed_set
     return selected_scripts, cluster_entries
 
 
+def _derive_entry_short_code(entry: Dict[str, Any]) -> str:
+    """F1-F4 (700.CODEBOOK_SHORT_CODE_DRIFT): short code is a pure function of the entry's own path/domain (never a sequential counter)."""
+    npath = str(entry.get("path") or "").replace("\\", "/")
+    fname = Path(npath).name
+    dc = str(entry.get("domain_code") or "000")
+    nkey = str(entry.get("node_key") or entry.get("node_id") or dc)
+    if fname == "HANDOVER.md":
+        return dc or "900"
+    if fname == "LEDGER.md":
+        return "300"
+    if npath.startswith("memory/codex/") and (m := re.match(r"^(\d{3})_(?!\d)", fname)):
+        return m.group(1)
+    if m := re.match(r"^HANDOVER_(\d{2})_.*\.md$", fname):
+        return f"{dc}.H{int(m.group(1))}"
+    m_sub = re.match(r"^(\d{3})_(\d{2})_(\d{1,2})_[A-Za-z]", fname)
+    m_std = m_sub or re.match(r"^(\d{3})_(\d{2})_", fname)
+    if not m_std:
+        return nkey
+    file_dom, seq = m_std.group(1), int(m_std.group(2))
+    prefix = f"{file_dom}.S{seq}" if (file_dom == "700" and npath.startswith("memory/specs/")) else f"{file_dom}.{seq}"
+    return f"{prefix}.{int(m_sub.group(3))}" if m_sub else prefix
+
+
+def _short_code_sort_key(code: str, nkey: str, nid: str) -> Tuple[Any, ...]:
+    parts: List[Tuple[Any, ...]] = []
+    for part in str(code).split("."):
+        m = re.match(r"^([A-Za-z_-]*)(\d*)(.*)$", part)
+        if part.isdigit():
+            parts.append((0, int(part)))
+        else:
+            parts.append((1, m.group(1), int(m.group(2) or 0), m.group(3)))
+    return (tuple(parts), nkey, nid)
+
+
 def _build_node_short_map(active_entries: List[Dict[str, Any]]) -> Dict[str, str]:
-    domain_counts: Dict[str, int] = {}
+    node_short_map: Dict[str, str] = {}
+    code_owner: Dict[str, str] = {}
     for e in active_entries:
-        dc = str(e.get("domain_code") or "000")
-        domain_counts[dc] = domain_counts.get(dc, 0) + 1
-    domain_seen, node_short_map = {}, {}
-    for e in active_entries:
-        nid, nkey, dc = str(e.get("node_id") or ""), str(e.get("node_key") or ""), str(e.get("domain_code") or "000")
-        seen_idx = domain_seen.get(dc, 0) + 1
-        domain_seen[dc] = seen_idx
-        ncode = dc if (domain_counts.get(dc, 0) == 1 or seen_idx == 1) else f"{dc}.{seen_idx}"
+        nid, nkey = str(e.get("node_id") or ""), str(e.get("node_key") or "")
+        ncode = _derive_entry_short_code(e)
+        if ncode in code_owner:
+            raise ValueError(f"[CODEBOOK-DUP-CODE] Duplicate short code '{ncode}' for '{code_owner[ncode]}' and '{e.get('path') or nkey}'")
+        code_owner[ncode] = str(e.get("path") or nkey)
         node_short_map[nid] = ncode
         if nkey:
             node_short_map[nkey] = ncode
@@ -169,7 +202,9 @@ def compile_codebook_map(  # noqa: god-function
 ) -> Dict[str, Any]:
     """D-05: Compile Turn-1 Frozen @D/@C/@G Codebook Map with L1/L2/L3 scale tiering and reverse_lookup dictionary."""
     brain_rel = get_brain_rel_dir(project_root)
-    active_entries = sorted([e for e in entries if e.get("status") not in ("archived", "deprecated")], key=lambda e: (str(e.get("domain_code") or "999"), str(e.get("node_key") or ""), str(e.get("node_id") or "")))
+    active_entries = [e for e in entries if e.get("status") not in ("archived", "deprecated")]
+    node_short_map = _build_node_short_map(active_entries)
+    active_entries.sort(key=lambda e: _short_code_sort_key(node_short_map.get(str(e.get("node_id") or ""), node_short_map.get(str(e.get("node_key") or ""), str(e.get("domain_code") or "000"))), str(e.get("node_key") or ""), str(e.get("node_id") or "")))
     total_scripts, total_nodes = len(intel_map), len(active_entries)
     tier = "L1-Full" if (total_scripts <= 150 and total_nodes <= 80) else ("L2-Cluster" if total_scripts <= 1500 else "L3-ActiveCone")
     canonical_dirs = [("M", "memory/"), ("C", "memory/codex/"), ("E", "memory/episodic/"), ("P", "memory/specs/"), ("W", "memory/wiki/"), ("A", "memory/audits/"), ("H", "schemas/"), ("S", "scripts/"), ("J", "projects/"), ("X", f"{brain_rel}/extensions/"), ("XS", f"{brain_rel}/extensions/subagent/")]
@@ -217,7 +252,6 @@ def compile_codebook_map(  # noqa: god-function
     for dcode in sorted_dir_codes:
         reverse_lookup[dcode] = {"kind": "dir", "code": dcode, "path": code_to_dir[dcode]}
 
-    node_short_map = _build_node_short_map(active_entries)
     active_pins = _load_active_handover_pins(project_root)
     folded_shard_ids, bp_summaries = _compute_blueprint_folding(active_entries, active_pins)
     folded_310_ids, wiki_dir_line = _build_310_topic_directory(active_entries, node_short_map, folded_shard_ids, active_pins)
@@ -266,7 +300,7 @@ def compile_codebook_map(  # noqa: god-function
         "@R (Write Route): 業務專案程式碼->J(projects/<project_id>/{src,scripts,tests,configs}/) | 開架知識庫(領域百科wiki/操作指南sop/詞彙表glossary/討論與備忘錄note)->W(memory/wiki/)[310-499,免雙審自動補標頭] | 抓蟲/修復藍帖->A(memory/audits/)[type:audit] | 已拍板新規格->P(memory/specs/)[type:spec] | 活躍工單->M:LEDGER.md | 臨時草稿->scratch/ (未定案嚴禁建spec；修Bug嚴禁塗改舊藍圖) | 生命週期: draft(規劃/施工中) -> verified(實測通過定稿) -> archived(討論筆記已收斂升級封存，保留 depends_on 脈絡但過濾 @M 視野) / deprecated(路線廢棄)",
         "@M (Nodes):", *(m_rows if m_rows else ["  (none)"]), "@C (Scripts):", *(c_rows if c_rows else ["  (none)"]),
         "@G (Topology Graph — DAG / Governance Synapses / Code AST Imports):", *g_lines,
-        '💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；可直接用 `@D`+`@M`/`@C` 還原路徑，或執行 `python3 scripts/auto_update_map.py --query "200"` 查閱完整中文摘要與符號。',
+        '💡 [Lookup Rule]: `<` 表示 depends_on，`=>` 表示記憶管轄腳本，`->` 表示程式碼 AST 引用；禁止整檔讀取 CONTEXT_MAP.md (限 \'## 2.\' 之前)，請優先用 MCP `netark_query(query="status:reviewing"|"status:draft"|"310:draft"|"<Topic>")`、`netark_guard(action="handover")` 或 `python3 scripts/auto_update_map.py --query "200"` 查閱。',
     ])
     raw_uncompressed_est = sum(len(str(e.get("path", ""))) * 3 + len(str(e.get("summary_1line", ""))) + len(json.dumps(e, ensure_ascii=False)) for e in active_entries) + sum(len(sp) * 4 + len(json.dumps(intel_map.get(sp, {}), ensure_ascii=False)) for sp in selected_scripts)
     saved_pct = round((1.0 - (len(compact_text) / max(raw_uncompressed_est, len(compact_text) + 1))) * 100.0, 1)

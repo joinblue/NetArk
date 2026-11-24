@@ -24,11 +24,11 @@ from scripts.netark_guard_daemon import (  # noqa: E402
 
 MCP_SERVER_INSTRUCTIONS = (
     "NetArk is a Hook-first governance & memory harness: security, AST, RIBC, and handover checks run automatically via `netark-mcp hook`. "
-    "Use these 3 MCP tools for memory & verification: "
-    "(1) `netark_query(query)` BEFORE reading/editing to resolve @D/@C/@G codes, specs, topics, or 1-hop AST impact; "
+    "Use these 3 MCP tools for memory & verification (NEVER whole-read `memory/codex/CONTEXT_MAP.md` past '## 2.'): "
+    '(1) `netark_query(query="status:reviewing"|"status:draft"|"310:draft"|"<Topic>")` BEFORE reading/editing to resolve @D/@C/@G codes, status buckets, specs, topics, or 1-hop AST impact; '
     "(2) `netark_record(intent, title, body, mode='preflight'|'write')` for ALL `memory/**/*.md` writes (never raw file writes); "
-    "(3) `netark_guard(action)` for full-repo schema+DAG validation (`oracle`), handover/policy status (`handover`|`status`), "
-    "or the universal Hook CLI contract (`setup`) to wire hooks on any host (AGY, Claude, Pi .ts, Cursor, etc.)."
+    '(3) `netark_guard(action="handover")` for session tracks/objective before memory triage, `oracle` for full-repo schema+DAG validation, `status` for policy status, '
+    "or `setup` for the universal Hook CLI contract to wire hooks on any host (AGY, Claude, Pi .ts, Cursor, etc.)."
 )
 
 

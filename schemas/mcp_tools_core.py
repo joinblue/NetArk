@@ -24,9 +24,9 @@ from scripts.netark_init import CORE_MEMORY_MAP, DEFAULT_ENTERPRISE_POLICY  # no
 from scripts.sync_doc_metadata import apply_supersedes_transitions  # noqa: E402
 
 MCP_TOOLS_SCHEMA: List[Dict[str, Any]] = [
-    {"name": "netark_query", "description": "Query map", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "project_id": {"type": "string"}}, "required": ["query"]}},
+    {"name": "netark_query", "description": "Query map/nodes/topics", "inputSchema": {"type": "object", "properties": {"query": {"type": "string", "description": "Code/key/topic/bucket: status:reviewing | status:draft | 310:draft | <Topic>"}, "project_id": {"type": "string"}}, "required": ["query"]}},
     {"name": "netark_record", "description": "Record md", "inputSchema": {"type": "object", "properties": {"intent": {"enum": ["wiki", "note", "sop", "glossary", "blueprint", "spec", "audit", "handover"]}, "title": {"type": "string"}, "body": {"type": "string"}, "mode": {"enum": ["preflight", "write"]}, "domain_code": {}, "slug": {}, "topic": {}, "parent_blueprint": {}, "shard_modules": {}, "stub_paths": {}, "scope_profile": {}, "supersedes": {}, "relates_to": {}, "affected_paths": {}}, "required": ["intent", "title", "body"]}},
-    {"name": "netark_guard", "description": "Guard/setup", "inputSchema": {"type": "object", "properties": {"action": {"enum": ["status", "oracle", "handover", "setup"]}}, "required": ["action"]}},
+    {"name": "netark_guard", "description": "Guard/handover/setup (never whole-read CONTEXT_MAP.md past '## 2.')", "inputSchema": {"type": "object", "properties": {"action": {"enum": ["status", "oracle", "handover", "setup"], "description": "handover=tracks/objective; oracle=schema+DAG; status=policy; setup=hooks"}}, "required": ["action"]}},
 ]
 
 INTENT_ROUTES: Dict[str, Tuple[str, str, str]] = {
@@ -90,8 +90,11 @@ def _resolve_record_target(intent: str, title: str, slug: str, dom_arg: str, roo
     dom = dom_arg.strip() or default_dom
     clean_slug = re.sub(r"[^A-Za-z0-9]+", "_", (slug or title or "ENTRY")).strip("_").upper() or "ENTRY"
     if intent == "handover":
-        fname = f"HANDOVER_{clean_slug}.md" if slug.strip() else "HANDOVER.md"
-        return f"{target_dir}/{fname}", dom, art_type, (f"HANDOVER_{clean_slug}" if slug.strip() else "HANDOVER")
+        if not slug.strip():
+            return f"{target_dir}/HANDOVER.md", dom, art_type, "HANDOVER"
+        max_seq = max((int(m.group(1)) for p in (root / target_dir).glob("HANDOVER_*.md") if (m := re.match(r"^HANDOVER_(\d{2})_", p.name))), default=1)
+        clean_ho = re.sub(r"^\d{2}_", "", clean_slug) or clean_slug
+        return f"{target_dir}/HANDOVER_{max_seq + 1:02d}_{clean_ho}.md", dom, art_type, f"HANDOVER_{clean_ho}"
     tdir = root / target_dir
     existing = list(tdir.glob(f"{dom}_*.md")) if tdir.is_dir() else []
     max_seq = max((int(m.group(1)) for p in existing if (m := re.match(rf"^{re.escape(dom)}_(\d{{2}})_", p.name))), default=0)

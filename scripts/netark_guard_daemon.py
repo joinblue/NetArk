@@ -204,8 +204,13 @@ class NetArkGuardEngine:
         self.policy = load_enterprise_policy(cwd)
         self.license_info = verify_enterprise_license(license_key)
         self.audit_path = audit_path or str(_resolve_audit_path(cwd))
-        self.tier1 = Tier1ClassifierSlot()
+        self._tier1: Optional[Tier1ClassifierSlot] = None
         self.tier2 = Tier2SemanticSlot()
+
+    @property
+    def tier1(self) -> Tier1ClassifierSlot:
+        if self._tier1 is None: self._tier1 = Tier1ClassifierSlot()
+        return self._tier1
 
     def _should_fast_path(self, tool_name: str, args: Dict[str, Any]) -> bool:
         pol = self.policy if isinstance(self.policy, dict) else {}
@@ -307,7 +312,7 @@ def _run_hook_mode(host: str, default_cwd: str) -> int:
         print(msg, file=sys.stderr)
         return 2
     if host == "agy":
-        print(json.dumps({"decision": "allow", **({"message": verdict["warning"]} if verdict.get("warning") else {})}, ensure_ascii=False))
+        print(json.dumps({"decision": "allow"}, ensure_ascii=False))
     elif verdict.get("warning"):
         print(verdict["warning"], file=sys.stderr)
     return 0
