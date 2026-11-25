@@ -3,11 +3,14 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import os
 import socket
 import ssl
 import subprocess
 import sys
 import tempfile
+import threading
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, Tuple
@@ -172,9 +175,9 @@ class ControlNotebookHandler(BaseHTTPRequestHandler):
 class DualProtocolHTTPServer(ThreadingHTTPServer):
     """Supports both plain HTTP and HTTPS (TLS) on the same port."""
 
-    def __init__(self, server_address: Tuple[str, int], RequestHandlerClass: Any) -> None:
+    def __init__(self, server_address: Tuple[str, int], RequestHandlerClass: Any, enable_tls: bool = True) -> None:
         super().__init__(server_address, RequestHandlerClass)
-        self.ssl_ctx: ssl.SSLContext | None = self._create_self_signed_ssl_context()
+        self.ssl_ctx: ssl.SSLContext | None = self._create_self_signed_ssl_context() if enable_tls else None
 
     @staticmethod
     def _create_self_signed_ssl_context() -> ssl.SSLContext | None:
@@ -214,26 +217,96 @@ class DualProtocolHTTPServer(ThreadingHTTPServer):
         return conn, addr
 
 
-def run_server(host: str = "127.0.0.1", port: int = 8765, cwd: str | None = None) -> None:
-    """Start the PM Control Center Dual HTTP/HTTPS server."""
-    if cwd:
-        ws_root = Path(cwd).resolve()
-        if (ws_root / "memory").is_dir() and not (ws_root / "memory" / "index" / "CONTEXT_INDEX.json").is_file():
-            repo_root = DASHBOARD_ROOT.parent
-            if str(repo_root) not in sys.path and (repo_root / "schemas").is_dir():
-                sys.path.insert(0, str(repo_root))
-            from schemas.mcp_tools_core import compile_and_write_indices
+def _prepare_workspace(cwd: str) -> Path:
+    """Resolve workspace root, compile missing indices if memory/ exists, and activate workspace."""
+    ws_root = Path(cwd).resolve()
+    if (ws_root / "memory").is_dir() and not (ws_root / "memory" / "index" / "CONTEXT_INDEX.json").is_file():
+        repo_root = DASHBOARD_ROOT.parent
+        if str(repo_root) not in sys.path and (repo_root / "schemas").is_dir():
+            sys.path.insert(0, str(repo_root))
+        from schemas.mcp_tools_core import compile_and_write_indices
 
-            compile_and_write_indices(ws_root)
-        set_workspace_root(ws_root)
-    server = DualProtocolHTTPServer((host, port), ControlNotebookHandler)
+        compile_and_write_indices(ws_root)
+    set_workspace_root(ws_root)
+    return ws_root
+
+
+def _is_port_open(host: str, port: int, timeout: float = 0.15) -> bool:
+    """Return True if a TCP listener accepts connections on host:port."""
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def _probe_existing_dashboard(host: str, port: int, ws_root: Path, timeout: float = 0.4) -> bool:
+    """Return True if http://{host}:{port}/api/projects serves the exact ws_root."""
+    try:
+        with urllib.request.urlopen(f"http://{host}:{port}/api/projects", timeout=timeout) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return False
+    projects = payload.get("projects") if isinstance(payload, dict) else None
+    return isinstance(projects, list) and any(
+        isinstance(p, dict) and str(p.get("root") or "").strip() and Path(str(p["root"])).resolve() == ws_root
+        for p in projects
+    )
+
+
+def start_background_dashboard(cwd: str, host: str = "127.0.0.1", base_port: int | None = None, max_port_scan: int = 11) -> Dict[str, Any]:
+    """Start or reuse a plain-HTTP background dashboard daemon without touching stdout."""
+    if os.environ.get("NETARK_DASHBOARD", "1").strip().lower() in ("0", "false", "no", "off"):
+        return {"status": "disabled", "url": None, "port": None, "server": None}
+    ws_root = Path(cwd).resolve()
+    if not (ws_root / "memory").is_dir():
+        return {"status": "skipped_no_memory", "url": None, "port": None, "server": None}
+    try:
+        start_port = int(base_port) if base_port is not None else int(os.environ.get("NETARK_DASHBOARD_PORT", "8765").strip() or "8765")
+    except ValueError:
+        start_port = 8765
+    for port in range(start_port, start_port + max(1, max_port_scan)):
+        url = f"http://{host}:{port}"
+        if _is_port_open(host, port):
+            if _probe_existing_dashboard(host, port, ws_root):
+                return {"status": "reused", "url": url, "port": port, "server": None}
+            continue
+        try:
+            server = DualProtocolHTTPServer((host, port), ControlNotebookHandler, enable_tls=False)
+        except OSError:
+            if _probe_existing_dashboard(host, port, ws_root):
+                return {"status": "reused", "url": url, "port": port, "server": None}
+            continue
+        _prepare_workspace(str(ws_root))
+        threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.05}, name="netark-dashboard-bg", daemon=True).start()
+        return {"status": "started", "url": url, "port": port, "server": server}
+    return {"status": "port_exhausted", "url": None, "port": None, "server": None}
+
+
+def run_server(host: str = "127.0.0.1", port: int = 8765, cwd: str | None = None) -> int:
+    """Start the PM Control Center Dual HTTP/HTTPS server."""
+    ws_root = Path(cwd).resolve() if cwd else DASHBOARD_ROOT.parent.resolve()
+    if _is_port_open(host, port):
+        if _probe_existing_dashboard(host, port, ws_root):
+            print(f"ℹ️ NetArk Dashboard 已在 http://{host}:{port} 運行中（相同專案），請直接於瀏覽器開啟。", flush=True)
+            return 0
+        print(f"❌ 埠號 {host}:{port} 已被其他程式或專案佔用，請改用 --port {port + 1}。", file=sys.stderr, flush=True)
+        return 1
+    try:
+        server = DualProtocolHTTPServer((host, port), ControlNotebookHandler, enable_tls=True)
+    except OSError as exc:
+        print(f"❌ 無法綁定 {host}:{port}: {exc}", file=sys.stderr, flush=True)
+        return 1
+    if cwd:
+        _prepare_workspace(cwd)
     print(f"🚀 NetArk 專案控管中心已啟動 (同時支援 HTTP 與 HTTPS): http://{host}:{port}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         server.server_close()
+    return 0
 
 
 if __name__ == "__main__":
     port_arg = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
-    run_server("127.0.0.1", port_arg)
+    raise SystemExit(run_server("127.0.0.1", port_arg))

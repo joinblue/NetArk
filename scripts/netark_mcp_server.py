@@ -71,24 +71,49 @@ def _handle_rpc_request(msg: Dict[str, Any], cwd: str) -> Optional[Dict[str, Any
     return None
 
 
+def _maybe_start_serve_dashboard(cwd: str) -> Optional[Any]:
+    """Start or reuse local dashboard in background without writing to stdout."""
+    try:
+        from dashboard.backend.server import start_background_dashboard
+
+        info = start_background_dashboard(cwd)
+        if info.get("url"):
+            os.environ["NETARK_ACTIVE_DASHBOARD_URL"] = str(info["url"])
+        else:
+            os.environ.pop("NETARK_ACTIVE_DASHBOARD_URL", None)
+        return info.get("server")
+    except Exception:
+        return None
+
+
 def _run_serve(cwd: str) -> int:
-    while True:
-        line = sys.stdin.readline()
-        if not line:
-            break
-        stripped = line.strip()
-        if not stripped:
-            continue
-        try:
-            msg = json.loads(stripped)
-        except Exception:
-            _write_rpc({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}})
-            continue
-        if not isinstance(msg, dict):
-            _write_rpc({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request"}})
-            continue
-        if (resp := _handle_rpc_request(msg, cwd)) is not None:
-            _write_rpc(resp)
+    bg_server = _maybe_start_serve_dashboard(cwd)
+    try:
+        while True:
+            line = sys.stdin.readline()
+            if not line:
+                break
+            stripped = line.strip()
+            if not stripped:
+                continue
+            try:
+                msg = json.loads(stripped)
+            except Exception:
+                _write_rpc({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}})
+                continue
+            if not isinstance(msg, dict):
+                _write_rpc({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request"}})
+                continue
+            if (resp := _handle_rpc_request(msg, cwd)) is not None:
+                _write_rpc(resp)
+    finally:
+        if bg_server is not None:
+            try:
+                bg_server.shutdown()
+                bg_server.server_close()
+            except Exception:
+                pass  # noqa: silent-except
+        os.environ.pop("NETARK_ACTIVE_DASHBOARD_URL", None)
     return 0
 
 
@@ -275,8 +300,7 @@ def _run_dashboard_subcommand(argv: List[str]) -> int:
     root = resolve_mcp_workspace_root(args.cwd)
     from dashboard.backend.server import run_server
 
-    run_server(host=args.host, port=args.port, cwd=str(root))
-    return 0
+    return int(run_server(host=args.host, port=args.port, cwd=str(root)) or 0)
 
 
 def main(argv: Optional[List[str]] = None) -> int:

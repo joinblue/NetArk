@@ -47,24 +47,29 @@ def _load_embedded_schemas() -> Tuple[Dict[str, Any], Dict[str, Any]]:
     return json.loads(get_embedded_asset_text("schemas/artifact_header.schema.json")), json.loads(get_embedded_asset_text("schemas/context_node.schema.json"))
 
 
+def _atomic_write_text(path: Path, text: str) -> None:
+    """Atomically write UTF-8 text via a same-directory temp file and os.replace."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def compile_and_write_indices(root: Path) -> Dict[str, Any]:
     """Compile CONTEXT_INDEX.json, optional private index, and CONTEXT_MAP.md in-process."""
     index, private_index = build_public_and_private_indices(root)
     verify_no_plaintext_secrets_before_index_write(root, index)
     idx_path = root / "memory" / "index" / "CONTEXT_INDEX.json"
-    idx_path.parent.mkdir(parents=True, exist_ok=True)
-    idx_path.write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _atomic_write_text(idx_path, json.dumps(index, ensure_ascii=False, indent=2) + "\n")
     priv_idx, priv_map = root / "memory" / "index" / "PRIVATE_INDEX.json", root / "memory" / "private" / "CONTEXT_MAP.md"
     if private_index.get("total_nodes", 0) > 0:
-        priv_idx.write_text(json.dumps(private_index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        priv_map.parent.mkdir(parents=True, exist_ok=True)
-        priv_map.write_text(render_private_context_map(root, private_index), encoding="utf-8")
+        _atomic_write_text(priv_idx, json.dumps(private_index, ensure_ascii=False, indent=2) + "\n")
+        _atomic_write_text(priv_map, render_private_context_map(root, private_index))
     else:
         for p in (priv_idx, priv_map):
             p.unlink(missing_ok=True)
     map_path = root / "memory" / "codex" / "CONTEXT_MAP.md"
-    map_path.parent.mkdir(parents=True, exist_ok=True)
-    map_path.write_text(render_context_map(root, index), encoding="utf-8")
+    _atomic_write_text(map_path, render_context_map(root, index))
     return {"total_nodes": index["total_nodes"], "private_nodes": private_index.get("total_nodes", 0), "map_path": "memory/codex/CONTEXT_MAP.md"}
 
 
@@ -149,7 +154,14 @@ def _handle_netark_guard(args: Dict[str, Any], root: Path, cwd: str, lic: Dict[s
             break
     audit_path = _resolve_audit_path(cwd)
     entries = len([ln for ln in audit_path.read_text(encoding="utf-8").splitlines() if ln.strip()]) if audit_path.is_file() else 0
-    return {"ok": True, "action": "status", "license": lic, "policy": policy_info, "audit_log": {"path": str(audit_path), "exists": audit_path.is_file(), "entries": entries}}
+    return {
+        "ok": True,
+        "action": "status",
+        "license": lic,
+        "policy": policy_info,
+        "audit_log": {"path": str(audit_path), "exists": audit_path.is_file(), "entries": entries},
+        "dashboard_url": os.environ.get("NETARK_ACTIVE_DASHBOARD_URL") or None,
+    }
 
 
 def execute_netark_query(root: Path, query: str, project_id: str = "") -> Dict[str, Any]:

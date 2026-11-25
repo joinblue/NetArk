@@ -131,7 +131,7 @@ flowchart LR
   <img src="docs/assets/demo-dashboard-preview.png" width="100%" alt="NetArk 因果拓撲與治理狀態儀表板預覽">
 </p>
 
-在任意已初始化的工作區啟動零依賴本機唯讀戰情室：
+隨 `netark-mcp serve` 對話開啟自動於背景啟動 `http://127.0.0.1:8765`（同專案自動復用、跨專案自動遞補 `8766..8775`，設 `NETARK_DASHBOARD=0` 可關閉），亦可不開對話獨立啟動：
 
 ```bash
 netark-mcp dashboard --cwd . --port 8765

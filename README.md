@@ -131,7 +131,7 @@ Tracks every change from `draft` ➔ `reviewing` ➔ `stub_ready` ➔ `verified`
   <img src="docs/assets/demo-dashboard-preview.png" width="100%" alt="NetArk Causal Topology & Governance State Dashboard">
 </p>
 
-Launch the zero-dependency read-only local dashboard for any initialized workspace:
+Auto-starts on `http://127.0.0.1:8765` alongside `netark-mcp serve` (auto-reuses same-workspace sessions, increments ports `8766..8775` across workspaces, or disable with `NETARK_DASHBOARD=0`), or launch standalone without an AI session:
 
 ```bash
 netark-mcp dashboard --cwd . --port 8765

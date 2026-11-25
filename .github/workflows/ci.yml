@@ -88,6 +88,7 @@ jobs:
                   {"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "netark_record", "arguments": {"intent": "note", "title": "CI Note", "body": "- [FACT] Verified in CI.", "mode": "write"}}},
                   {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "netark_guard", "arguments": {"action": "oracle"}}},
                   {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "netark_guard", "arguments": {"action": "setup"}}},
+                  {"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "netark_guard", "arguments": {"action": "status"}}},
               ]
               rpc_in = "\n".join(json.dumps(r) for r in rpc_reqs) + "\n"
               srv = subprocess.run([cli, "serve", "--cwd", str(ws_mem)], input=rpc_in, text=True, encoding="utf-8", capture_output=True, check=True)
@@ -100,6 +101,7 @@ jobs:
               assert json.loads(resps[6]["content"][0]["text"])["ok"] is True
               assert json.loads(resps[7]["content"][0]["text"])["ok"] is True
               assert "Hook CLI Contract" in json.loads(resps[8]["content"][0]["text"])["contract"]
+              assert str(json.loads(resps[9]["content"][0]["text"]).get("dashboard_url") or "").startswith("http://127.0.0.1:")
 
               # Verify PreToolUse deterministic hooks across dialects
               env_payload = json.dumps({"tool_name": "read_file", "tool_input": {"path": ".env"}})

@@ -4,15 +4,21 @@
 
 ---
 
-## 🚀 1. 快速啟動方式
+## 🚀 1. 啟動方式（自動隨對話啟動 ＋ 獨立手開）
 
-### 方式 A：使用 `netark-mcp` CLI 或 Python 直接啟動
+### 模式一：隨 AI 對話自動背景啟動（預設）
+當宿主開啟對話載入 `netark-mcp serve` 時，會於背景執行緒自動啟動唯讀本機 Dashboard（`http://127.0.0.1:8765`，零 `stdout` 汙染）：
+- **同專案多開復用**：同一工作區開啟多個對話時自動偵測並復用現有埠號，不重複啟動。
+- **跨專案自動遞補**：若 `8765` 已被其他專案佔用，自動依序掃描 `8766..8775`（可透過 `netark_guard(action="status")` 的 `dashboard_url` 查詢實際網址）。
+- **環境變數開關**：設 `NETARK_DASHBOARD=0` 可關閉自動啟動；設 `NETARK_DASHBOARD_PORT` 可自訂起始埠號。
+
+### 模式二：不開對話獨立使用（`netark-mcp dashboard` / Python）
 ```bash
 netark-mcp dashboard --cwd . --port 8765
-# 或
+# 或在母倉直接執行
 python3 dashboard/backend/server.py 8765
 ```
-*（預設監聽 `127.0.0.1:8765`，內建首字節 `0x16` TLS 自動探測，同一埠號同時支援 `http://127.0.0.1:8765` 與 `https://127.0.0.1:8765`）*
+*（預設監聽 `127.0.0.1:8765`，若同專案已由背景運行會友善提示直接開啟；手動啟動內建首字節 `0x16` TLS 自動探測，同一埠號同時支援 HTTP 與 HTTPS）*
 
 ### 方式 B：同時掛載多個 NetArk 架構專案
 透過環境變數 `NETARK_EXTRA_PROJECTS`（以 `:` 分隔多個專案根目錄路徑）即可於右上角下拉選單一鍵切換不同專案：
