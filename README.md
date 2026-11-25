@@ -131,6 +131,12 @@ Tracks every change from `draft` ➔ `reviewing` ➔ `stub_ready` ➔ `verified`
   <img src="docs/assets/demo-dashboard-preview.png" width="100%" alt="NetArk Causal Topology & Governance State Dashboard">
 </p>
 
+Launch the zero-dependency read-only local dashboard for any initialized workspace:
+
+```bash
+netark-mcp dashboard --cwd . --port 8765
+```
+
 ---
 
 ## 3 High-Cohesion MCP Tools

@@ -266,14 +266,27 @@ def _run_uninstall_subcommand(argv: List[str]) -> int:
     return 0
 
 
+def _run_dashboard_subcommand(argv: List[str]) -> int:
+    p = argparse.ArgumentParser(prog="netark-mcp dashboard", description="NetArk Local Control Center Dashboard")
+    p.add_argument("--cwd", default=".")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8765)
+    args = p.parse_args(argv)
+    root = resolve_mcp_workspace_root(args.cwd)
+    from dashboard.backend.server import run_server
+
+    run_server(host=args.host, port=args.port, cwd=str(root))
+    return 0
+
+
 def main(argv: Optional[List[str]] = None) -> int:
-    """Unified entrypoint for serve, hook, init, and uninstall subcommands."""
+    """Unified entrypoint for serve, hook, init, uninstall, and dashboard subcommands."""
     for _stream in (sys.stdin, sys.stdout, sys.stderr):
         if hasattr(_stream, "reconfigure"):
             _stream.reconfigure(encoding="utf-8", errors="replace")
     raw = list(sys.argv[1:] if argv is None else argv)
     if not raw or raw[0] in {"-h", "--help"}:
-        print("Usage: netark-mcp {serve|hook|init|uninstall} [options]", file=sys.stderr)
+        print("Usage: netark-mcp {serve|hook|init|uninstall|dashboard} [options]", file=sys.stderr)
         return 0 if raw else 2
     sub, rest = raw[0], raw[1:]
     if sub == "serve":
@@ -286,6 +299,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _run_init_subcommand(rest)
     if sub == "uninstall":
         return _run_uninstall_subcommand(rest)
+    if sub == "dashboard":
+        return _run_dashboard_subcommand(rest)
     print(f"Unknown subcommand: {sub}", file=sys.stderr)
     return 2
 

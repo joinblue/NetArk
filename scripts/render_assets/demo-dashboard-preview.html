@@ -30,6 +30,23 @@
       grid-template-columns: 296px 1fr;
       flex: 1;
       overflow: hidden;
+      position: relative;
+    }
+    .pane-pill {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(14, 16, 21, 0.92);
+      border: 1px solid var(--brand-border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
     }
     .sidebar {
       border-right: 1px solid var(--border);
@@ -170,12 +187,12 @@
       <div class="dash-topbar">
         <div style="display:flex;align-items:center;gap:10px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-          <span class="mono" style="font-size:13px;font-weight:700;">netark_guard(action="oracle")</span>
-          <span class="badge">Track: ARCH-GOVERNANCE</span>
+          <span class="mono" style="font-size:13px;font-weight:700;">netark-mcp dashboard --cwd .</span>
+          <span class="badge">127.0.0.1:8765 · Read-Only</span>
         </div>
         <div class="kpi-strip">
-          <span class="badge">Modules: 22 (&le;400L)</span>
-          <span class="badge">Shards: 12 verified</span>
+          <span class="badge">72ch Focus Mode</span>
+          <span class="badge">Collapsible AST (4)</span>
           <span class="badge badge-pass">Guard: Tier-0 Active</span>
         </div>
       </div>
@@ -202,12 +219,12 @@
           <div class="filter-row">
             <div class="tabs">
               <span class="tab active">verified (12)</span>
-              <span class="tab">stub_ready (0)</span>
+              <span class="tab">stub_ready (1)</span>
               <span class="tab">reviewing (5)</span>
               <span class="tab">draft (4)</span>
               <span class="tab">archived (7)</span>
             </div>
-            <span class="mono" style="font-size:12px;color:var(--text-muted);">DAG: 0 broken links</span>
+            <span class="badge badge-brand">⛶ Focus Expand</span>
           </div>
 
           <div class="topo-grid">
@@ -284,6 +301,7 @@
             </div>
           </div>
         </div>
+        <div class="pane-pill">◀ &nbsp; Split &nbsp; ▶</div>
       </div>
     </div>
   </div>

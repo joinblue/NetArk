@@ -131,6 +131,12 @@ flowchart LR
   <img src="docs/assets/demo-dashboard-preview.png" width="100%" alt="NetArk 因果拓撲與治理狀態儀表板預覽">
 </p>
 
+在任意已初始化的工作區啟動零依賴本機唯讀戰情室：
+
+```bash
+netark-mcp dashboard --cwd . --port 8765
+```
+
 ---
 
 ## 3 大高內聚 MCP 工具
