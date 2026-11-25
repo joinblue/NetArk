@@ -160,12 +160,30 @@ def execute_netark_query(root: Path, query: str, project_id: str = "") -> Dict[s
     return res
 
 
+def resolve_mcp_workspace_root(cwd: str) -> Path:
+    """Resolve workspace root for MCP server, honoring NETARK_MEMORY_ROOT and escaping host plugin dirs."""
+    raw = (cwd or "").strip()
+    if raw in ("", "."):
+        env_root = os.environ.get("NETARK_MEMORY_ROOT", "").strip()
+        if env_root and "${" not in env_root:
+            return Path(env_root).expanduser().resolve()
+    cand = Path(raw or ".").resolve()
+    parts = cand.parts
+    for idx in range(len(parts) - 1):
+        if parts[idx] == ".agents" and parts[idx + 1] == "plugins":
+            return Path(*parts[:idx]).resolve() if idx > 0 else cand
+    if cand.name in (".agents", ".claude", ".pi", ".netark") and (cand.parent / "memory").is_dir():
+        return cand.parent
+    return cand
+
+
 def handle_mcp_tool_call(name: str, arguments: Dict[str, Any], cwd: str) -> Dict[str, Any]:
     """Dispatch netark_query, netark_record, and netark_guard MCP tool invocations."""
-    root, args, lic = Path(cwd).resolve(), (arguments if isinstance(arguments, dict) else {}), verify_enterprise_license()
+    root = resolve_mcp_workspace_root(cwd)
+    args, lic = (arguments if isinstance(arguments, dict) else {}), verify_enterprise_license()
     if name == "netark_query": return {**execute_netark_query(root, str(args.get("query") or ""), str(args.get("project_id") or "")), "license": lic}
     if name == "netark_record": return _handle_netark_record(args, root, lic)
-    if name == "netark_guard": return _handle_netark_guard(args, root, cwd, lic)
+    if name == "netark_guard": return _handle_netark_guard(args, root, str(root), lic)
     return {"ok": False, "error": f"Unknown tool: {name}", "license": lic}
 
 

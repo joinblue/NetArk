@@ -167,13 +167,17 @@ def evaluate_command_and_path(tool_name: str, args: Dict[str, Any], cwd: str = "
     cmd_str = str(safe_args.get("command") or safe_args.get("CommandLine") or "")
     target_path = str(safe_args.get("path") or safe_args.get("Path") or safe_args.get("file_path") or safe_args.get("TargetFile") or "")
     policy = load_enterprise_policy(cwd_str)
-    rel = ""
+    rel, in_workspace = "", False
     if target_path:
         if _is_secret_path(target_path):
             return {"allowed": False, "code": "SEC-CRED", "reason": f"Access to secret file '{target_path}' is blocked."}
-        try: rel = str(Path(target_path).resolve().relative_to(Path(cwd_str).resolve())).replace("\\", "/")
-        except (ValueError, OSError): rel = target_path.replace("\\", "/")
-    if rel and tool in WRITE_TOOLS:
+        root_p, cand_p = Path(cwd_str).expanduser().resolve(), Path(target_path).expanduser()
+        resolved_p = (root_p / cand_p).resolve() if not cand_p.is_absolute() else cand_p.resolve()
+        try:
+            rel, in_workspace = str(resolved_p.relative_to(root_p)).replace("\\", "/"), True
+        except (ValueError, OSError):
+            rel = str(resolved_p).replace("\\", "/")
+    if rel and in_workspace and tool in WRITE_TOOLS:
         allow_cp = os.environ.get("NETARK_ALLOW_CONTROL_PLANE") == "1" or os.environ.get("PRISM_ALLOW_CONTROL_PLANE") == "1"
         raw_prot = policy.get("protected_paths")
         cp_prefixes = () if allow_cp else PROTECTED_CONTROL_PATHS + tuple(str(p) for p in (raw_prot if isinstance(raw_prot, list) else []) if p)

@@ -14,7 +14,8 @@ if str(ROOT_DIR) not in sys.path:
 from schemas import schema_validator as sv  # noqa: E402
 from schemas.hook_lifecycle import _run_pre_invocation_mode, _run_session_start_mode, queue_agy_post_alert  # noqa: E402
 from schemas.mcp_tools_core import (  # noqa: E402
-    MCP_TOOLS_SCHEMA, compile_and_write_indices, get_embedded_asset_text, handle_mcp_tool_call, run_closed_mcp_init,
+    MCP_TOOLS_SCHEMA, compile_and_write_indices, get_embedded_asset_text, handle_mcp_tool_call,
+    resolve_mcp_workspace_root, run_closed_mcp_init,
 )
 from schemas.topology_graph import check_code_to_spec_drift, query_codebook_entry  # noqa: E402
 from schemas.yaml_lite import _parse_simple_yaml  # noqa: E402, F401
@@ -278,7 +279,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     if sub == "serve":
         sp = argparse.ArgumentParser(prog="netark-mcp serve")
         sp.add_argument("--cwd", default=".")
-        return _run_serve(sp.parse_args(rest).cwd)
+        return _run_serve(str(resolve_mcp_workspace_root(sp.parse_args(rest).cwd)))
     if sub == "hook":
         return _run_hook_subcommand(rest)
     if sub == "init":

@@ -56,10 +56,12 @@ def check_web_and_ssrf_guard(tool_name: str, args: Dict[str, Any], policy: Optio
 
 
 def check_code_placement(rel_path: str, cwd: str, policy: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-    rel = (rel_path or "").replace("\\", "/").lstrip("./")
-    if not rel or not rel.lower().endswith(CODE_FILE_EXTS): return None
-    root = Path(cwd or ".").resolve()
-    if (root / rel).is_file(): return None
+    raw = (rel_path or "").strip()
+    if not raw: return None
+    root, cand = Path(cwd or ".").expanduser().resolve(), Path(raw).expanduser()
+    try: rel = str(cand.resolve().relative_to(root)).replace("\\", "/") if cand.is_absolute() else raw.replace("\\", "/").lstrip("./")
+    except (ValueError, OSError): return None
+    if not rel or not rel.lower().endswith(CODE_FILE_EXTS) or (root / rel).is_file(): return None
     pol = policy if isinstance(policy, dict) else {}
     raw_roots, raw_subs = pol.get("approved_code_roots"), pol.get("project_subdirs")
     roots = {str(r).strip().strip("/") for r in raw_roots if str(r).strip()} if isinstance(raw_roots, (list, tuple, set)) else APPROVED_CODE_ROOTS
@@ -78,8 +80,8 @@ def check_code_placement(rel_path: str, cwd: str, policy: Optional[Dict[str, Any
         if len(parts) < 3 or parts[2] not in subdirs:
             return {"allowed": False, "code": "SEC-CODE-PLACEMENT", "reason": f"Project code '{rel}' must reside within a valid project subdirectory {sorted(subdirs)} (e.g. 'projects/<project_id>/src/...').{proj_hint}"}
         return None
-    if parts[0] not in roots and (root / "memory" / "codex").exists():
-        return {"allowed": False, "code": "SEC-CODE-PLACEMENT", "reason": f"Root folder '{parts[0]}' is not an approved code root in NetArk. Approved roots: {sorted(roots)}.{proj_hint}"}
+    if parts[0] not in roots and (root / "memory" / "codex").exists() and (parts[0] == "memory" or not (root / parts[0]).is_dir()):
+        return {"allowed": False, "code": "SEC-CODE-PLACEMENT", "reason": f"Root folder '{parts[0]}' is not an approved code root in NetArk (and does not already exist). Approved roots: {sorted(roots)}.{proj_hint}"}
     return None
 
 
@@ -386,12 +388,9 @@ def check_stub_first_gate(rel_path: str, old_text: str, new_text: str, existed: 
     old_s, new_s = old_text or "", new_text or ""
     delta_eff = count_effective_code_lines(new_s, ".py") - count_effective_code_lines(old_s, ".py")
     added_defs = _top_level_defs(new_s) - _top_level_defs(old_s)
-    try:
-        raw_d = pol.get("stub_first_edit_delta_lines")
-        delta_limit = int(25 if raw_d is None else raw_d)
-    except (TypeError, ValueError):
-        delta_limit = 25
-    if delta_limit <= 0: delta_limit = 25
+    try: delta_limit = int(25 if (raw_d := pol.get("stub_first_edit_delta_lines")) is None else raw_d)
+    except (TypeError, ValueError): delta_limit = 25
+    delta_limit = delta_limit if delta_limit > 0 else 25
     if delta_eff >= delta_limit or added_defs:
         return {"allowed": False, "ask_confirmation": True, "code": "STUB-FIRST-GATE", "reason": f"[STUB-FIRST-GATE] Modifying existing module '{rel}' (+{delta_eff} effective lines or new top-level symbols {sorted(added_defs)[:4]}) without an active 'stub_ready' Spec or Audit requires confirmation."}
     return None
