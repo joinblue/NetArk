@@ -15,7 +15,7 @@
   "properties": {
     "node_id": {
       "type": "string",
-      "pattern": "^MEM-[0-9]{4}-[0-9]{4}$",
+      "pattern": "^MEM-[0-9]{4}-[0-9]{4,}$",
       "description": "唯一記憶節點 ID (例如: MEM-2026-0001)"
     },
     "artifact_type": {

@@ -3,7 +3,7 @@
 NetArk Governed Markdown Initializer & Wiki Auto-Header Engine (schemas/doc_initializer.py)
 ===========================================================================================
 Extracted from `scripts/sync_doc_metadata.py` to enforce modular separation:
-  - `allocate_next_node_id`: Sequential `MEM-YYYY-XXXX` allocator (ignoring sentinel IDs >= 0099)
+  - `allocate_next_node_id`: Sequential `MEM-YYYY-XXXX+` allocator (frontmatter-only scan, dynamic year, skipping sentinel band 9900-9999)
   - `init_memory_node` (`init_governed_markdown` alias): Generates governed YAML frontmatter & body
   - `auto_initialize_wiki_node`: Automatically initializes headerless Markdown nodes under `memory/wiki/`
 """
@@ -24,7 +24,10 @@ if str(SCHEMAS_DIR) not in sys.path:
 
 import schema_validator as sv  # type: ignore  # noqa: E402
 
-NODE_ID_RE = re.compile(r"MEM-(\d{4})-(\d{4})")
+NODE_ID_RE = re.compile(r"MEM-(\d{4})-(\d{4,})")
+FM_NODE_ID_RE = re.compile(r'(?m)^node_id:\s*["\']?MEM-(\d{4})-(\d{4,})["\']?\s*(?:#.*)?$')
+SENTINEL_SEQ_MIN = 9900
+SENTINEL_SEQ_MAX = 9999
 WIKILINK_RE = re.compile(r"\[\[([A-Za-z0-9_.-]+)(?:\|[^\]]+)?\]\]")
 GENERIC_TOPICS = {"Wiki", "Governance", "General"}
 TOPIC_TAG_RE = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -112,19 +115,38 @@ def _compute_epistemic_counts(body: str) -> Dict[str, int]:
     return {key: len(pattern.findall(body)) for key, pattern in sv.EPISTEMIC_TAGS.items()}
 
 
+def _extract_frontmatter_block(text: str) -> str:
+    norm = text.lstrip("\ufeff")
+    if not (norm.startswith("---\n") or norm.startswith("---\r\n")):
+        return ""
+    m = re.match(r"^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)", norm)
+    return m.group(1) if m else ""
+
+
 def _scan_max_node_seq_in_file(f: Path, year: int) -> int:
-    if not f.is_file() or f.suffix not in (".md", ".json") or any(s in f.name for s in ("SENTINEL-X", "900_SENTINEL", "910_SENTINEL")):
+    if not f.is_file() or f.suffix != ".md" or f.name == "CONTEXT_MAP.md" or any(s in f.name for s in ("SENTINEL-X", "900_SENTINEL", "910_SENTINEL")):
         return 0
-    try: text = f.read_text(encoding="utf-8", errors="ignore")
-    except Exception: return 0
-    return max((int(m.group(2)) for m in NODE_ID_RE.finditer(text) if int(m.group(1)) == year and int(m.group(2)) < 99), default=0)
+    try: fm_block = _extract_frontmatter_block(f.read_text(encoding="utf-8", errors="ignore"))
+    except Exception: return 0  # noqa: silent-except
+    if not fm_block:
+        return 0
+    m = FM_NODE_ID_RE.search(fm_block)
+    if not m or int(m.group(1)) != year:
+        return 0
+    seq = int(m.group(2))
+    return 0 if SENTINEL_SEQ_MIN <= seq <= SENTINEL_SEQ_MAX else seq
 
 
-def allocate_next_node_id(memory_root: Path, year: int = 2026) -> str:
-    """Scans memory/ for all MEM-YYYY-XXXX node IDs (< 0099) and returns next sequential ID."""
-    if not memory_root.exists(): return f"MEM-{year}-0001"
-    max_id = max((_scan_max_node_seq_in_file(f, year) for f in memory_root.glob("**/*")), default=0)
-    return f"MEM-{year}-{max_id + 1:04d}"
+def allocate_next_node_id(memory_root: Path, year: int | None = None) -> str:
+    """Scans memory/**/*.md YAML frontmatter for MEM-YYYY-XXXX+ node IDs and returns next sequential ID."""
+    target_year = year if year is not None else datetime.date.today().year
+    if not memory_root.exists():
+        return f"MEM-{target_year}-0001"
+    max_id = max((_scan_max_node_seq_in_file(f, target_year) for f in memory_root.rglob("*.md")), default=0)
+    next_seq = max_id + 1
+    if SENTINEL_SEQ_MIN <= next_seq <= SENTINEL_SEQ_MAX:
+        next_seq = SENTINEL_SEQ_MAX + 1
+    return f"MEM-{target_year}-{next_seq:04d}"
 
 
 def init_memory_node(  # noqa: god-function

@@ -111,7 +111,7 @@ def generate_prescription_skeleton(md_path: Path, project_root: Path, fm: Dict[s
     rel_path = (str(md_path.relative_to(project_root)) if md_path.is_relative_to(project_root) else md_path.name).replace("\\", "/")
     fm_dict = fm if isinstance(fm, dict) else {}
     ctx_idx = fm_dict.get("context_index") if isinstance(fm_dict.get("context_index"), dict) else {}
-    node_id = fm_dict.get("node_id", "MEM-2026-0099")
+    node_id = fm_dict.get("node_id", "MEM-2026-9999")
     artifact_type = fm_dict.get("artifact_type", "spec")
     node_key = ctx_idx.get("node_key", "300.MODULE-SPEC.v1")
     domain_code = ctx_idx.get("domain_code", "300")
@@ -360,13 +360,19 @@ def main() -> int:
     oracle_cache: Dict[str, Tuple[int, str]] = {}
     checked_stubs: Set[Path] = set()
     all_nodes: Dict[str, Dict[str, Any]] = {}
+    seen_node_ids: Dict[str, str] = {}
     total_errors = 0
 
     for md_file in md_files:
         rel = md_file.relative_to(project_root) if md_file.is_relative_to(project_root) else md_file
         fm, errs = validate_document(md_file, project_root, header_schema, node_schema, args.run_oracle, all_nodes=existing_nodes, valid_tax_codes=valid_tax_codes, oracle_cache=oracle_cache, checked_stubs=checked_stubs)
         if fm and "node_id" in fm:
-            all_nodes[fm["node_id"]] = fm
+            nid = str(fm["node_id"])
+            if nid in seen_node_ids:
+                errs.append(f"[AS-06 Duplicate node_id] 重複之節點編號 `{nid}` 已由 `{seen_node_ids[nid]}` 佔用，請重新配號避免圖譜索引覆蓋。")
+            else:
+                seen_node_ids[nid] = str(rel)
+                all_nodes[nid] = fm
         if errs:
             total_errors += len(errs)
             print(f"❌ {rel}: FAILED ({len(errs)} errors)")
