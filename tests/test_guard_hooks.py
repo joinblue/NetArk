@@ -54,6 +54,24 @@ class TestGuardHooks(unittest.TestCase):
                 self.assertEqual(verdict.get("decision"), "deny", (tool_name, verdict))
                 self.assertIn(expected_code, verdict.get("reason", ""), verdict)
 
+    def test_closed_core_memory_write_alignment(self) -> None:
+        valid_fm = '---\nnode_id: "MEM-2026-0008"\n---\n# Core Ledger\n'
+        with tempfile.TemporaryDirectory() as tmp:
+            run_closed_mcp_init(tmp, target="agy", lang="en")
+            (Path(tmp) / "memory" / "LEDGER.md").unlink()
+
+            ok_verdict = _run_agy_hook(tmp, "write_file", {"Path": "memory/LEDGER.md", "Content": valid_fm})
+            self.assertEqual(ok_verdict.get("decision"), "allow", ok_verdict)
+
+            bad_raw = _run_agy_hook(tmp, "write_file", {"Path": "memory/LEDGER.md", "Content": "# No frontmatter\n"})
+            self.assertEqual(bad_raw.get("decision"), "deny", bad_raw)
+            self.assertIn("SCHEMA-403-PREFILL", bad_raw.get("reason", ""), bad_raw)
+
+            for rel in ("memory/specs/500_02_DIRECT.md", "memory/random_junk.md"):
+                redir = _run_agy_hook(tmp, "write_file", {"Path": rel, "Content": valid_fm})
+                self.assertEqual(redir.get("decision"), "deny", (rel, redir))
+                self.assertIn("MCP-PROB-01-REDIRECT", redir.get("reason", ""), redir)
+
 
 if __name__ == "__main__":
     unittest.main()

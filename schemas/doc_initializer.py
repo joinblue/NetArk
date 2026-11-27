@@ -26,6 +26,7 @@ import schema_validator as sv  # type: ignore  # noqa: E402
 
 NODE_ID_RE = re.compile(r"MEM-(\d{4})-(\d{4,})")
 FM_NODE_ID_RE = re.compile(r'(?m)^node_id:\s*["\']?MEM-(\d{4})-(\d{4,})["\']?\s*(?:#.*)?$')
+FM_NODE_KEY_RE = re.compile(r'(?m)^[ \t]*node_key:\s*["\']?([^"\'\s#]+)["\']?\s*(?:#.*)?$')
 SENTINEL_SEQ_MIN = 9900
 SENTINEL_SEQ_MAX = 9999
 WIKILINK_RE = re.compile(r"\[\[([A-Za-z0-9_.-]+)(?:\|[^\]]+)?\]\]")
@@ -147,6 +148,55 @@ def allocate_next_node_id(memory_root: Path, year: int | None = None) -> str:
     if SENTINEL_SEQ_MIN <= next_seq <= SENTINEL_SEQ_MAX:
         next_seq = SENTINEL_SEQ_MAX + 1
     return f"MEM-{target_year}-{next_seq:04d}"
+
+
+def collect_existing_node_ids_and_keys(memory_root: Path) -> Tuple[set[str], set[str]]:
+    """Scan existing memory/**/*.md frontmatter for occupied node_id and node_key values."""
+    used_ids: set[str] = set()
+    used_keys: set[str] = set()
+    if not memory_root.is_dir():
+        return used_ids, used_keys
+    for md_file in memory_root.rglob("*.md"):
+        if not md_file.is_file() or md_file.name == "CONTEXT_MAP.md":
+            continue
+        try: fm_block = _extract_frontmatter_block(md_file.read_text(encoding="utf-8", errors="ignore"))
+        except Exception: continue  # noqa: silent-except
+        if not fm_block:
+            continue
+        if (m_id := FM_NODE_ID_RE.search(fm_block)):
+            used_ids.add(f"MEM-{m_id.group(1)}-{m_id.group(2)}")
+        if (m_key := FM_NODE_KEY_RE.search(fm_block)):
+            used_keys.add(m_key.group(1).strip())
+    return used_ids, used_keys
+
+
+def render_core_memory_template(
+    raw_text: str, memory_root: Path, today: str, used_ids: set[str], used_keys: set[str]
+) -> Optional[str]:
+    """Render a core memory template without node_key duplication or node_id collisions."""
+    fm_block = _extract_frontmatter_block(raw_text)
+    m_key = FM_NODE_KEY_RE.search(fm_block)
+    tmpl_key = m_key.group(1).strip() if m_key else ""
+    if tmpl_key and tmpl_key in used_keys:
+        return None
+    rendered = raw_text.replace("2026-11-08", today)
+    m_id = FM_NODE_ID_RE.search(fm_block)
+    if m_id:
+        tmpl_id = f"MEM-{m_id.group(1)}-{m_id.group(2)}"
+        final_id = tmpl_id
+        if tmpl_id in used_ids:
+            final_id = allocate_next_node_id(memory_root)
+            while final_id in used_ids:
+                parts = final_id.split("-")
+                seq = int(parts[2]) + 1
+                if SENTINEL_SEQ_MIN <= seq <= SENTINEL_SEQ_MAX:
+                    seq = SENTINEL_SEQ_MAX + 1
+                final_id = f"MEM-{parts[1]}-{seq:04d}"
+            rendered = rendered.replace(tmpl_id, final_id)
+        used_ids.add(final_id)
+    if tmpl_key:
+        used_keys.add(tmpl_key)
+    return rendered
 
 
 def init_memory_node(  # noqa: god-function

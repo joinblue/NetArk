@@ -123,6 +123,11 @@ def _parse_modularity_limit(policy: Dict[str, Any], key: str, default: int) -> i
     except (TypeError, ValueError): return default
 
 
+def _is_core_direct_memory_path(rel: str) -> bool:
+    """Return True for valid governed core/private paths not routed by netark_record INTENT_ROUTES."""
+    return rel == "memory/LEDGER.md" or (rel.startswith("memory/codex/") and rel.count("/") == 2) or rel.startswith("memory/private/")
+
+
 def _check_governance_pre_write(tool_name: str, args: Dict[str, Any], cwd: str) -> Optional[Dict[str, Any]]:
     """Enforce secret lint, doc governance, modularity budget, AST hygiene, and frontmatter."""
     if (tool_name or "").lower() not in WRITE_TOOL_NAMES: return None
@@ -161,7 +166,7 @@ def _check_governance_pre_write(tool_name: str, args: Dict[str, Any], cwd: str) 
             queue_agy_post_alert(cwd, w_msg)
             mod_warn = {"allowed": True, "code": "MODULARITY-BUFFER-WARN", "warning": w_msg, "systemMessage": w_msg, "reason": w_msg}
     is_edit_existing = (tool_name or "").lower() in EDIT_TOOL_NAMES and target.exists()
-    if os.environ.get("NETARK_MCP_HOOK_MODE") == "1" and rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md") and not is_edit_existing:
+    if os.environ.get("NETARK_MCP_HOOK_MODE") == "1" and rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md") and not is_edit_existing and not _is_core_direct_memory_path(rel):
         return {"allowed": False, "code": "MCP-PROB-01-REDIRECT", "reason": f"Direct native write to governed memory '{rel}' is blocked in closed MCP mode. Use MCP tool netark_record(intent=..., title=..., body=..., mode='preflight'|'write')."}
     if rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md") and not rel.startswith("memory/wiki/"):
         if str(root) in eff_src or str(Path.home()) in eff_src:

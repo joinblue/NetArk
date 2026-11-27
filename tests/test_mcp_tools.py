@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import datetime
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -67,6 +69,24 @@ class TestMCPToolsAndAnnotations(unittest.TestCase):
             for act in ("status", "oracle", "handover", "setup"):
                 gres = handle_mcp_tool_call("netark_guard", {"action": act}, tmp)
                 self.assertTrue(gres["ok"], (act, gres))
+
+    def test_init_avoids_node_id_and_node_key_collisions(self) -> None:
+        year = datetime.date.today().year
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_res = run_closed_mcp_init(tmp, target="memory", lang="en")
+            self.assertEqual(init_res["status"], "ok")
+            (root / "memory" / "LEDGER.md").unlink()
+            soul_p = root / "memory" / "codex" / "000_SOUL.md"
+            soul_p.write_text(soul_p.read_text(encoding="utf-8").replace("MEM-2026-0001", f"MEM-{year}-0004"), encoding="utf-8")
+
+            reinit = run_closed_mcp_init(tmp, target="memory", lang="en")
+            self.assertEqual(reinit["bootstrapped_memory_nodes"], ["memory/LEDGER.md"])
+            ledger_txt = (root / "memory" / "LEDGER.md").read_text(encoding="utf-8")
+            m_id = re.search(rf'(?m)^node_id:\s*["\']?(MEM-{year}-(\d{{4,}}))', ledger_txt)
+            self.assertIsNotNone(m_id, ledger_txt[:200])
+            self.assertGreaterEqual(int(m_id.group(2)), 6)
+            self.assertTrue(handle_mcp_tool_call("netark_guard", {"action": "oracle"}, tmp)["ok"])
 
 
 if __name__ == "__main__":

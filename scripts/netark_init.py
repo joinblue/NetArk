@@ -275,18 +275,24 @@ def _sync_python_core_if_external(root: Path, update: bool = False) -> None:
 
 
 def bootstrap_bilingual_memory(root: Path, lang: str) -> List[str]:
+    if str(NETARK_SOURCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(NETARK_SOURCE_ROOT))
+    from schemas.doc_initializer import collect_existing_node_ids_and_keys, render_core_memory_template  # noqa: E402
+
     today = datetime.date.today().isoformat()
     created: List[str] = []
     for std_dir in ("memory/wiki", "memory/specs", "memory/audits", "projects", "scratch"):
         (root / std_dir).mkdir(parents=True, exist_ok=True)
     tmpl_dir = NETARK_SOURCE_ROOT / "templates" / "memory" / lang
+    used_ids, used_keys = collect_existing_node_ids_and_keys(root / "memory")
     for tmpl_name, dest_rel in CORE_MEMORY_MAP:
         dst = root / dest_rel
         src = tmpl_dir / tmpl_name
         if not dst.exists() and src.exists():
+            raw = render_core_memory_template(src.read_text(encoding="utf-8"), root / "memory", today, used_ids, used_keys)
+            if raw is None:
+                continue
             dst.parent.mkdir(parents=True, exist_ok=True)
-            raw = src.read_text(encoding="utf-8")
-            raw = raw.replace("2026-11-08", today)
             dst.write_text(raw, encoding="utf-8")
             created.append(dest_rel)
     if (root / "scripts" / "auto_update_map.py").exists():

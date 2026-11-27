@@ -168,6 +168,6 @@ netark-mcp uninstall --target all --cwd .
 | **`CODE-ARROW-NESTING` / `CODE-SILENT-EXCEPT` / `CODE-NESTED-LOOPS` / `CODE-GOD-FUNCTION` / `MODULARITY-GATE`** | 程式碼控制流過深、靜默吞掉例外、迴圈過深或單一函式／檔案過長 | 改採 Early-Return 扁平結構、具名捕捉例外，並依職責拆分為較小函式或獨立模組。 |
 | **`SPEC-RIBC-GATE`** | 派工給實作型子代理時缺少完整四維任務規格或說明過短 | 補齊 `[R]` 職責路徑、`[I]` 不變量與行數上限、`[B]` 邊界防護、`[C]` 型別契約且達規定字數後重派。 |
 | **`SPEC-FILENAME-FORMAT` / `SCHEMA-403-PREFILL`** | 記憶文件命名不符規範、序號重複，或直接寫入缺標頭之受管記憶檔 | 依建議序號更名，並改用 `netark_record`（先 `preflight` 再 `write`）完成建檔。 |
-| **`MCP-PROB-01-REDIRECT`** | `NETARK_MCP_HOOK_MODE=1` 下試圖用原生 `write_file`/`Write` 新建或整檔覆寫 `memory/**/*.md`（排除 `CONTEXT_MAP.md`；已存在檔之 `edit_file`/`Edit` 放行並自動後檢） | 改呼叫 MCP `netark_record`（`preflight` ➔ `write`，或傳入 `target_path` 原地更新）寫入記憶節點，或使用 `edit_file` 局部編修既有記憶檔。 |
+| **`MCP-PROB-01-REDIRECT`** | `NETARK_MCP_HOOK_MODE=1` 下試圖用原生 `write_file`/`Write` 於 `memory/{wiki,specs,audits,episodic}/` 新建或整檔覆寫，或於 `memory/` 根目錄寫入未受管檔案（核心／私有路徑 `memory/LEDGER.md`、`memory/codex/*.md`、`memory/private/**/*.md` 與已存在檔之 `edit_file`/`Edit` 放行並受標頭＋後檢把關） | 改呼叫 MCP `netark_record`（`preflight` ➔ `write`，或傳入 `target_path` 原地更新）寫入記憶節點，或使用 `edit_file` 局部編修既有記憶檔。 |
 | **`SPEC-BLUEPRINT-REQUIRED` / `STUB-FIRST-GATE`** | 複合型 `spec` 缺少 `parent_blueprint`，或未經 `stub_ready`/`verified` 規格授權即新建／大改受管 `.py` 模組 | 先透過 `netark_record` 建立或推進對應母藍圖與切片至 `stub_ready`，再動工程式碼。 |
 | **`SEC-HANDOVER-OVERWRITE`** | 試圖直接以不同任務覆寫尚未結案的交接檔案 | 若為新支線請另建獨立軌道交接檔；若確定切換任務，請先結案舊軌或確認覆寫。 |

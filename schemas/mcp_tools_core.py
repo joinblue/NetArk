@@ -13,7 +13,10 @@ if str(ROOT_DIR) not in sys.path:
 
 from schemas import schema_validator as sv  # noqa: E402
 from schemas.codebook_compiler import render_context_map, render_private_context_map  # noqa: E402
-from schemas.doc_initializer import allocate_next_node_id, collect_existing_topics, normalize_scope_profile, normalize_topic_tag  # noqa: E402
+from schemas.doc_initializer import (  # noqa: E402
+    allocate_next_node_id, collect_existing_node_ids_and_keys, collect_existing_topics,
+    normalize_scope_profile, normalize_topic_tag, render_core_memory_template,
+)
 from schemas.guard_slots_and_audit import _resolve_audit_path, verify_enterprise_license  # noqa: E402
 from schemas.mcp_record_builder import (  # noqa: E402,F401
     INTENT_ROUTES, _build_record_frontmatter, _dump_yaml_frontmatter, _emit_yaml_lines,
@@ -298,10 +301,12 @@ def run_closed_mcp_init(cwd: str, target: str = "memory", lang: str = "zh-TW", b
     _configure_closed_hosts(root, targets, bin_cmd, write_rules=write_rules, update_rules=update_rules, pi_brain_dir=pi_brain)
     _copy_asset_if_needed("memory/index/TAXONOMY.json", root / "memory" / "index" / "TAXONOMY.json")
     today, created, has_py_core = datetime.date.today().isoformat(), [], (root / "schemas" / "schema_validator.py").exists()
+    used_ids, used_keys = collect_existing_node_ids_and_keys(root / "memory")
     for tmpl_name, dest_rel in CORE_MEMORY_MAP:
         dst = root / dest_rel
         if dst.exists(): continue
-        raw = get_embedded_asset_text(f"templates/memory/{lang}/{tmpl_name}").replace("2026-11-08", today)
+        raw = render_core_memory_template(get_embedded_asset_text(f"templates/memory/{lang}/{tmpl_name}"), root / "memory", today, used_ids, used_keys)
+        if raw is None: continue
         if not has_py_core: raw = re.sub(r'(?m)^  affected_paths:\n    - "(?:schemas|scripts)/[^"]+"\n', "  affected_paths: []\n", raw)
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(raw, encoding="utf-8")
