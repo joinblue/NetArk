@@ -5,7 +5,7 @@
 [![CI](https://github.com/joinblue/NetArk/actions/workflows/ci.yml/badge.svg)](https://github.com/joinblue/NetArk/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0%20(pure%20stdlib)-brightgreen.svg)](pyproject.toml)
-[![MCP Tools: 3](https://img.shields.io/badge/MCP%20schema-3%20tools%20%3C220%20tokens-0ea5e9.svg)](docs/QUICKSTART.md)
+[![MCP Tools: 3](https://img.shields.io/badge/MCP%20schema-3%20tools%20%3C600%20tokens-0ea5e9.svg)](docs/QUICKSTART.md)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](LICENSE)
 
 [English](README.md) | **繁體中文**
@@ -31,7 +31,7 @@ NetArk 為 AI 寫碼助手（Claude Code、Google Antigravity、Pi Agent 與自�
 
 | 指標項目 | 實測數據 | 工程效益 |
 | :--- | :--- | :--- |
-| **MCP Schema 佔用** | **`3 工具 (< 220 Tokens)`** | 只暴露 `netark_query`、`netark_record`、`netark_guard`，極大化保留工作上下文。 |
+| **MCP Schema 佔用** | **`3 工具 (< 600 Tokens)`** | 只暴露 `netark_query`、`netark_record`、`netark_guard`，極大化保留工作上下文。 |
 | **外部依賴套件** | **`0 外部依賴`** | 100% Python 3.10+ 標準庫實作；不需向量資料庫、Docker 或 Node.js 執行環境。 |
 | **寫前 Hook 延遲** | **`~62ms` (`PreToolUse`)** | 檔案寫入或命令執行前完成 AST 巢狀深度、靜默例外、憑證 DLP 與落點掃描。 |
 | **Turn-1 上下文壓縮** | **`95.7%` Token 節省** | 開局自動將所有記憶節點、模組與 DAG 邊壓縮為凍結 `@D/@M/@C/@G` 代號圖譜（`5.2 KB`）。 |

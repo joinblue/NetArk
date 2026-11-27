@@ -5,7 +5,7 @@
 [![CI](https://github.com/joinblue/NetArk/actions/workflows/ci.yml/badge.svg)](https://github.com/joinblue/NetArk/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0%20(pure%20stdlib)-brightgreen.svg)](pyproject.toml)
-[![MCP Tools: 3](https://img.shields.io/badge/MCP%20schema-3%20tools%20%3C220%20tokens-0ea5e9.svg)](docs/QUICKSTART.md)
+[![MCP Tools: 3](https://img.shields.io/badge/MCP%20schema-3%20tools%20%3C600%20tokens-0ea5e9.svg)](docs/QUICKSTART.md)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](LICENSE)
 
 **English** | [繁體中文](README.zh-TW.md)
@@ -31,7 +31,7 @@ NetArk gives AI coding agents (Claude Code, Google Antigravity, Pi Agent, and cu
 
 | Metric | Value | Why It Matters |
 | :--- | :--- | :--- |
-| **MCP Context Footprint** | **`3 Tools (< 220 Tokens)`** | Keeps tool-schema overhead near zero (`netark_query`, `netark_record`, `netark_guard`). |
+| **MCP Context Footprint** | **`3 Tools (< 600 Tokens)`** | Keeps tool-schema overhead near zero (`netark_query`, `netark_record`, `netark_guard`). |
 | **Runtime Dependencies** | **`0 External Packages`** | Pure Python 3.10+ standard library; no vector DB, Docker, or Node.js runtime required. |
 | **Pre-Write Hook Latency** | **`~62ms` (`PreToolUse`)** | Deterministic AST nesting, silent-except, secret DLP, and shell inspection before disk writes. |
 | **Turn-1 Context Compression** | **`95.7%` Token Saved** | Compresses multi-node specs & AST edges into a frozen `@D/@M/@C/@G` map (`5.2 KB`). |

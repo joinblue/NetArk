@@ -30,6 +30,22 @@ def _free_port() -> int:
 class TestDashboardCLI(unittest.TestCase):
     """Verify single-project dashboard scanning, HTTP-only startup, and disable switch."""
 
+    def _assert_http_background_server(self, ws: Path) -> None:
+        port = _free_port()
+        with patch.dict(os.environ, {"NETARK_DASHBOARD": "1", "NETARK_DASHBOARD_PORT": str(port)}):
+            info = server.start_background_dashboard(str(ws))
+            self.assertEqual(info.get("status"), "started")
+            try:
+                with urllib.request.urlopen(f"{info['url']}/api/projects", timeout=2.0) as resp:
+                    self.assertEqual(resp.status, 200)
+                    data = json.loads(resp.read().decode("utf-8"))
+                    self.assertTrue(any(p["id"] == ws.name for p in data.get("projects", [])))
+            finally:
+                srv = info.get("server")
+                if srv is not None:
+                    srv.shutdown()
+                    srv.server_close()
+
     def test_scanner_and_background_server(self) -> None:
         prev_root = graph_scanner._WORKSPACE_ROOT
         with tempfile.TemporaryDirectory() as tmp:
@@ -47,20 +63,7 @@ class TestDashboardCLI(unittest.TestCase):
                     self.assertEqual(dis.get("status"), "disabled")
                     self.assertIsNone(dis.get("url"))
 
-                port = _free_port()
-                with patch.dict(os.environ, {"NETARK_DASHBOARD": "1", "NETARK_DASHBOARD_PORT": str(port)}):
-                    info = server.start_background_dashboard(str(ws))
-                    self.assertEqual(info.get("status"), "started")
-                    try:
-                        with urllib.request.urlopen(f"{info['url']}/api/projects", timeout=2.0) as resp:
-                            self.assertEqual(resp.status, 200)
-                            data = json.loads(resp.read().decode("utf-8"))
-                            self.assertTrue(any(p["id"] == ws.name for p in data.get("projects", [])))
-                    finally:
-                        srv = info.get("server")
-                        if srv is not None:
-                            srv.shutdown()
-                            srv.server_close()
+                self._assert_http_background_server(ws)
             finally:
                 if prev_root is not None:
                     graph_scanner.set_workspace_root(prev_root)
