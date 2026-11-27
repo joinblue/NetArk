@@ -6,6 +6,7 @@ from __future__ import annotations
 import datetime
 import json
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -87,6 +88,22 @@ class TestMCPToolsAndAnnotations(unittest.TestCase):
             self.assertIsNotNone(m_id, ledger_txt[:200])
             self.assertGreaterEqual(int(m_id.group(2)), 6)
             self.assertTrue(handle_mcp_tool_call("netark_guard", {"action": "oracle"}, tmp)["ok"])
+
+    def test_version_parity_and_docs_sync(self) -> None:
+        pyproj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        ver = re.search(r'(?m)^version\s*=\s*"([^"]+)"', pyproj).group(1)
+        init_ver = re.search(r'(?m)^__version__\s*=\s*"([^"]+)"', (ROOT / "src" / "netark_mcp" / "__init__.py").read_text(encoding="utf-8")).group(1)
+        srv_ver = re.search(r'(?m)^NETARK_VERSION\s*=\s*"([^"]+)"', (ROOT / "scripts" / "netark_mcp_server.py").read_text(encoding="utf-8")).group(1)
+        self.assertEqual(ver, init_ver)
+        self.assertEqual(ver, srv_ver)
+        for flag in ("--version", "-V"):
+            proc = subprocess.run([sys.executable, str(ROOT / "scripts" / "netark_mcp_server.py"), flag], text=True, capture_output=True, check=True)
+            self.assertEqual(proc.stdout.strip(), f"netark-mcp {ver}")
+        docs_hc = (ROOT / "docs" / "HOOK_CONTRACT.md").read_text(encoding="utf-8")
+        tmpl_hc = (ROOT / "templates" / "mcp" / "HOOK_CONTRACT.md").read_text(encoding="utf-8")
+        self.assertEqual(docs_hc, tmpl_hc)
+        self.assertIn("--target pi", docs_hc)
+        self.assertIn("--target pi", (ROOT / "docs" / "QUICKSTART.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

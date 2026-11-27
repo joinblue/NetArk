@@ -24,6 +24,8 @@ from scripts.netark_guard_daemon import (  # noqa: E402
 )
 from scripts.sync_doc_metadata import sync_governed_markdown  # noqa: E402
 
+NETARK_VERSION = "3.2.3"
+
 MCP_SERVER_INSTRUCTIONS = (
     "NetArk is a Hook-first governance & memory harness: security, AST, RIBC, and handover checks run automatically via `netark-mcp hook`. "
     "Use these 3 MCP tools for memory & verification (NEVER whole-read `memory/codex/CONTEXT_MAP.md` past '## 2.'): "
@@ -50,7 +52,7 @@ def _handle_rpc_request(msg: Dict[str, Any], cwd: str) -> Optional[Dict[str, Any
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "netark-mcp", "version": "3.2.2"},
+                "serverInfo": {"name": "netark-mcp", "version": NETARK_VERSION},
                 "instructions": MCP_SERVER_INSTRUCTIONS,
             },
         }
@@ -314,8 +316,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         if hasattr(_stream, "reconfigure"):
             _stream.reconfigure(encoding="utf-8", errors="replace")
     raw = list(sys.argv[1:] if argv is None else argv)
+    if raw and raw[0] in {"-V", "--version"}:
+        print(f"netark-mcp {NETARK_VERSION}")
+        return 0
     if not raw or raw[0] in {"-h", "--help"}:
-        print("Usage: netark-mcp {serve|hook|init|uninstall|dashboard} [options]", file=sys.stderr)
+        print("Usage: netark-mcp [--version] {serve|hook|init|uninstall|dashboard} [options]", file=sys.stderr)
         return 0 if raw else 2
     sub, rest = raw[0], raw[1:]
     if sub == "serve":

@@ -23,6 +23,24 @@ jobs:
           python-version: "3.12"
           enable-cache: true
 
+      - name: Verify release version & tag parity
+        shell: python
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          import os, re
+          from pathlib import Path
+          pyproj_ver = re.search(r'(?m)^version\s*=\s*"([^"]+)"', Path("pyproject.toml").read_text(encoding="utf-8")).group(1)
+          init_ver = re.search(r'(?m)^__version__\s*=\s*"([^"]+)"', Path("src/netark_mcp/__init__.py").read_text(encoding="utf-8")).group(1)
+          srv_ver = re.search(r'(?m)^NETARK_VERSION\s*=\s*"([^"]+)"', Path("scripts/netark_mcp_server.py").read_text(encoding="utf-8")).group(1)
+          assert pyproj_ver == init_ver == srv_ver, f"Version drift: pyproject={pyproj_ver}, __init__={init_ver}, server={srv_ver}"
+          assert Path("docs/HOOK_CONTRACT.md").read_text(encoding="utf-8") == Path("templates/mcp/HOOK_CONTRACT.md").read_text(encoding="utf-8"), "HOOK_CONTRACT.md drift!"
+          if os.environ.get("GITHUB_REF", "").startswith("refs/tags/v"):
+              tag = os.environ.get("GITHUB_REF_NAME", "")
+              assert tag == f"v{pyproj_ver}", f"Tag {tag} does not match pyproject.toml version v{pyproj_ver}"
+          print(f"Verified version parity: v{pyproj_ver}")
+
       - name: Build distributions
         run: uv build --wheel --sdist
 

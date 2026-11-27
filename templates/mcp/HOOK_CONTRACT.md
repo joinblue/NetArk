@@ -1,11 +1,12 @@
 # NetArk Universal Hook CLI Contract
 
 NetArk is Hook-first: all security, AST hygiene, RIBC, and handover guardrails listed below live inside `netark-mcp hook`.
-Use the fast path for natively supported hosts, or wire **1 thin bridge** using the Universal Hook CLI Contract for any other host (Pi Agent `.ts` extension, Cursor, Windsurf, Cline, Codex, Gemini CLI, etc.).
+Use the fast path for natively supported hosts (`AGY`, `Claude Code`, `Pi Agent`), or wire **1 thin bridge** using the Universal Hook CLI Contract for any other custom host (`Cursor`, `Windsurf`, `Cline`, `Codex`, `Gemini CLI`, etc.).
 
-## 1. Fast Path (Zero-Intrusion Memory / Native AGY & Claude Code)
+## 1. Fast Path (Zero-Intrusion Memory / Native AGY, Claude Code & Pi Agent)
 - Default (zero host pollution — creates/merges only `.mcp.json`, `memory/`, and policy): `netark-mcp init --cwd .` (or `--target memory`)
-- Native Hooks + MCP: `netark-mcp init --target agy --cwd .` or `netark-mcp init --target claude --cwd .` (pass `--write-rules` only if you also want root `AGENTS.md`/`CLAUDE.md`)
+- Native Hooks + MCP: `netark-mcp init --target agy --cwd .`, `netark-mcp init --target claude --cwd .`, or `netark-mcp init --target pi --cwd .` (pass `--brain-dir .netark` if migrating an existing `.netark/` Pi workspace; pass `--write-rules` only if you also want root `AGENTS.md`/`CLAUDE.md`)
+- Upgrading an existing install (required if `< 3.2.2` for `--target pi`): `uv tool upgrade netark-mcp` (or `uv tool install --force --refresh netark-mcp`) and verify with `netark-mcp --version`.
 - Non-destructively merges host JSON/hooks/env, preserves existing `memory/` files, and locks the absolute `netark-mcp` path (preventing GUI `ENOENT`).
 
 ## 2. Black-Box Capabilities Built Into `netark-mcp hook` (No Duplicate Logic Needed)
@@ -16,7 +17,7 @@ Use the fast path for natively supported hosts, or wire **1 thin bridge** using 
 - `--post-hook-mode` (`PostToolUse`): Runs embedded single-file schema validation, refreshes `CONTEXT_INDEX.json` / `CONTEXT_MAP.md`, and emits Spec↔Code drift alerts on code edits.
 - `--stop-mode` (`Stop`): Safety-net recompile of `CONTEXT_INDEX.json` and `CONTEXT_MAP.md`.
 
-## 3. Universal Hook CLI Contract (Other Hosts / Pi `.ts`)
+## 3. Universal Hook CLI Contract (Custom Hosts & Manual Pi .ts Wiring)
 ### 3.1 Five Lifecycle Modes
 - `SessionStart` -> `netark-mcp hook --session-start-mode <dialect> --cwd .` (timeout 5s)
 - `PreInvocation` *(optional)* -> `netark-mcp hook --pre-invocation-mode <dialect> --cwd .` (timeout 5s)

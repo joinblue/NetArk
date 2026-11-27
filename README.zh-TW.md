@@ -22,6 +22,7 @@ NetArk 為 AI 寫碼助手（Claude Code、Google Antigravity、Pi Agent 與自�
 > - **若您是 AI 代理（Claude Code / Google Antigravity / Cursor / Pi）**：請先透過 `curl -fsSL https://raw.githubusercontent.com/joinblue/NetArk/main/README.zh-TW.md` 讀取部署規範，並直接執行全域安裝與原位初始化：
 >   ```bash
 >   uv tool install netark-mcp
+>   # 若由 < 3.2.2 升級（--target pi 必要）：uv tool upgrade netark-mcp && netark-mcp --version
 >   netark-mcp init --target agy --cwd /path/to/your-project   # 或 --target claude / pi / memory
 >   ```
 
@@ -45,6 +46,9 @@ NetArk 為 AI 寫碼助手（Claude Code、Google Antigravity、Pi Agent 與自�
 ```bash
 # 1. 從 PyPI 安裝 CLI（推薦：提供原生速度的 PreToolUse Hook 與 stdio MCP）
 uv tool install netark-mcp
+# 升級既有安裝並確認版本（支援 --target pi 需 >= 3.2.2）
+uv tool upgrade netark-mcp    # 或：uv tool install --force --refresh netark-mcp
+netark-mcp --version
 # 或從 GitHub 最新主線安裝：
 # uv tool install git+https://github.com/joinblue/NetArk
 
@@ -78,7 +82,7 @@ netark-mcp init --lang zh-TW --cwd .
   ```bash
   netark-mcp init --target pi --lang zh-TW --cwd .
   ```
-  自動接線 `.pi/mcp.json`、`.pi/extensions/`、`.pi/agents/`、`.pi/skills/`、`.pi/enterprise-policy.json` 與初始 `memory/` 節點。
+  自動接線 `.pi/mcp.json`、`.pi/extensions/`、`.pi/agents/`、`.pi/skills/`、`.pi/enterprise-policy.json` 與初始 `memory/` 節點（既有 `.netark/` 工作區可加 `--brain-dir .netark`）。
 
 - **自訂 MCP 宿主（`uvx` ＋ 通用 Hook 契約）**：
   ```json

@@ -22,6 +22,7 @@ NetArk gives AI coding agents (Claude Code, Google Antigravity, Pi Agent, and cu
 > - **For AI Agents (Claude Code / Google Antigravity / Cursor / Pi)**: Read the raw docs first via `curl -fsSL https://raw.githubusercontent.com/joinblue/NetArk/main/README.md`, then install globally and initialize in place:
 >   ```bash
 >   uv tool install netark-mcp
+>   # Upgrading from < 3.2.2 (required for --target pi): uv tool upgrade netark-mcp && netark-mcp --version
 >   netark-mcp init --target agy --cwd /path/to/your-project   # or --target claude / pi / memory
 >   ```
 
@@ -45,6 +46,9 @@ Install `netark-mcp` once globally for full **Hooks + MCP**, or run `uvx` direct
 ```bash
 # 1. Install globally from PyPI (recommended for native-speed PreToolUse hooks)
 uv tool install netark-mcp
+# Upgrade an existing install & confirm version (>= 3.2.2 required for --target pi)
+uv tool upgrade netark-mcp    # or: uv tool install --force --refresh netark-mcp
+netark-mcp --version
 # Or install directly from GitHub main:
 # uv tool install git+https://github.com/joinblue/NetArk
 
@@ -78,7 +82,7 @@ netark-mcp init --lang en --cwd .
   ```bash
   netark-mcp init --target pi --lang en --cwd .
   ```
-  Wires `.pi/mcp.json`, `.pi/extensions/`, `.pi/agents/`, `.pi/skills/`, `.pi/enterprise-policy.json`, and starter `memory/` nodes.
+  Wires `.pi/mcp.json`, `.pi/extensions/`, `.pi/agents/`, `.pi/skills/`, `.pi/enterprise-policy.json`, and starter `memory/` nodes (existing `.netark/` workspaces can pass `--brain-dir .netark`).
 
 - **Custom MCP Hosts (`uvx` + Universal Hook Contract)**:
   ```json

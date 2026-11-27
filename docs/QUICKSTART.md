@@ -8,7 +8,8 @@ NetArk is packaged as a zero-dependency Python CLI & stdio MCP server (`requires
 > - **For AI Agents (Claude Code / Google Antigravity / Cursor / Pi)**: Read the raw docs first via `curl -fsSL https://raw.githubusercontent.com/joinblue/NetArk/main/README.md`, then install globally and initialize in place:
 >   ```bash
 >   uv tool install netark-mcp
->   netark-mcp init --target agy --cwd /path/to/your-project   # or --target claude / memory
+>   # Upgrading from < 3.2.2 (required for --target pi): uv tool upgrade netark-mcp && netark-mcp --version
+>   netark-mcp init --target agy --cwd /path/to/your-project   # or --target claude / pi / memory
 >   ```
 
 ---
@@ -21,6 +22,10 @@ Installing via `uv tool install` places an isolated, native-speed shim on your `
 ```bash
 # From PyPI (recommended)
 uv tool install netark-mcp
+
+# Upgrade an existing install & confirm version (>= 3.2.2 required for --target pi)
+uv tool upgrade netark-mcp    # or: uv tool install --force --refresh netark-mcp
+netark-mcp --version
 
 # Or directly from GitHub
 # uv tool install git+https://github.com/joinblue/NetArk
@@ -42,7 +47,7 @@ If you only want to run the 3-tool MCP server without permanent installation:
 
 ---
 
-## 2. Initialize Your Project (`4 Integration Modes`)
+## 2. Initialize Your Project (`5 Integration Modes`)
 
 Navigate to your target repository and choose the integration depth you need:
 
@@ -73,10 +78,20 @@ netark-mcp init --target agy --lang en --cwd .
 # Pass --write-rules only if you also want a root AGENTS.md template
 ```
 
-### Mode 4: Pi Agent (`.ts`) & Custom MCP Hosts
+### Mode 4: Pi Agent (`pi` — MCP + Thin Bridge `.ts` Extensions)
+Wires `.pi/mcp.json`, `.pi/extensions/netark-guard.ts` (thin bridge forwarding lifecycle events to `netark-mcp hook`), hub/specialist `.ts` extensions, agents, skills, `.pi/enterprise-policy.json`, and `memory/` with 0 `.py` files:
+
+```bash
+netark-mcp init --target pi --lang en --cwd .
+# If migrating an existing .netark/ Pi workspace, pass --brain-dir .netark:
+# netark-mcp init --target pi --brain-dir .netark --lang en --cwd .
+# Pass --write-rules only if you also want a root AGENTS.md template
+```
+
+### Mode 5: Custom MCP Hosts (Universal Hook Contract)
 1. Wire `netark-mcp serve --cwd .` in your host's MCP configuration.
 2. Have your coding agent call `netark_guard(action="setup")` (or read [HOOK_CONTRACT.md](HOOK_CONTRACT.md)) to receive the Universal Hook CLI Contract with the `agy`, `claude`, and `pi` stdin/stdout dialects.
-3. For Pi Agent `.ts` extensions or shell wrappers, spawn `netark-mcp hook --hook-mode pi --cwd <root>` with tool JSON on `stdin` and block whenever exit code `!= 0`.
+3. For custom `.ts` extensions or shell wrappers, spawn `netark-mcp hook --hook-mode pi --cwd <root>` with tool JSON on `stdin` and block whenever exit code `!= 0`.
 
 ---
 
@@ -96,9 +111,13 @@ netark-mcp uninstall --target all --cwd .
 
 ## 4. Verify Installation (30-Second Smoke Test)
 
-Verify both the `PreToolUse` secret block and the full-repo schema/DAG oracle:
+Verify the installed CLI version, supported `--target` options, the `PreToolUse` secret block, and the Codebook Map compiler:
 
 ```bash
+# 0. Confirm installed version (>= 3.2.2 required for --target pi) & init targets
+netark-mcp --version
+netark-mcp init --help
+
 # 1. Synthetic PreToolUse smoke test (does not touch disk)
 echo '{"tool_name":"read_file","tool_input":{"path":".env"}}' | netark-mcp hook --hook-mode claude --cwd .
 # Expected: exit code 2 + SEC-CRED block

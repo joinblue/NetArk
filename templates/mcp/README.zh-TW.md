@@ -42,12 +42,15 @@ flowchart LR
 ### 步驟 A：初始化目標專案與授權設定
 
 ```bash
-# 方式一（公開跨平台主力）：透過 uv 全域安裝 CLI
+# 方式一（公開跨平台主力）：透過 uv 全域安裝或升級 CLI
 uv tool install netark-mcp
+# 若已安裝過舊版（支援 --target pi 需 >= 3.2.2），請務必升級並檢查版本：
+# uv tool upgrade netark-mcp   # 或 uv tool install --force --refresh netark-mcp
+# netark-mcp --version
 cd /path/to/your-project
 netark-mcp init --lang zh-TW --cwd .                  # 預設 --target memory：僅建 .mcp.json + memory/（不污染任何宿主目錄與 AGENTS.md/CLAUDE.md）
 # 若同時要自動接好 AGY、Claude 或 Pi Hooks：
-# netark-mcp init --target agy --lang zh-TW --cwd .    # 或 --target claude / --target pi；僅在需要根目錄範本時才加 --write-rules
+# netark-mcp init --target agy --lang zh-TW --cwd .    # 或 --target claude / --target pi（既有 .netark/ Pi 專案可加 --brain-dir .netark）；僅在需要根目錄範本時才加 --write-rules
 # （純連 MCP 亦可於設定檔使用 command: "uvx", args: ["netark-mcp", "serve"]）
 
 # 1. 選填：設定企業授權金鑰與中央記憶庫路徑（請勿硬編碼進專案檔案；未設定則以 community 模式運作）
