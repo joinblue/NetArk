@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-import argparse, datetime, hashlib, json, os, re, sys
+import argparse, datetime, json, os, re, sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -16,10 +16,8 @@ import schema_validator as sv  # type: ignore  # noqa: E402
 from schemas.doc_initializer import allocate_next_node_id, auto_initialize_wiki_node, init_governed_markdown, init_memory_node  # type: ignore  # noqa: E402,F401
 
 ROLE_MODELS_MARKER_RE = re.compile(r"<!-- AUTO-ROLE-MODELS:START -->.*?<!-- AUTO-ROLE-MODELS:END -->", re.DOTALL)
-ETERNAL_CORE_REFS = frozenset({
-    "000.SOUL.v1", "MEM-2026-0001", "100.ARCH-RULES.v1", "MEM-2026-0002", "200.ADR-001.v1", "MEM-2026-0003",
-    "300.LEDGER.v1", "MEM-2026-0004", "900.HANDOVER.v1", "MEM-2026-0005", "700.V32-ENGINEERING-RECORD.v1", "MEM-2026-0011",
-})
+AUTO_LEDGER_START = "<!-- NETARK:AUTO-LEDGER:START -->"
+AUTO_LEDGER_END = "<!-- NETARK:AUTO-LEDGER:END -->"
 
 
 def split_frontmatter_raw(content: str) -> Tuple[str, str]:
@@ -118,96 +116,21 @@ def load_all_node_paths(project_root: Path) -> Tuple[Dict[str, Path], Dict[str, 
     return id_to_path, key_to_id, all_nodes
 
 
-def _extract_completed_wos(project_root: Path) -> set[str]:
-    """Return set of WO-XXXX ids marked completed in memory/LEDGER.md."""
-    ledger = project_root / "memory" / "LEDGER.md"
-    if not ledger.exists(): return set()
-    try: txt = ledger.read_text(encoding="utf-8")
-    except Exception: return set()  # noqa: silent-except
-    done: set[str] = set()
-    for line in txt.splitlines():
-        if not line.lstrip().startswith("|"): continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) >= 2 and re.search(r"(?i)(?:✅|已完成|\bcompleted\b|\bdone\b|\bverified\b)", cells[-1]):
-            src = cells[0] if re.search(r"\bWO-\d+\b", cells[0]) else " ".join(cells[:-1])
-            done.update(re.findall(r"\bWO-\d+\b", src))
-    return done
+def _fm_scalar(raw_fm: str, key: str) -> str:
+    m = re.search(rf'(?m)^[ \t]*{re.escape(key)}:[ \t]*([^\n#]*)', raw_fm)
+    return m.group(1).strip().strip("\"'") if m else ""
 
 
-def _extract_yaml_list_items(raw_fm: str, key: str) -> List[str]:
-    """Extract inline `[a, b]` or multiline `- a` YAML list items from raw frontmatter."""
-    m = re.search(rf"(?m)^([ \t]*){re.escape(key)}:[ \t]*(.*)$", raw_fm)
-    if not m: return []
-    base_ind, inline = len(m.group(1)), re.sub(r"(?:^|\s+)#.*$", "", m.group(2)).strip()
-    if inline.startswith("[") and inline.endswith("]"):
-        return [x.strip().strip("\"'") for x in inline[1:-1].split(",") if x.strip().strip("\"'")]
-    if inline:
-        v = inline.strip("\"'")
-        return [v] if v and v.lower() not in {"null", "none", "~"} else []
-    items: List[str] = []
-    for ln in raw_fm[m.end():].splitlines()[1:]:
-        st = ln.strip()
-        if not st or st.startswith("#"): continue
-        ind = len(ln) - len(ln.lstrip(" \t"))
-        if ind < base_ind or (ind == base_ind and not st.startswith("-")) or not st.startswith("- "): break
-        if (v := st[2:].split("#", 1)[0].strip().strip("\"'")): items.append(v)
-    return items
-
-
-def _node_aliases(nid: str, npath: Path | None, fm: Dict[str, Any]) -> Tuple[str, str, List[str]]:
-    ci = fm.get("context_index") if isinstance(fm.get("context_index"), dict) else {}
-    node_id = str(fm.get("node_id") or nid).strip()
-    node_key = str(ci.get("node_key") or fm.get("node_key") or "").strip()
-    aliases = [k for k in (node_id, node_key) if k]
-    if isinstance(npath, Path):
-        aliases.append(npath.stem)
-        if (ms := re.match(r"^310_\d{2}(?:_\d+)?_(.+)$", npath.stem)): aliases.append(f"310.{ms.group(1)}.v1")
-    return node_id, node_key, aliases
-
-
-def _index_target_nodes(all_nodes: Dict[str, Any], excluded: set[str]) -> Tuple[Dict[str, Tuple[str, Dict[str, Any], set[str]]], Dict[str, List[Tuple[str, Dict[str, Any], set[str]]]]]:
-    exact, pfx = {}, {}
-    for nid, val in all_nodes.items():
-        npath, fm = val if (isinstance(val, tuple) and len(val) == 2) else (None, val)
+def _build_status_lookup(project_root: Path, all_nodes: Dict[str, Any] | None) -> Dict[str, str]:
+    nodes = all_nodes if all_nodes is not None else load_all_node_paths(project_root)[2]
+    lookup: Dict[str, str] = {}
+    for nid, val in nodes.items():
+        fm = val[1] if (isinstance(val, tuple) and len(val) == 2) else val
         if not isinstance(fm, dict): continue
-        node_id, node_key, aliases = _node_aliases(nid, npath if isinstance(npath, Path) else None, fm)
-        if node_id in excluded or (node_key and node_key in excluded): continue
-        entry = (node_id, fm, set(aliases))
-        for a in aliases: exact.setdefault(a, entry)
-        if node_key: exact[node_key] = entry
-        if isinstance(npath, Path):
-            posix = npath.as_posix().replace("\\", "/")
-            exact[npath.name] = exact[posix] = entry
-            if "/memory/" in posix: exact["memory/" + posix.split("/memory/", 1)[1]] = entry
-            if (m_310 := re.match(r"^(310_\d{2})(?:_|\.|$)", npath.name)): pfx.setdefault(m_310.group(1), []).append(entry)
-    return exact, pfx
-
-
-def _is_non_wo_handover_converged(raw_fm: str, body: str, all_nodes: Dict[str, Any]) -> bool:
-    """Return True when non-WO handover has >=1 resolved target and all are archived/deprecated or superseded by verified nodes."""
-    m_nid, m_nkey = re.search(r'(?m)^node_id:\s*["\']?(MEM-\d{4}-\d{4})["\']?', raw_fm), re.search(r'(?m)^[ \t]*node_key:\s*["\']?([^"\'\s#]+)', raw_fm)
-    excluded = set(ETERNAL_CORE_REFS) | {m.group(1) for m in (m_nid, m_nkey) if m}
-    superseded: set[str] = set()
-    for val in all_nodes.values():
-        n_fm = val[1] if (isinstance(val, tuple) and len(val) == 2) else val
-        if not isinstance(n_fm, dict) or str(n_fm.get("status") or "").strip().lower() != "verified": continue
-        topo = n_fm.get("topology") if isinstance(n_fm.get("topology"), dict) else {}
-        superseded.update(str(t).strip() for t in (topo.get("supersedes") or []) if isinstance(t, str) and str(t).strip())
-    m_s1 = re.search(r"(?m)^##\s*1\..*?\n([\s\S]*?)(?=\n##\s|\Z)", body)
-    s1 = (m_s1.group(1).strip() if m_s1 else "") or body
-    refs = (_extract_yaml_list_items(raw_fm, "depends_on") + _extract_yaml_list_items(raw_fm, "affected_paths")
-            + [lk.split("|", 1)[0].strip() for lk in re.findall(r"\[\[([^\]]+)\]\]", s1)]
-            + re.findall(r"\bMEM-\d{4}-\d{4}\b|\b\d{3}\.[A-Za-z0-9._-]+\.v\d+\b|\b310_\d{2}(?:_[A-Za-z0-9_-]+)?\b", s1))
-    exact, pfx = _index_target_nodes(all_nodes, excluded)
-    resolved: Dict[str, Tuple[Dict[str, Any], set[str]]] = {}
-    for ref in refs:
-        if not ref or ref in excluded: continue
-        if ref in exact: resolved[exact[ref][0]] = (exact[ref][1], exact[ref][2])
-        elif ref.endswith(".md") and Path(ref).name in exact and Path(ref).name not in {"HANDOVER.md", "LEDGER.md"}:
-            t = exact[Path(ref).name]; resolved[t[0]] = (t[1], t[2])
-        elif ref in pfx:
-            for nid, fm, als in pfx[ref]: resolved[nid] = (fm, als)
-    return bool(resolved) and all(str(fm.get("status") or "").strip().lower() in {"archived", "deprecated"} or bool(superseded & als) for fm, als in resolved.values())
+        st, ci = str(fm.get("status") or "").strip().lower(), fm.get("context_index") if isinstance(fm.get("context_index"), dict) else {}
+        for ref in (nid, fm.get("node_id"), ci.get("node_key"), fm.get("node_key")):
+            if isinstance(ref, str) and ref.strip(): lookup[ref.strip()] = st
+    return lookup
 
 
 def _archive_md_status(md_file: Path, raw_fm: str, body: str, project_root: Path, today_str: str, old_st: str, extra: Dict[str, str] | None = None) -> Dict[str, str] | None:
@@ -218,41 +141,88 @@ def _archive_md_status(md_file: Path, raw_fm: str, body: str, project_root: Path
     return {"path": str(md_file.relative_to(project_root)), "old_status": old_st, "new_status": "archived", **(extra or {})}
 
 
-def _extract_wo_refs_for_ho(ho_path: Path, raw_fm: str, body: str) -> Tuple[str, set[str]]:
-    src = f"{raw_fm}\n{body}"
-    m_ts = re.search(r'(?m)^track_status:\s*["\']?([^"\'\s#]+)', src)
-    t_st = m_ts.group(1).strip().lower() if m_ts else ""
-    tids = [v.strip() for v in re.findall(r'(?m)^(?:track_id|active_wo):\s*["\']?([^"\'\n#]+)', src) if v.strip()]
-    if tids or re.search(r"\bWO-\d+\b", ho_path.name): wo_src = f"{ho_path.name}\n" + "\n".join(tids)
-    elif t_st == "active": wo_src = ""
-    else:
-        m_s1 = re.search(r"(?m)^##\s*1\..*?\n([\s\S]*?)(?=\n##\s|\Z)", body)
-        wo_src = m_s1.group(1) if m_s1 else ""
-    return t_st, set(re.findall(r"\bWO-\d+\b", wo_src))
-
-
 def _auto_archive_completed_handovers(md_path: Path, project_root: Path, today_str: str | Dict[str, Any] | None = None, all_nodes: Dict[str, Any] | None = None) -> List[Dict[str, str]]:
-    """Auto-set YAML status='archived' on HANDOVER_*.md when self-done, WO done, or non-WO targets converged."""
+    """Auto-set YAML status='archived' on HANDOVER_*.md when track_status or active_blueprint is done."""
     if isinstance(today_str, dict): all_nodes, today_str = today_str, datetime.date.today().isoformat()
-    today_str = today_str or datetime.date.today().isoformat()
-    ep_dir = project_root / "memory" / "episodic"
+    today_str, ep_dir = today_str or datetime.date.today().isoformat(), project_root / "memory" / "episodic"
     targets = sorted(ep_dir.glob("HANDOVER_*.md")) if ep_dir.exists() else []
     if not targets: return []
-    if all_nodes is None:
-        id_to_path, _, fm_map = load_all_node_paths(project_root)
-        all_nodes = {nid: (id_to_path[nid], fm_map[nid]) for nid in fm_map if nid in id_to_path}
-    completed_wos, archived = _extract_completed_wos(project_root), []
+    status_lookup, archived = None, []
     for ho_path in targets:
         try: raw_fm, body = split_frontmatter_raw(ho_path.read_text(encoding="utf-8"))
         except Exception: continue  # noqa: silent-except
-        m_st = re.search(r'(?m)^status:\s*["\']?([^"\'\s#]+)', raw_fm)
-        old_st = m_st.group(1).strip() if m_st else ""
+        old_st = _fm_scalar(raw_fm, "status")
         if old_st.lower() in {"archived", "deprecated"}: continue
-        t_st, wo_refs = _extract_wo_refs_for_ho(ho_path, raw_fm, body)
-        is_wo_done = bool(wo_refs and wo_refs.issubset(completed_wos))
-        if not (t_st in {"completed", "archived"} or is_wo_done or (not wo_refs and _is_non_wo_handover_converged(raw_fm, body, all_nodes))): continue
-        if (rec := _archive_md_status(ho_path, raw_fm, body, project_root, today_str, old_st)): archived.append(rec)
+        t_st, active_bp, bp_done = _fm_scalar(raw_fm, "track_status").lower(), _fm_scalar(raw_fm, "active_blueprint"), False
+        if active_bp and active_bp.lower() not in {"null", "none", "~"}:
+            if status_lookup is None: status_lookup = _build_status_lookup(project_root, all_nodes)
+            bp_done = status_lookup.get(active_bp) in {"verified", "archived"}
+        if (t_st in {"completed", "archived"} or bp_done) and (rec := _archive_md_status(ho_path, raw_fm, body, project_root, today_str, old_st)):
+            archived.append(rec)
     return archived
+
+
+def _collect_blueprint_and_shard_stats(specs_dir: Path) -> Tuple[List[Tuple[int, str, Path, Dict[str, Any]]], Dict[str, Dict[str, int]]]:
+    blueprints, shard_counts = [], {}
+    if not specs_dir.is_dir(): return blueprints, shard_counts
+    for sp in sorted(specs_dir.glob("*.md")):
+        try: fm, _ = sv.parse_markdown_frontmatter(sp)
+        except Exception: continue  # noqa: silent-except
+        if not isinstance(fm, dict): continue
+        if (m_seq := re.match(r"^200_(\d+)_", sp.name)): blueprints.append((int(m_seq.group(1)), m_seq.group(1), sp, fm))
+        pb = str((fm.get("topology") or {}).get("parent_blueprint") or "").strip() if isinstance(fm.get("topology"), dict) else ""
+        st = str(fm.get("status") or "").strip().lower()
+        bucket = "done" if st == "verified" else ("wip" if st in {"stub_ready", "reviewing"} else ("draft" if st == "draft" else ""))
+        if pb and bucket: shard_counts.setdefault(pb, {"done": 0, "wip": 0, "draft": 0})[bucket] += 1
+    return blueprints, shard_counts
+
+
+def _format_auto_ledger_row(seq_str: str, bp_key: str, bp_id: str, bp_st: str, summary: str, shard_counts: Dict[str, Dict[str, int]]) -> str:
+    summary_clean = (summary or bp_key).replace("|", "｜").strip()
+    head = re.split(r"[：—]", summary_clean, maxsplit=1)[0].replace("*", "").strip()
+    title_clean = (head[:28].strip() if len(head) > 28 else head) or bp_key[:28]
+    done, wip, draft = (sum((shard_counts.get(r) or {}).get(k, 0) for r in {x for x in (bp_key, bp_id) if x}) for k in ("done", "wip", "draft"))
+    badge = "✅ 已完成" if bp_st == "verified" else ("📝 草案 (draft)" if bp_st == "draft" else f"🚧 施工中 ({bp_st})")
+    return f"| `BP-{seq_str}` | **{title_clean}**｜{summary_clean} ({done}✅ {wip}🟡 {draft}🟠) | `{bp_key}` | `{badge}` |"
+
+
+def sync_auto_ledger(project_root: Path) -> bool:
+    """Sync unreferenced 200_*.md blueprints into memory/LEDGER.md auto-ledger markers (<= 80 lines)."""
+    ledger_p = project_root / "memory" / "LEDGER.md"
+    if not ledger_p.is_file(): return False
+    lines = ledger_p.read_text(encoding="utf-8").splitlines()
+    s_idx, e_idx = next((i for i, ln in enumerate(lines) if AUTO_LEDGER_START in ln), -1), next((i for i, ln in enumerate(lines) if AUTO_LEDGER_END in ln), -1)
+    if s_idx == -1 or e_idx == -1 or e_idx <= s_idx: return False
+    before_lines, after_lines = lines[:s_idx], lines[e_idx + 1:]
+    while after_lines and not after_lines[-1].strip(): after_lines.pop()
+    non_marker_lines = before_lines + after_lines
+    hist_body = re.sub(r"^---\n[\s\S]*?\n---\n?", "", "\n".join(non_marker_lines))
+    hist_tokens = set(re.findall(r"`([^`]+)`", hist_body))
+    blueprints, shard_counts = _collect_blueprint_and_shard_stats(project_root / "memory" / "specs")
+    candidates: List[Tuple[bool, int, str]] = []
+    for seq_int, seq_str, sp, fm in blueprints:
+        bp_st = str(fm.get("status") or "").strip().lower()
+        if bp_st in {"archived", "deprecated"}: continue
+        ci = fm.get("context_index") if isinstance(fm.get("context_index"), dict) else {}
+        bp_id, bp_key = str(fm.get("node_id") or "").strip(), str(ci.get("node_key") or fm.get("node_key") or fm.get("node_id") or sp.stem).strip()
+        if bp_key in hist_tokens or re.search(rf"(?<![A-Za-z0-9._-]){re.escape(bp_key)}(?![A-Za-z0-9._-])", hist_body): continue
+        candidates.append((bp_st == "verified", seq_int, _format_auto_ledger_row(seq_str, bp_key, bp_id, bp_st, str(ci.get("summary_1line") or "").strip(), shard_counts)))
+    budget = max(0, 80 - len(non_marker_lines) - 2)
+    if len(candidates) > budget:
+        candidates = sorted(candidates, key=lambda item: (1 if item[0] else 0, -item[1]))[:budget]
+    selected_rows = [row for _, _, row in sorted(candidates, key=lambda item: item[1])]
+    if lines[s_idx + 1 : e_idx] == selected_rows: return False
+    new_text = "\n".join(before_lines + [lines[s_idx]] + selected_rows + [lines[e_idx]] + after_lines) + "\n"
+    if new_text.startswith("---\n") and "\n---\n" in new_text:
+        raw_fm, body = split_frontmatter_raw(new_text)
+        new_fm, _ = surgical_try_set_scalar(raw_fm, "updated_at", datetime.date.today().isoformat())
+        if re.search(r"(?m)^content_checksum:", new_fm):
+            new_fm, _ = surgical_try_set_scalar(new_fm, "content_checksum", sv.compute_body_checksum(body))
+        new_text = f"---\n{new_fm}\n---\n{body}"
+    tmp_p = ledger_p.with_name(f".{ledger_p.name}.{os.getpid()}.tmp")
+    try: tmp_p.write_text(new_text, encoding="utf-8"); os.replace(tmp_p, ledger_p)
+    except Exception: tmp_p.unlink(missing_ok=True); raise
+    return True
 
 
 def _cascade_archive_blueprint_shards(fm_after: Dict[str, Any], project_root: Path, today_str: str, id_to_path: Dict[str, Path], all_nodes: Dict[str, Dict[str, Any]]) -> List[Dict[str, str]]:
@@ -300,6 +270,16 @@ def apply_supersedes_transitions(fm_after: Dict[str, Any], project_root: Path, t
     return transitions
 
 
+def _load_schema_pair(project_root: Path) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    for base in (project_root / "schemas", PROJECT_ROOT_DEFAULT / "schemas"):
+        hdr, nod = base / "artifact_header.schema.json", base / "context_node.schema.json"
+        if hdr.is_file() and nod.is_file():
+            return json.loads(hdr.read_text(encoding="utf-8")), json.loads(nod.read_text(encoding="utf-8"))
+    import builtins
+    assets = getattr(builtins, "__NETARK_EMBEDDED_ASSETS__", None) or {}
+    return json.loads(assets["schemas/artifact_header.schema.json"]), json.loads(assets["schemas/context_node.schema.json"])
+
+
 def sync_governed_markdown(md_path: Path, project_root: Path, today_str: str | None = None) -> Dict[str, Any]:  # noqa: god-function
     today_str = today_str or datetime.date.today().isoformat()
     result: Dict[str, Any] = {"file": str(md_path), "counts_updated": False, "ssot_table_updated": False, "old_counts": {}, "new_counts": {}, "deprecated_targets": [], "archived_shards": [], "archived_handovers": [], "phase1_errors": [], "phase2_aborted": False}
@@ -332,8 +312,7 @@ def sync_governed_markdown(md_path: Path, project_root: Path, today_str: str | N
         md_path.write_text(f"---\n{new_raw_fm}\n---\n{new_body}", encoding="utf-8")
         result["counts_updated"] = counts_changed
     result["archived_handovers"] = _auto_archive_completed_handovers(md_path, project_root, today_str)
-    schemas_dir = (project_root / "schemas") if (project_root / "schemas" / "artifact_header.schema.json").exists() else (PROJECT_ROOT_DEFAULT / "schemas")
-    header_schema, node_schema = json.loads((schemas_dir / "artifact_header.schema.json").read_text(encoding="utf-8")), json.loads((schemas_dir / "context_node.schema.json").read_text(encoding="utf-8"))
+    header_schema, node_schema = _load_schema_pair(project_root)
     id_to_path, key_to_id, all_nodes = load_all_node_paths(project_root)
     fm_after, errs = sv.validate_document(md_path, project_root, header_schema, node_schema, run_oracle=False, all_nodes=all_nodes)
     blocking_errs = [e for e in errs if not e.startswith("[AS-06 Supersedes Conflict]")]

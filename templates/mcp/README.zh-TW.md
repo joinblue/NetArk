@@ -79,6 +79,11 @@ netark-mcp uninstall --target all --cwd .
       "env": {
         "NETARK_LICENSE_KEY": "${NETARK_LICENSE_KEY}",
         "NETARK_MEMORY_ROOT": "${NETARK_MEMORY_ROOT}"
+      },
+      "tools": {
+        "netark_query": { "eager": true },
+        "netark_record": { "eager": true },
+        "netark_guard": { "eager": true }
       }
     }
   }
@@ -113,6 +118,11 @@ netark-mcp uninstall --target all --cwd .
       "env": {
         "NETARK_LICENSE_KEY": "${NETARK_LICENSE_KEY}",
         "NETARK_MEMORY_ROOT": "${NETARK_MEMORY_ROOT}"
+      },
+      "tools": {
+        "netark_query": { "eager": true },
+        "netark_record": { "eager": true },
+        "netark_guard": { "eager": true }
       }
     }
   }
@@ -139,7 +149,7 @@ netark-mcp uninstall --target all --cwd .
 | 工具名稱 | 關鍵輸入參數 | 回傳內容與用途說明 |
 | :--- | :--- | :--- |
 | **`netark_query`** | `query`（短代號／節點鍵／狀態／主題／關鍵字）、`project_id`（選填專案識別） | 查詢記憶節點摘要、受管檔案與程式碼關聯鄰居（1-hop 依賴與影響範圍），免去全文掃描。 |
-| **`netark_record`** | `intent`（`wiki` \| `note` \| `sop` \| `glossary` \| `blueprint` \| `spec` \| `audit` \| `handover`）、`title`、`body`、`mode`（`preflight` \| `write`）、選填：`domain_code`、`slug`、`topic`、`parent_blueprint`、`shard_modules`、`stub_paths`、`scope_profile`、`supersedes`、`relates_to`、`affected_paths` | **`preflight`**：只檢不寫，檢查命名、標頭完整性、可攜性、行數預算、防跳步與 `SPEC-AST-SYNC-GATE`；**`write`**：自動鎖定合法目錄、補齊治理標頭與索引更新並完成驗證。 |
+| **`netark_record`** | `intent`（`wiki` \| `note` \| `sop` \| `glossary` \| `blueprint` \| `spec` \| `audit` \| `handover`）、`title`、`body`、`mode`（`preflight` \| `write`）、選填：`target_path`（原地更新既有記憶檔）、`domain_code`、`slug`、`topic`、`parent_blueprint`、`shard_modules`、`stub_paths`、`scope_profile`、`supersedes`、`relates_to`、`affected_paths` | **`preflight`**：只檢不寫，檢查命名、標頭完整性、可攜性、行數預算、防跳步與 `SPEC-AST-SYNC-GATE`；**`write`**：自動鎖定合法目錄（或依 `target_path` 原地更新），補齊治理標頭與索引更新並完成驗證。 |
 | **`netark_guard`** | `action`（`status` \| `oracle` \| `handover` \| `setup`） | **`status`**：檢視授權、防護策略與稽核鏈健康度；**`oracle`**：執行全記憶庫 Schema＋拓撲無環驗收；**`handover`**：檢查各軌道交接與台帳狀態；**`setup`**：按需回傳通用 Hook CLI 契約（`HOOK_CONTRACT.md`）供任意宿主自行串接。 |
 
 ---
@@ -148,7 +158,7 @@ netark-mcp uninstall --target all --cwd .
 
 | 阻斷碼 | 觸發原因 | 建議處置動作 |
 | :--- | :--- | :--- |
-| **`SIDECAR-GATE`** | 對 `> 600` 行大型檔案未指定範圍硬讀、連續切香腸超過上限或使用 `cat`/`head`/`sed`/`python -c` 傾印繞過 | 改依 `CONTEXT_MAP.md` 行號做 `<= 600` 行局部讀取，或派發 `research` / `Explore` 唯讀子代理（自動取得租約配額）消化。 |
+| **`SIDECAR-GATE`** | 對 `> 600` 行大型檔案未指定範圍硬讀、連續切香腸超過上限或使用 `cat`/`sed`/`awk`/大行數 `head`/`tail`（`> 120` 行）/`python -c` 傾印繞過 | 改依 `CONTEXT_MAP.md` 行號做 `<= 600` 行局部讀取、`<= 120` 行 `head`/`tail`，或派發 `research` / `Explore` 唯讀子代理（自動取得租約配額）消化。 |
 | **`SPEC-AST-SYNC-GATE`** | 撰寫 `spec` 時綁定之 `affected_paths`/`stub_paths` 既有程式碼，內文未對齊任何 AST 符號且未標註「新增」 | 依阻斷訊息印出之實際 AST 符號清單對齊真實函式／類別名稱，或於內文標註 `新增` / `stub`。 |
 | **`SEC-CRED`** | 試圖讀取或修改受保護之機密憑證檔案（如 `.env*`、金鑰、憑證設定） | 停止存取該檔案；請人類開發者手動設定本機環境變數，程式改用環境變數讀取。 |
 | **`SEC-PREWRITE-SECRET`** | 寫入內容包含明文 API Key、私鑰或機密連線字串 | 移除硬編碼字串，改以環境變數介面讀取後重新寫入。 |
@@ -158,6 +168,6 @@ netark-mcp uninstall --target all --cwd .
 | **`CODE-ARROW-NESTING` / `CODE-SILENT-EXCEPT` / `CODE-NESTED-LOOPS` / `CODE-GOD-FUNCTION` / `MODULARITY-GATE`** | 程式碼控制流過深、靜默吞掉例外、迴圈過深或單一函式／檔案過長 | 改採 Early-Return 扁平結構、具名捕捉例外，並依職責拆分為較小函式或獨立模組。 |
 | **`SPEC-RIBC-GATE`** | 派工給實作型子代理時缺少完整四維任務規格或說明過短 | 補齊 `[R]` 職責路徑、`[I]` 不變量與行數上限、`[B]` 邊界防護、`[C]` 型別契約且達規定字數後重派。 |
 | **`SPEC-FILENAME-FORMAT` / `SCHEMA-403-PREFILL`** | 記憶文件命名不符規範、序號重複，或直接寫入缺標頭之受管記憶檔 | 依建議序號更名，並改用 `netark_record`（先 `preflight` 再 `write`）完成建檔。 |
-| **`MCP-PROB-01-REDIRECT`** | `NETARK_MCP_HOOK_MODE=1` 下試圖用原生檔案工具直寫 `memory/**/*.md`（排除 `CONTEXT_MAP.md`） | 改呼叫 MCP `netark_record`（`preflight` ➔ `write`）寫入記憶節點以同步補標頭與編譯索引。 |
+| **`MCP-PROB-01-REDIRECT`** | `NETARK_MCP_HOOK_MODE=1` 下試圖用原生 `write_file`/`Write` 新建或整檔覆寫 `memory/**/*.md`（排除 `CONTEXT_MAP.md`；已存在檔之 `edit_file`/`Edit` 放行並自動後檢） | 改呼叫 MCP `netark_record`（`preflight` ➔ `write`，或傳入 `target_path` 原地更新）寫入記憶節點，或使用 `edit_file` 局部編修既有記憶檔。 |
 | **`SPEC-BLUEPRINT-REQUIRED` / `STUB-FIRST-GATE`** | 複合型 `spec` 缺少 `parent_blueprint`，或未經 `stub_ready`/`verified` 規格授權即新建／大改受管 `.py` 模組 | 先透過 `netark_record` 建立或推進對應母藍圖與切片至 `stub_ready`，再動工程式碼。 |
 | **`SEC-HANDOVER-OVERWRITE`** | 試圖直接以不同任務覆寫尚未結案的交接檔案 | 若為新支線請另建獨立軌道交接檔；若確定切換任務，請先結案舊軌或確認覆寫。 |

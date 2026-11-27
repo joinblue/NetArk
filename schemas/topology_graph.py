@@ -212,17 +212,32 @@ def _format_match_item(m: Dict[str, Any]) -> Dict[str, Any]:
     return {f: m[f] for f in ("kind", "code", "path", "node_id", "node_key", "status", "topic", "summary_1line", "folded") if m.get(f) is not None and m.get(f) != ""}
 
 
-def _expand_entry_result(query: str, entry: Dict[str, Any], rev: Dict[str, Any], intel_map: Dict[str, Any]) -> Dict[str, Any]:
+def _scan_md_outline(md_path: Path) -> Dict[str, Any]:
+    if not md_path.is_file(): return {}
+    lines, in_fence, bp, raw = md_path.read_text(encoding="utf-8", errors="ignore").splitlines(), False, None, []
+    for idx, ln in enumerate(lines, 1):
+        s = ln.strip()
+        if s.startswith("```"): in_fence = not in_fence; continue
+        if in_fence: continue
+        if bp is None and "<!-- 閱讀斷點" in s: bp = idx
+        if re.match(r"^#{2,3}\s+", s) or s.startswith("<details>"):
+            raw.append({"heading": "<details> 已落地歷史紀錄" if s.startswith("<details>") else s, "line_start": idx})
+    sections = [{**sec, "line_end": (raw[i + 1]["line_start"] - 1 if i + 1 < len(raw) else len(lines))} for i, sec in enumerate(raw)]
+    return {"total_lines": len(lines), "reading_breakpoint_line": bp, "sections": sections}
+
+
+def _expand_entry_result(query: str, entry: Dict[str, Any], rev: Dict[str, Any], intel_map: Dict[str, Any], project_root: Optional[Path] = None) -> Dict[str, Any]:
     kind = entry.get("kind")
     if kind == "script":
         cinfo = intel_map.get(entry.get("path", ""), {}) if isinstance(intel_map, dict) else {}
         imports, imported_by = list(cinfo.get("imports") or entry.get("imports") or []), list(cinfo.get("imported_by") or entry.get("imported_by") or [])
-        gov_specs = list(entry.get("governing_specs") or cinfo.get("governing_specs") or [])
+        gov_specs = [{k: g[k] for k in ("code", "node_id", "node_key", "path") if k in g} if isinstance(g, dict) else g for g in (entry.get("governing_specs") or cinfo.get("governing_specs") or [])]
         return {"found": True, "query": query, **entry, "imports": imports, "imported_by": imported_by, "governing_specs": gov_specs, "neighbors": {"imports": imports, "imported_by": imported_by, "governing_specs": gov_specs}}
     if kind == "node":
         deps = [{k: t[k] for k in ("code", "node_id", "node_key", "path", "summary_1line") if k in t} if isinstance(t := rev.get(d), dict) else {"ref": d} for d in (entry.get("depends_on") or [])]
         govs = [{k: t[k] for k in ("code", "path", "line_range") if k in t} if isinstance(t := rev.get(g), dict) else {"code": g} for g in (entry.get("governed_scripts") or [])]
         res: Dict[str, Any] = {"found": True, "query": query, **entry, "neighbors": {"depends_on": deps, "governed_scripts": govs}}
+        if project_root is not None and entry.get("path"): res.update(_scan_md_outline(project_root / str(entry["path"])))
         if entry.get("artifact_type") == "blueprint" or entry.get("type") == "blueprint" or entry.get("shard_modules"):
             bp_refs = {x for x in (str(entry.get("node_key") or ""), str(entry.get("node_id") or "")) if x}
             bp_shards = {str(s).strip() for s in (entry.get("shard_modules") or []) if str(s).strip()}
@@ -249,7 +264,7 @@ def query_codebook_entry(project_root: Path, query: str) -> Dict[str, Any]:
     if not isinstance(rev, dict):
         return {"found": False, "query": query, "matches": []}
     if isinstance(direct := rev.get(q) or rev.get(q.upper()), dict):
-        return _expand_entry_result(query, direct, rev, intel_map)
+        return _expand_entry_result(query, direct, rev, intel_map, project_root)
     nodes = _iter_unique_rev_nodes(rev)
     if (m_st := re.match(r"^(status|\d{3}):([A-Za-z_]+)$", q, re.IGNORECASE)):
         scope, target_st = m_st.group(1).lower(), m_st.group(2).lower()
@@ -272,7 +287,7 @@ def query_codebook_entry(project_root: Path, query: str) -> Dict[str, Any]:
             matches.append(v)
     if not matches:
         return {"found": False, "query": query, "matches": []}
-    res = _expand_entry_result(query, matches[0], rev, intel_map)
+    res = _expand_entry_result(query, matches[0], rev, intel_map, project_root)
     res["matches"] = [_format_match_item(m) for m in matches[:10]]
     return res
 

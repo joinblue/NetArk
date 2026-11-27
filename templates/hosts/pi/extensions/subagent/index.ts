@@ -533,6 +533,7 @@ export default function (pi: ExtensionAPI) {
 			`To enable project-local agents in ${CONFIG_DIR_NAME}/agents, set agentScope: "both" (or "project").`,
 		].join(" "),
 		parameters: SubagentParams as any,
+		annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 
 		async execute(_toolCallId, rawParams, signal, onUpdate, ctx) {
 			const params = (rawParams ?? {}) as SubagentToolParams;

@@ -335,6 +335,10 @@ def main() -> int:
     if args.query is not None:
         print(json.dumps(query_codebook_entry(project_root, args.query), ensure_ascii=False, indent=2))
         return 0
+    if str(_repo_root := Path(__file__).resolve().parent.parent) not in sys.path:
+        sys.path.insert(0, str(_repo_root))
+    from scripts.sync_doc_metadata import sync_auto_ledger  # type: ignore
+    sync_auto_ledger(project_root)
     index, private_index = build_public_and_private_indices(project_root)
     try:
         verify_no_plaintext_secrets_before_index_write(project_root, index)

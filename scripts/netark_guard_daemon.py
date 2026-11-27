@@ -153,6 +153,30 @@ def _run_hook_mode(host: str, default_cwd: str) -> int:
     return 0
 
 
+def _run_post_memory_sync(target: Path, root: Path, rel: str) -> Optional[str]:
+    if (root / "scripts" / "sync_doc_metadata.py").exists():
+        drift_msg: Optional[str] = None
+        for script, flag in (("scripts/sync_doc_metadata.py", "--file"), ("schemas/schema_validator.py", "--file"), ("scripts/auto_update_map.py", None)):
+            if not (root / script).exists():
+                continue
+            proc = subprocess.run([sys.executable, str(root / script)] + ([flag, rel] if flag else []), cwd=str(root), text=True, capture_output=True, check=False)
+            if script == "schemas/schema_validator.py" and proc.returncode != 0:
+                err_out = (proc.stdout or proc.stderr or "").strip()
+                drift_msg = f"⚠️ [PostToolUse Schema Failure | {rel}]\n{err_out[:1200]}"
+        return drift_msg
+    try:
+        from schemas import schema_validator as sv
+        from schemas.mcp_tools_core import _load_embedded_schemas, compile_and_write_indices
+        from scripts.sync_doc_metadata import sync_governed_markdown
+        sync_governed_markdown(target, root)
+        hdr_sch, nod_sch = _load_embedded_schemas()
+        _, val_errs = sv.validate_document(target, root, hdr_sch, nod_sch, run_oracle=False)
+        compile_and_write_indices(root)
+        return f"⚠️ [PostToolUse Schema Failure | {rel}]\n" + "\n".join(val_errs)[:1200] if val_errs else None
+    except Exception as exc:
+        return f"⚠️ [PostToolUse Sync Error | {rel}] {exc}"
+
+
 def _run_post_hook_mode(host: str, default_cwd: str) -> int:
     payload = _parse_stdin_json()
     cwd, _, tool_args = _resolve_cwd_and_tool(payload, default_cwd)
@@ -164,14 +188,8 @@ def _run_post_hook_mode(host: str, default_cwd: str) -> int:
         try: rel = str(target.relative_to(root)).replace("\\", "/")
         except ValueError: pass  # noqa: silent-except
     drift_msg: Optional[str] = None
-    if rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md"):
-        for script, flag in (("scripts/sync_doc_metadata.py", "--file"), ("schemas/schema_validator.py", "--file"), ("scripts/auto_update_map.py", None)):
-            if not (root / script).exists():
-                continue
-            proc = subprocess.run([sys.executable, str(root / script)] + ([flag, rel] if flag else []), cwd=str(root), text=True, capture_output=True, check=False)
-            if script == "schemas/schema_validator.py" and proc.returncode != 0:
-                err_out = (proc.stdout or proc.stderr or "").strip()
-                drift_msg = f"⚠️ [PostToolUse Schema Failure | {rel}]\n{err_out[:1200]}"
+    if rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md") and target is not None:
+        drift_msg = _run_post_memory_sync(target, root, rel)
     elif rel and not rel.startswith("memory/"):
         drift_msg = check_code_to_spec_drift(root, rel)
     if host == "agy":
@@ -189,6 +207,12 @@ def _run_stop_mode(host: str, default_cwd: str) -> int:
     root = Path(cwd).resolve()
     if (root / "scripts" / "auto_update_map.py").exists():
         subprocess.run([sys.executable, str(root / "scripts" / "auto_update_map.py")], cwd=str(root), capture_output=True, check=False)
+    elif (root / "memory").is_dir():
+        try:
+            from schemas.mcp_tools_core import compile_and_write_indices
+            compile_and_write_indices(root)
+        except Exception as exc:
+            print(f"⚠️ [Stop] Failed to compile indices: {exc}", file=sys.stderr)
     if host == "agy": print(json.dumps({"decision": "stop"}, ensure_ascii=False))
     return 0
 

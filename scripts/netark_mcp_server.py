@@ -22,12 +22,13 @@ from schemas.yaml_lite import _parse_simple_yaml  # noqa: E402, F401
 from scripts.netark_guard_daemon import (  # noqa: E402
     _parse_stdin_json, _resolve_cwd_and_tool, _run_hook_mode, _run_post_hook_mode, _run_stop_mode,
 )
+from scripts.sync_doc_metadata import sync_governed_markdown  # noqa: E402
 
 MCP_SERVER_INSTRUCTIONS = (
     "NetArk is a Hook-first governance & memory harness: security, AST, RIBC, and handover checks run automatically via `netark-mcp hook`. "
     "Use these 3 MCP tools for memory & verification (NEVER whole-read `memory/codex/CONTEXT_MAP.md` past '## 2.'): "
     '(1) `netark_query(query="status:reviewing"|"status:draft"|"310:draft"|"<Topic>")` BEFORE reading/editing to resolve @D/@C/@G codes, status buckets, specs, topics, or 1-hop AST impact; '
-    "(2) `netark_record(intent, title, body, mode='preflight'|'write')` for ALL `memory/**/*.md` writes (never raw file writes); "
+    "(2) `netark_record(intent, title, body, mode='preflight'|'write', target_path?)` for `memory/**/*.md` writes (or `edit_file` on existing `memory/**/*.md` in closed mode with PostToolUse sync); "
     '(3) `netark_guard(action="handover")` for session tracks/objective before memory triage, `oracle` for full-repo schema+DAG validation, `status` for policy status, '
     "or `setup` for the universal Hook CLI contract to wire hooks on any host (AGY, Claude, Pi .ts, Cursor, etc.)."
 )
@@ -49,7 +50,7 @@ def _handle_rpc_request(msg: Dict[str, Any], cwd: str) -> Optional[Dict[str, Any
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "netark-mcp", "version": "3.2.0"},
+                "serverInfo": {"name": "netark-mcp", "version": "3.2.2"},
                 "instructions": MCP_SERVER_INSTRUCTIONS,
             },
         }
@@ -131,6 +132,10 @@ def _run_closed_post_hook(host: str, default_cwd: str) -> int:
             rel = ""
     drift_msg: Optional[str] = None
     if rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md"):
+        try:
+            sync_governed_markdown(target, root)
+        except Exception as exc:
+            print(f"⚠️ PostToolUse metadata sync warning: {exc}", file=sys.stderr)
         hdr_sch = json.loads(get_embedded_asset_text("schemas/artifact_header.schema.json"))
         nod_sch = json.loads(get_embedded_asset_text("schemas/context_node.schema.json"))
         _, errs = sv.validate_document(target, root, hdr_sch, nod_sch, run_oracle=False)

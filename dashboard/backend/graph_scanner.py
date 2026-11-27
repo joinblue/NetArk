@@ -141,7 +141,7 @@ def _scan_handovers(episodic_dir: Path) -> List[Dict[str, Any]]:
     for fpath in files:
         if not fpath.is_file(): continue
         fm_raw, body = _split_frontmatter(fpath.read_text(encoding="utf-8", errors="ignore"))
-        default_track = "main" if fpath.name == "HANDOVER.md" else (fpath.stem[len("HANDOVER_"):] or fpath.stem)
+        default_track = "main" if fpath.name == "HANDOVER.md" else (re.sub(r"^\d{2}_", "", fpath.stem[len("HANDOVER_"):]) or fpath.stem)
         raw_st, trk_st = _parse_fm_scalar(fm_raw, "status"), _parse_fm_scalar(fm_raw, "track_status")
         status = raw_st if raw_st in ("archived", "deprecated") else (trk_st or raw_st or "active")
         summary = _parse_fm_scalar(fm_raw, "summary_1line") or _parse_fm_scalar(fm_raw, "summary")

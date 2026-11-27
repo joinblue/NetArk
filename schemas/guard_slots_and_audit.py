@@ -132,7 +132,7 @@ def generate_offline_license_token(org: str, exp: str = "2099-12-31", secret: st
 def verify_enterprise_license(license_key: Optional[str] = None) -> Dict[str, Any]:
     raw = license_key if license_key is not None else os.environ.get("NETARK_LICENSE_KEY", "")
     key = raw.strip() if isinstance(raw, str) else ""
-    if not key:
+    if not key or "${" in key:
         return {"tier": "community", "valid": True, "org": "community_user", "dlp_redaction": False, "signed_audit": False}
     invalid = {"tier": "community", "valid": False, "org": "invalid_key_fallback", "dlp_redaction": False, "signed_audit": False}
     parts = key.split(".")

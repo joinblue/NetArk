@@ -1541,6 +1541,7 @@ export default function (pi: ExtensionAPI) {
 			"- vision: Multimodal image/chart analysis (pass `imagePath` to attach local image file)",
 		].join(" "),
 		parameters: DispatchSpecialistParams as any,
+		annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 		async execute(_toolCallId, rawParams, signal, onUpdate, ctx) {
 			const params = (rawParams ?? {}) as DispatchSpecialistArgs;
 			loadPersistedRoleModels();

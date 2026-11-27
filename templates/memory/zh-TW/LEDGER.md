@@ -53,3 +53,5 @@ topology:
 | 工單編號 (`WO`) | 任務主旨與技術細項 (`Title & Technical Summary`) | 綁定規格 (`Spec`) | 狀態 (`Status`) |
 | :--- | :--- | :---: | :---: |
 | `WO-0001` | **NetArk V1 乾淨商業級母版初始化**｜建立 `.netark/` 大腦、5 核心記憶節點、`@D/@C/@G` 代號壓縮地圖與跨宿主安全護欄 | `000.SOUL.v1` | `✅ 已完成` |
+<!-- NETARK:AUTO-LEDGER:START -->
+<!-- NETARK:AUTO-LEDGER:END -->

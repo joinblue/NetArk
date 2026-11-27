@@ -20,11 +20,13 @@ RE_READONLY_ROLE = re.compile(
     re.IGNORECASE,
 )
 
-# Trivial single-line or typo fixes bypass RIBC only when not creating a new module.
+# Trivial single-line or typo fixes bypass RIBC only when single-file, <=120 chars, and not creating/refactoring.
 RE_MICRO_FIX = re.compile(
-    r"(?:\btypo\b|\brename\b|移除未使用|單行修正|修正錯字|調整縮排|行號)",
+    r"(?:\btypo\b|\brename\b|移除未使用|單行修正|修正錯字|調整縮排)",
     re.IGNORECASE,
 )
+RE_REFACTOR_KEYWORDS = re.compile(r"(?:重構|refactor|架構|遷移|migrat)", re.IGNORECASE)
+RE_CODE_FILE_REF = re.compile(r"[a-zA-Z0-9_./-]+\.(?:py|ts|tsx|js|jsx|rs|go)\b")
 RE_NEW_MODULE = re.compile(
     r"(?:新建|新增模組|建立新檔|新模組|撰寫新|create\s+(?:a\s+)?new\s+(?:file|module|script)|"
     r"new\s+(?:module|file|service)|implement\s+from\s+scratch)",
@@ -54,6 +56,11 @@ RE_DIM_C_CONTRACT = re.compile(
     r"\bdict\b|\blist\b|\btuple\b|\binterface\b|\breturn\b|\bschema\b)",
     re.IGNORECASE,
 )
+RE_DIM_V_VERIFICATION = re.compile(
+    r"(?:test_[a-zA-Z0-9_]+\.py|[a-zA-Z0-9_]+_test\.py|\bpytest\b|\bunittest\b|\bassert\b|"
+    r"紅燈|綠燈|負向|反例|回歸|回滾|驗收|測試|驗證|rollback|reject|deny|falsifiable|negative)",
+    re.IGNORECASE,
+)
 
 MIN_SPEC_LENGTH = 60
 SUBAGENT_TOOL_NAMES = ("invoke_subagent", "Agent", "Task", "subagent", "dispatch_specialist")
@@ -75,7 +82,14 @@ def validate_ribc_construction_task(
             ["派工指令為空（Empty task prompt）"],
         )
 
-    if RE_MICRO_FIX.search(text) and not RE_NEW_MODULE.search(text):
+    is_micro_fix = (
+        RE_MICRO_FIX.search(text)
+        and not RE_NEW_MODULE.search(text)
+        and not RE_REFACTOR_KEYWORDS.search(text)
+        and len(set(RE_CODE_FILE_REF.findall(text))) <= 1
+        and len(text) <= 120
+    )
+    if is_micro_fix:
         return True, ""
 
     missing: List[str] = []
@@ -87,6 +101,8 @@ def validate_ribc_construction_task(
         missing.append("3. [B - Boundaries]: 缺少空值/負數/越界防護、Early-Return（巢狀<=4層）與具名例外處理")
     if not RE_DIM_C_CONTRACT.search(text):
         missing.append("4. [C - Contracts]: 缺少輸入輸出型別簽章、回傳結構或驗收基準（若涉及數值請註明精度）")
+    elif not RE_DIM_V_VERIFICATION.search(text):
+        missing.append("4b. [C - Verification & Negative Test]: 缺少具體測試標的（如 test_*.py / pytest / assert）或負向／失敗驗收案例")
     if len(text) < MIN_SPEC_LENGTH:
         missing.append(f"5. [Length]: 任務描述過於簡略（目前 {len(text)} 字元，需至少 {MIN_SPEC_LENGTH} 字元）")
 
@@ -192,7 +208,7 @@ def evaluate_subagent_invocation(tool_name: str, tool_args: Dict[str, Any], cwd:
 
 REMEDIATION_REGISTRY: Dict[str, Tuple[str, str]] = {
     "SIDECAR-GATE": ("memory/specs/500_04_SHARD_NEXUS_HOOK_ENHANCEMENTS.md", "Delegate large-file digestion to invoke_subagent(TypeName='research') / Task(subagent_type='Explore')."),
-    "SPEC-RIBC-GATE": ("memory/specs/500_02_SHARD_RIBC_GATE.md", "Path A (Readonly): set Role/TypeName to a readonly whitelist role (research, Explore, Plan, scout, auditor, reviewer, challenger, architect). Path B (Construction): provide [R] path, [I] line cap, [B] bounds/errors, [C] contracts (>=60 chars)."),
+    "SPEC-RIBC-GATE": ("memory/specs/500_02_SHARD_RIBC_GATE.md", "Path A (Readonly): set Role/TypeName to a readonly whitelist role (research, Explore, Plan, scout, auditor, reviewer, challenger, architect). Path B (Construction): provide [R] path, [I] line cap, [B] 4Q boundaries (失敗回滾／省略欄位繼承／跨規則數值疊加／畸形輸入繞過), [C] 輸入輸出型別簽章＋至少 1 個測試標的（test_*.py / pytest / assert）或負向驗收案例 (>=60 chars)."),
     "SEC-CRED": ("memory/codex/100_ARCH_RULES.md", "Never read/write .env*, auth.json, or key files; use os.environ.get('KEY_NAME') or *.example templates."),
     "SEC-CONTROL-PLANE": ("memory/codex/100_ARCH_RULES.md", "Control-plane updates require explicit human confirmation or authorized governance mode."),
     "SEC-CODE-PLACEMENT": ("memory/codex/100_ARCH_RULES.md", "Place business code under projects/<project_id>/{src,scripts,tests,configs}/ or tests under scratch/test_<name>.py."),
@@ -241,8 +257,8 @@ def _format_prescription(role_label: str, missing_items: List[str]) -> str:
         f"    請補齊以下四維規格（總長 >= 60 字元）：\n"
         f"    [R - Role & Path] 目標檔案路徑（如 path/to/module.py）與單一職責\n"
         f"    [I - Invariants] 業務不變量與單檔行數上限（如 <= 350 行）\n"
-        f"    [B - Boundaries] 空值/越界防護、巢狀 <= 4 層（Early-Return）與具名例外處理\n"
-        f"    [C - Contracts] 輸入輸出型別簽章、回傳結構或驗收基準（若涉及數值請註明精度）"
+        f"    [B - Boundaries] 空值/越界防護、巢狀 <= 4 層（Early-Return）、具名例外處理，並檢查 4Q：失敗回滾／省略欄位繼承／跨規則數值疊加／畸形輸入繞過\n"
+        f"    [C - Contracts] 輸入輸出型別簽章＋至少 1 個測試標的（test_*.py / pytest / assert）或負向驗收案例（若涉及數值請註明精度）"
     )
 
 
@@ -255,9 +271,11 @@ def _run_self_tests() -> None:
     assert validate_ribc_construction_task("修正 foo.py 行號 L12 的 typo", "worker")[0] is True
 
     assert validate_ribc_construction_task("新建模組 wallet.py 並避免 typo", "worker")[0] is False
+    assert validate_ribc_construction_task("重構 schemas/a.py 與 schemas/b.py 的行號解析邏輯", "worker")[0] is False
     ok_missing, msg_missing = validate_ribc_construction_task("實作這個功能，字數已經夠長了，但我完全沒有加上防呆，也沒有任何資料格式相關的字眼，純粹來亂的", "code")
     assert ok_missing is False and "SPEC-RIBC-GATE" in msg_missing
-    full_spec = "[R] 目標模組 projects/demo/src/wallet.py 負責餘額計算；[I] 單檔 <=350行 且餘額不得為負；[B] 遇到空值或負數使用 Early-Return 並拋出 ValueError 防護；[C] 採用 Decimal 精度與強型別 dict 回傳介面契約。"
+    assert validate_ribc_construction_task("[R] 修改 schemas/demo.py 處理設定；[I] 單檔 <=350行；[B] 檢查空值與越界並 early-return；[C] 回傳 dict 型別。", "worker")[0] is False
+    full_spec = "[R] 目標模組 projects/demo/src/wallet.py 負責餘額計算；[I] 單檔 <=350行 且餘額不得為負；[B] 遇到空值或負數使用 Early-Return 並拋出 ValueError 防護；[C] 採用 Decimal 精度與強型別 dict 回傳介面契約，並以 test_wallet.py 驗證負數餘額拋出 ValueError 之負向案例。"
     assert validate_ribc_construction_task(full_spec, "worker")[0] is True
 
     import tempfile

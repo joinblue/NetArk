@@ -36,23 +36,20 @@ def _parse_yaml_list(src: str, key: str) -> List[str]:
 
 
 def _parse_handover_meta(text: str, filename: str = "") -> Dict[str, Any]:
-    """Extract track_id, status, track_status, §1 topic, WO ids, and active blueprint/shards."""
+    """Extract track_id, status, track_status, summary_1line, §1 topic, and active blueprint/shards."""
     m_fm = re.match(r"^---\n([\s\S]*?)\n---\n", text)
     fm, body = (m_fm.group(1), text[m_fm.end():]) if m_fm else ("", text)
     def _val(key: str, src: str) -> str:
-        m = re.search(rf'(?m)^{key}:\s*["\']?([^"\'\n#]+)', src)
+        m = re.search(rf'(?m)^[ \t]*{key}:\s*["\']?([^"\'\n#]+)', src)
         return m.group(1).strip() if m else ""
     m_s1 = re.search(r"(?m)^##\s*1\..*?\n([\s\S]*?)(?=\n##\s|\Z)", body)
     s1_lines = [ln.strip() for ln in (m_s1.group(1).splitlines() if m_s1 else []) if ln.strip()]
-    track_id, active_wo = _val("track_id", fm) or _val("track_id", body), _val("active_wo", fm) or _val("active_wo", body)
-    explicit_wos = list(dict.fromkeys(re.findall(r"\bWO-\d+\b", f"{filename}\n{track_id}\n{active_wo}")))
-    s1_wos = list(dict.fromkeys(re.findall(r"\bWO-\d+\b", "\n".join(s1_lines))))
+    track_id = _val("track_id", fm) or _val("track_id", body)
     m_bp = re.search(r'(?m)^active_blueprint:\s*["\']?([A-Za-z0-9._-]+)["\']?', f"{fm}\n{body}")
     bp_val = m_bp.group(1).strip() if m_bp else ""
     return {
         "status": _val("status", fm).lower(), "track_id": track_id, "track_status": (_val("track_status", fm) or _val("track_status", body)).lower(),
         "summary_1line": _val("summary_1line", fm), "s1": "\n".join(s1_lines), "s1_first": s1_lines[0] if s1_lines else "",
-        "explicit_wo_ids": explicit_wos, "wo_ids": explicit_wos or s1_wos,
         "active_blueprint": "" if bp_val.lower() in {"null", "none", "~"} else bp_val,
         "active_shards": _parse_yaml_list(fm, "active_shards") or _parse_yaml_list(body, "active_shards"),
     }

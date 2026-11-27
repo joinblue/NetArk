@@ -546,6 +546,7 @@ export default function registerWebResearchExtension(pi: any): void {
 				},
 			},
 		},
+		annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
 		async execute(_toolCallId: string, params: { query?: string; url?: string; maxResults?: number }, ctx?: any) {
 			const cwd = ctx?.cwd || process.cwd();
 			if (!params?.query && !params?.url) {

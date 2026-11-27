@@ -53,3 +53,5 @@ topology:
 | Work Order (`WO`) | Objective & Technical Summary (`Title & Technical Summary`) | Spec (`Spec`) | Status (`Status`) |
 | :--- | :--- | :---: | :---: |
 | `WO-0001` | **NetArk V1 Clean-Room Initialization**｜Initialize 5 core memory nodes, `@D/@C/@G` codebook map, and Tier 0 AST guard | `000.SOUL.v1` | `✅ Completed` |
+<!-- NETARK:AUTO-LEDGER:START -->
+<!-- NETARK:AUTO-LEDGER:END -->

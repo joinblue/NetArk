@@ -97,7 +97,8 @@ jobs:
               tools = resps[3]["tools"]
               assert {t["name"] for t in tools} == {"netark_query", "netark_record", "netark_guard"}
               schema_chars = len(json.dumps(tools, separators=(",", ":")))
-              assert schema_chars <= 1280 and (schema_chars // 4) <= 320, f"Tool schema unexpectedly large: {schema_chars} chars"
+              assert schema_chars <= 4000 and (schema_chars // 4) <= 1000, f"Tool schema unexpectedly large: {schema_chars} chars"
+              assert all(set(t.get("annotations", {}).keys()) == {"readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"} for t in tools), tools
               assert json.loads(resps[6]["content"][0]["text"])["ok"] is True
               assert json.loads(resps[7]["content"][0]["text"])["ok"] is True
               assert "Hook CLI Contract" in json.loads(resps[8]["content"][0]["text"])["contract"]
@@ -169,6 +170,10 @@ jobs:
           uv run --no-project python schemas/netark_guard_core.py --self-test
           uv run --no-project python scripts/netark_guard_daemon.py --self-test
           uv run --no-project python scripts/netark_init.py --self-test
+
+      - name: Run top-level unit and integration test suite
+        run: |
+          uv run --no-project python -m unittest discover -s tests -p "test_*.py" -v
 
       - name: Validate visual README assets exist and are non-empty
         shell: python

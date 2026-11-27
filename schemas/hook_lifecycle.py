@@ -9,7 +9,7 @@ and _run_pre_invocation_mode for AGY, Claude, and Pi agents.
 
 from __future__ import annotations
 
-import difflib, fnmatch, os, re, sys
+import fnmatch, os, re, sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -30,12 +30,13 @@ from schemas.session_context_builder import (  # noqa: E402,F401
 )
 from schemas.workspace_placement_guard import check_spec_blueprint_required, check_spec_filename_format, check_stub_first_gate, parse_frontmatter_text  # noqa: E402
 
-WRITE_TOOL_NAMES = {"write", "edit", "write_file", "edit_file", "write_to_file", "replace_file_content", "multi_replace_file_content", "multiedit"}
+EDIT_TOOL_NAMES = {"edit", "edit_file", "replace_file_content", "multi_replace_file_content", "multiedit"}
+WRITE_TOOL_NAMES = {"write", "write_file", "write_to_file"} | EDIT_TOOL_NAMES
 
 
 def _extract_chunk_repl(chunk: Any) -> str:
     if not isinstance(chunk, dict): return ""
-    return str(chunk.get("ReplacementContent") or chunk.get("replacement") or chunk.get("Replacement") or chunk.get("new_str") or chunk.get("new_string") or "")
+    return str(chunk.get("ReplacementContent") or chunk.get("replacement") or chunk.get("Replacement") or chunk.get("new_str") or chunk.get("new_string") or chunk.get("newText") or "")
 
 
 def extract_added_content(tool_name: str, args: Dict[str, Any]) -> str:
@@ -47,7 +48,7 @@ def extract_added_content(tool_name: str, args: Dict[str, Any]) -> str:
     if tn in {"write", "write_file", "write_to_file"}:
         return str(args.get("CodeContent") or args.get("content") or args.get("Content") or args.get("file_text") or "")
     if tn in {"edit", "edit_file", "replace_file_content"}:
-        return str(args.get("ReplacementContent") or args.get("replacement") or args.get("Replacement") or args.get("new_str") or args.get("new_string") or "")
+        return str(args.get("ReplacementContent") or args.get("replacement") or args.get("Replacement") or args.get("new_str") or args.get("new_string") or args.get("newText") or "")
     return ""
 
 
@@ -55,7 +56,7 @@ def _apply_multi_replace(chunks: List[Any], base_text: str, args: Dict[str, Any]
     eff_text, matched = base_text, False
     for chunk in chunks:
         if not isinstance(chunk, dict): continue
-        tgt = str(chunk.get("TargetContent") or chunk.get("target") or chunk.get("Target") or chunk.get("old_str") or chunk.get("old_string") or "")
+        tgt = str(chunk.get("TargetContent") or chunk.get("target") or chunk.get("Target") or chunk.get("old_str") or chunk.get("old_string") or chunk.get("oldText") or "")
         repl = _extract_chunk_repl(chunk)
         allow_m = bool(chunk.get("AllowMultiple") or chunk.get("allow_multiple") or args.get("AllowMultiple") or args.get("allow_multiple"))
         if tgt and tgt in eff_text:
@@ -76,35 +77,19 @@ def reconstruct_post_edit_content(tool_name: str, args: Dict[str, Any], target: 
         eff_text, matched = _apply_multi_replace(chunks if isinstance(chunks, list) else [], old_text, args)
         eff_src = eff_text if matched else added_text
     elif tn in {"edit", "edit_file", "replace_file_content"}:
-        old_part = str(args.get("TargetContent") or args.get("target") or args.get("Target") or args.get("old_str") or args.get("old_string") or "")
+        old_part = str(args.get("TargetContent") or args.get("target") or args.get("Target") or args.get("old_str") or args.get("old_string") or args.get("oldText") or "")
         eff_src = old_text.replace(old_part, added_text, 1) if (old_part and old_part in old_text) else added_text
     else: eff_src = added_text
     return eff_src, old_lines, (len(eff_src.splitlines()) if eff_src else 0)
 
 
-def _is_ledger_wo_done(ledger_txt: str, wo: str) -> bool:
-    wo_re, done_re = re.compile(rf"\b{re.escape(wo)}\b"), re.compile(r"(?i)(?:✅|已完成|\bcompleted\b|\bdone\b|\bverified\b)")
-    for ln in ledger_txt.splitlines():
-        if not ln.lstrip().startswith("|"): continue
-        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
-        if len(cells) >= 2 and done_re.search(cells[-1]) and wo_re.search(cells[0] if wo_re.search(cells[0]) else " ".join(cells[:-1])): return True
-    return False
-
-
 def _is_handover_closed(meta: Dict[str, Any], root: Path) -> bool:
-    """Self-State first (completed/archived), then LEDGER.md WO completion auxiliary check."""
-    if meta["status"] in {"archived", "deprecated", "completed"} or meta["track_status"] in {"completed", "archived"}: return True
-    use_exp = (meta["track_status"] == "active" or bool(meta.get("track_id")))
-    target_wos = list(meta.get("explicit_wo_ids") or ()) if use_exp else list(meta.get("explicit_wo_ids") or meta.get("wo_ids") or ())
-    ledger = root / "memory" / "LEDGER.md"
-    if not target_wos or not ledger.exists(): return False
-    try: ledger_txt = ledger.read_text(encoding="utf-8")
-    except Exception: return False  # noqa: silent-except
-    return all(_is_ledger_wo_done(ledger_txt, wo) for wo in target_wos)
+    """Return True when handover status or track_status marks it closed."""
+    return meta["status"] in {"archived", "deprecated", "completed"} or meta["track_status"] in {"completed", "archived"}
 
 
 def _check_handover_overwrite(rel: str, target: Path, eff_src: str, root: Path) -> Optional[Dict[str, Any]]:
-    """Block overwriting an active HANDOVER*.md with a different track_id, WO, or §1 topic."""
+    """Block overwriting an active HANDOVER*.md with a different track_id without confirmation."""
     if not (rel.startswith("memory/episodic/HANDOVER") and rel.endswith(".md")) or not target.exists(): return None
     try: old_text = target.read_text(encoding="utf-8")
     except Exception: return None  # noqa: silent-except
@@ -113,14 +98,11 @@ def _check_handover_overwrite(rel: str, target: Path, eff_src: str, root: Path) 
     old_tid, new_tid = old_meta["track_id"], new_meta["track_id"]
     if old_tid and new_tid and old_tid != new_tid:
         return {"allowed": False, "code": "SEC-HANDOVER-OVERWRITE", "ask_confirmation": True, "reason": f"Active handover '{rel}' (track '{old_tid}') cannot be overwritten by track '{new_tid}' without confirmation."}
-    old_wos, new_wos = set(old_meta["wo_ids"]), set(new_meta["wo_ids"])
-    if old_meta["track_status"] == "active" and not old_tid and new_tid and not (old_wos & new_wos):
+    if old_meta["track_status"] == "active" and not old_tid and new_tid:
         return {"allowed": False, "code": "SEC-HANDOVER-OVERWRITE", "ask_confirmation": True, "reason": f"Active handover '{rel}' cannot be overwritten by track '{new_tid}' without confirmation."}
-    if old_wos and new_wos and not (old_wos & new_wos):
-        return {"allowed": False, "code": "SEC-HANDOVER-OVERWRITE", "ask_confirmation": True, "reason": f"Active handover '{rel}' (WO {sorted(old_wos)}) cannot be overwritten by WO {sorted(new_wos)} without confirmation."}
-    old_s1, new_s1 = old_meta["s1"], new_meta["s1"]
-    if not old_s1 or old_s1 == new_s1 or old_s1 in new_s1 or difflib.SequenceMatcher(None, old_s1, new_s1).ratio() >= 0.45: return None
-    return {"allowed": False, "code": "SEC-HANDOVER-OVERWRITE", "ask_confirmation": True, "reason": f"Active handover '{rel}' is not completed/archived; overwriting §1 objective requires confirmation."}
+    if old_tid and not new_tid and eff_src.lstrip().startswith("---"):
+        return {"allowed": False, "code": "SEC-HANDOVER-OVERWRITE", "ask_confirmation": True, "reason": f"Active handover '{rel}' (track '{old_tid}') cannot be overwritten without preserving 'track_id'."}
+    return None
 
 
 def _is_modularity_exempt(rel: str, exempt_paths: Any) -> bool:
@@ -178,7 +160,8 @@ def _check_governance_pre_write(tool_name: str, args: Dict[str, Any], cwd: str) 
             w_msg = f"⚠️ [Modularity Buffer] '{rel}' reached {eff_new} effective / {new_lines} physical lines (> {soft_limit} budget, <= {hard_limit} hard cap). Evaluate module cohesion (do NOT cram logic into upstream callers or compress onto single lines) and present a split vs keep-single-file recommendation to the human."
             queue_agy_post_alert(cwd, w_msg)
             mod_warn = {"allowed": True, "code": "MODULARITY-BUFFER-WARN", "warning": w_msg, "systemMessage": w_msg, "reason": w_msg}
-    if os.environ.get("NETARK_MCP_HOOK_MODE") == "1" and rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md"):
+    is_edit_existing = (tool_name or "").lower() in EDIT_TOOL_NAMES and target.exists()
+    if os.environ.get("NETARK_MCP_HOOK_MODE") == "1" and rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md") and not is_edit_existing:
         return {"allowed": False, "code": "MCP-PROB-01-REDIRECT", "reason": f"Direct native write to governed memory '{rel}' is blocked in closed MCP mode. Use MCP tool netark_record(intent=..., title=..., body=..., mode='preflight'|'write')."}
     if rel.startswith("memory/") and rel.endswith(".md") and not rel.endswith("CONTEXT_MAP.md") and not rel.startswith("memory/wiki/"):
         if str(root) in eff_src or str(Path.home()) in eff_src:

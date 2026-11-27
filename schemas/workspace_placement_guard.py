@@ -88,33 +88,26 @@ def check_code_placement(rel_path: str, cwd: str, policy: Optional[Dict[str, Any
 def check_spec_filename_format(rel_path: str, cwd: str) -> Optional[Dict[str, Any]]:
     """Enforce <domain>_<2-digit-seq>_<UPPER_SLUG>.md naming & unique seq in specs/."""
     rel = rel_path.replace("\\", "/").lstrip("./")
-    if not rel.endswith(".md"):
-        return None
+    if not rel.endswith(".md"): return None
     parts = rel.split("/")
     in_mem = len(parts) == 3 and parts[0] == "memory" and parts[1] in {"specs", "audits", "wiki"}
     in_proj = len(parts) == 4 and parts[0] == "projects" and bool(parts[1]) and parts[2] in {"specs", "audits", "wiki"}
-    if not (in_mem or in_proj) or parts[-1] in {"README.md", "INDEX.md"}:
-        return None
+    if not (in_mem or in_proj) or parts[-1] in {"README.md", "INDEX.md"}: return None
     fname, parent_rel = parts[-1], "/".join(parts[:-1])
-    pat = WIKI_FILENAME_RE if parts[-2] == "wiki" else SPEC_FILENAME_RE
-    m = pat.match(fname)
-    if m:
-        dom, seq, slug = m.group(1), m.group(2), m.group(3)
+    m = (WIKI_FILENAME_RE if parts[-2] == "wiki" else SPEC_FILENAME_RE).match(fname)
+    if m: dom, seq, slug = m.group(1), m.group(2), m.group(3)
     else:
         m_dom = re.match(r"^(\d{3})(?:[_-]+(.*)|$)", Path(fname).stem)
         dom = m_dom.group(1) if m_dom else "500"
         raw_slug = re.sub(r"^\d{2}(?:_\d+)?[_-]+", "", m_dom.group(2) or "") if m_dom else Path(fname).stem
-        slug = re.sub(r"[^A-Z0-9]+", "_", raw_slug.upper()).strip("_") or "SPEC"
-        seq = ""
+        slug, seq = re.sub(r"[^A-Z0-9]+", "_", raw_slug.upper()).strip("_") or "SPEC", ""
     specs_dir = Path(cwd).resolve() / parent_rel
     existing = [p for p in sorted(specs_dir.glob(f"{dom}_*.md")) if p.is_file()] if specs_dir.is_dir() else []
     has_dup = bool(seq) and any(p.name != fname and p.name.startswith(f"{dom}_{seq}_") for p in existing)
-    if m and not has_dup:
-        return None
+    if m and not has_dup: return None
     max_seq = max((int(pm.group(1)) for p in existing if (pm := re.match(rf"^{dom}_(\d{{2}})_", p.name))), default=0)
-    next_name = f"{dom}_{max_seq + 1:02d}_{slug}.md"
     issue = f"Duplicate spec sequence '{dom}_{seq}_' in '{parent_rel}/'" if has_dup else f"Invalid spec filename '{fname}'"
-    return {"allowed": False, "code": "SPEC-FILENAME-FORMAT", "reason": f"{issue}. Must match '<domain>_<2-digit-seq>_<UPPER_SLUG>.md'. Suggested next filename: '{parent_rel}/{next_name}'"}
+    return {"allowed": False, "code": "SPEC-FILENAME-FORMAT", "reason": f"{issue}. Must match '<domain>_<2-digit-seq>_<UPPER_SLUG>.md'. Suggested next filename: '{parent_rel}/{dom}_{max_seq + 1:02d}_{slug}.md'"}
 
 
 def _iter_child_stmts(stmt: ast.AST) -> List[ast.stmt]:
@@ -133,9 +126,7 @@ def _max_loop_depth(stmts: List[ast.stmt], current_depth: int = 0) -> int:
         if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)): continue
         if isinstance(stmt, (ast.For, ast.AsyncFor, ast.While)):
             d = current_depth + 1
-            best = max(best, d)
-            for attr in ("body", "orelse"):
-                best = max(best, _max_loop_depth(getattr(stmt, attr, []) or [], d))
+            best = max(best, d, *(_max_loop_depth(getattr(stmt, a, []) or [], d) for a in ("body", "orelse")))
         elif (child_stmts := _iter_child_stmts(stmt)):
             best = max(best, _max_loop_depth(child_stmts, current_depth))
     return best
@@ -208,16 +199,35 @@ def _resolve_in_root(raw: str, root: Path) -> Optional[Path]:
     except (OSError, ValueError): return None
 
 
+def _is_small_head_tail(args: List[str]) -> bool:
+    n_lines, files, i = 10, 0, 0
+    while i < len(args):
+        a = args[i]
+        if a == "--":
+            files += len(args) - i - 1; break
+        if a in {"-n", "--lines"}:
+            if i + 1 >= len(args) or not (args[i + 1].isascii() and args[i + 1].isdigit()): return False
+            n_lines, i = int(args[i + 1]), i + 2; continue
+        if a.startswith("-n") or a.startswith("--lines="):
+            val = a[2:] if a.startswith("-n") else a[8:]
+            if not (val.isascii() and val.isdigit()): return False
+            n_lines = int(val)
+        elif re.fullmatch(r"-\d+", a): n_lines = int(a[1:])
+        elif a.startswith("-"): return False
+        else: files += 1
+        i += 1
+    return 0 <= n_lines <= 120 and max(1, files) * n_lines <= 240
+
+
 def _extract_shell_dump_targets(cmd_str: str, root: Path) -> List[Path]:
     root_p, targets = Path(root).resolve(), []
     for seg in _split_shell_segments(cmd_str):
         try: tokens = shlex.split(seg, posix=True)
         except ValueError: tokens = seg.split()
-        while tokens and (("=" in tokens[0] and not tokens[0].startswith("-")) or tokens[0] in {"sudo", "env", "command", "nohup"}):
-            tokens.pop(0)
+        while tokens and (("=" in tokens[0] and not tokens[0].startswith("-")) or tokens[0] in {"sudo", "env", "command", "nohup"}): tokens.pop(0)
         if not tokens: continue
         cmd, args, cands = Path(tokens[0]).name.lower(), tokens[1:], []
-        if cmd in {"cat", "head", "tail", "sed", "awk"}:
+        if cmd in {"cat", "head", "tail", "sed", "awk"} and not (cmd in {"head", "tail"} and _is_small_head_tail(args)):
             cands = [a.lstrip("<") for a in args if not a.startswith("-") and a != "<"]
         elif cmd in {"python", "python3"} and any(fn in seg for fn in ("open(", "read_text(", "readlines(")):
             for a in args:
@@ -259,8 +269,7 @@ def _check_context_map_read_bound(tool: str, args: Dict[str, Any], root: Path) -
                 try: return int(v)
                 except (TypeError, ValueError): pass  # noqa: silent-except
         return None
-    if (end_ln := _arg_int(("EndLine", "end_line"))) is None and (lim := _arg_int(("limit", "Limit"))) is not None:
-        end_ln = max(1, _arg_int(("offset", "Offset")) or 1) + lim - 1
+    if (end_ln := _arg_int(("EndLine", "end_line"))) is None and (lim := _arg_int(("limit", "Limit"))) is not None: end_ln = max(1, _arg_int(("offset", "Offset")) or 1) + lim - 1
     return (True, None) if end_ln is not None and 1 <= end_ln <= cutoff else (True, verdict)
 
 def check_direct_read_guard(tool_name: str, args: Dict[str, Any], cwd: str, policy: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -301,8 +310,7 @@ def check_direct_read_guard(tool_name: str, args: Dict[str, Any], cwd: str, poli
 
 def parse_frontmatter_text(raw_text: str) -> Tuple[Optional[Dict[str, Any]], str]:
     """Parse YAML or JSON frontmatter and body from an in-memory Markdown string."""
-    m = re.match(r"^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n([\s\S]*))?$", raw_text.lstrip("\ufeff"))
-    if not m: return None, raw_text
+    if not (m := re.match(r"^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n([\s\S]*))?$", raw_text.lstrip("\ufeff"))): return None, raw_text
     raw_fm, body = m.group(1), m.group(2) or ""
     try:
         import yaml  # type: ignore
@@ -327,13 +335,9 @@ def check_spec_blueprint_required(fm: Any, body: str, rel_path: str = "") -> Opt
     if Path(rel_path).name == "LEDGER.md" or str(ctx.get("node_key") or "") == "300.LEDGER.v1": return None
     scope = fm.get("scope_profile") if isinstance(fm.get("scope_profile"), dict) else {}
     topo = fm.get("topology") if isinstance(fm.get("topology"), dict) else {}
-    aff = topo.get("affected_paths") if isinstance(topo.get("affected_paths"), list) else []
-    stubs = topo.get("stub_paths") if isinstance(topo.get("stub_paths"), list) else []
+    aff, stubs = (topo.get("affected_paths") if isinstance(topo.get("affected_paths"), list) else []), (topo.get("stub_paths") if isinstance(topo.get("stub_paths"), list) else [])
     code_paths = {str(p).strip().replace("\\", "/").lstrip("./") for p in (*aff, *stubs) if isinstance(p, str) and str(p).strip().lower().endswith(CODE_FILE_EXTS)}
-    is_composite = (
-        scope.get("complexity_tier") == "composite" or _safe_int(scope.get("new_modules_count")) >= 1 or _safe_int(scope.get("target_files_count")) >= 3
-        or bool(scope.get("requires_new_algorithm")) or len(code_paths) >= 3 or len(SLICE_ROW_RE.findall(body or "")) >= 2
-    )
+    is_composite = scope.get("complexity_tier") == "composite" or _safe_int(scope.get("new_modules_count")) >= 1 or _safe_int(scope.get("target_files_count")) >= 3 or bool(scope.get("requires_new_algorithm")) or len(code_paths) >= 3 or len(SLICE_ROW_RE.findall(body or "")) >= 2
     if not is_composite or str(topo.get("parent_blueprint") or "").strip(): return None
     return {"allowed": False, "code": "SPEC-BLUEPRINT-REQUIRED", "reason": "[SPEC-BLUEPRINT-REQUIRED] Composite spec requires a valid 'topology.parent_blueprint' before writing. Create a Master Blueprint first, then bind this shard spec via parent_blueprint."}
 
@@ -341,11 +345,8 @@ def check_spec_blueprint_required(fm: Any, body: str, rel_path: str = "") -> Opt
 def _top_level_defs(source: str) -> Set[str]:
     """Extract top-level function and class names from Python source."""
     if not source.strip(): return set()
-    try:
-        tree = ast.parse(source)
-        return {n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
-    except SyntaxError:
-        return set(re.findall(r"(?m)^(?:async\s+def|def|class)\s+([A-Za-z_]\w*)", source))
+    try: return {n.name for n in ast.parse(source).body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
+    except SyntaxError: return set(re.findall(r"(?m)^(?:async\s+def|def|class)\s+([A-Za-z_]\w*)", source))
 
 
 def _scan_stub_bindings(rel: str, cwd: str) -> Tuple[bool, bool, bool]:
